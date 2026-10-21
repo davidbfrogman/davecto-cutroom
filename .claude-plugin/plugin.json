@@ -1,0 +1,13 @@
+{
+  "name": "cutroom",
+  "version": "0.1.0",
+  "description": "Edit your talking-head videos with Claude: cuts, captions, titles and animations in your own brand, in a local editor where you leave notes and Claude makes the changes. macOS.",
+  "author": { "name": "Dave Brown" },
+  "keywords": ["video", "editing", "captions", "reels", "ffmpeg"],
+  "mcpServers": {
+    "cutroom": {
+      "command": "bash",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/bin/mcp.sh"]
+    }
+  }
+}

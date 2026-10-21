@@ -1,0 +1,24 @@
+<!doctype html>
+<!--
+  Cutroom graphics: the overlay track for edited videos, in the Cutaways style
+  (assets/css/cutaways.css), recoloured and re-fonted by the user's look. One page, three uses:
+
+    ?render=1   the renderer loads data, seeks frame by frame and screenshots with alpha
+    ?preview=1  the editor puts it in a transparent iframe over the preview player
+    (no query)  a live sample of every graphic, for checking the look
+
+  API on window.CR: ready, load(data), seek(t), signature(t), signatures(fps, n), sample(layout)
+-->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cutroom graphics</title>
+  <link rel="stylesheet" href="/assets/css/cutaways.css">
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+  <div id="cr-root" class="cr-root"></div>
+  <script type="module" src="overlay.js"></script>
+</body>
+</html>

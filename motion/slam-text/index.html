@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id":"text","type":"string","label":"Lines (split with /)","default":"160,000 stars / I tested it. / I don’t get the hype."},
+  {"id":"beats","type":"string","label":"When each line lands (s, comma-separated)","default":""},
+  {"id":"accent","type":"string","label":"Teal word (optional)","default":""},
+  {"id":"hold","type":"string","label":"Last line holds (s)","default":"1"},
+  {"id":"position","type":"string","label":"Position (top, center, lower)","default":"center"}
+]'>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <meta name="cutroom:kind" content="text" />
+  <meta name="description" content="Big serif lines that slam in one after another on a plate, each replacing the last. Split lines with /, and set beats to land each one on the word it echoes. For a hook or a punchline." />
+  <title>Slam text</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    :root { /* brand defaults; Cutroom injects the user's */
+            --cr-plate: #141310; --cr-text: #f3f0e9; --cr-accent: #3e8b82; --cr-display: Fraunces, Georgia, serif; --cr-body: Inter, system-ui, sans-serif;
+            --cr-w: 1080px; --cr-h: 1920px;
+            --u: calc(min(var(--cr-w), var(--cr-h)) / 100); }
+    html, body { margin: 0; overflow: hidden; background: transparent; }
+    #root { position: relative; width: var(--cr-w); height: var(--cr-h); overflow: hidden; }
+    .clip { position: absolute; inset: 0; }
+    .slot { position: absolute; left: 7%; right: 7%; }
+    .slot.top { top: 8%; height: 30%; } .slot.center { top: 34%; height: 32%; } .slot.lower { top: 50%; height: 26%; }
+    .line { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; opacity: 0; }
+    .slot.top .line { align-items: flex-start; } .slot.lower .line { align-items: flex-end; }
+    .plate { display: inline-block; max-width: 100%; box-sizing: border-box; padding: calc(var(--u) * 2.2) calc(var(--u) * 4) calc(var(--u) * 2.8);
+             background: color-mix(in srgb, var(--cr-plate) 92%, transparent); border-radius: 2px; text-align: center; text-wrap: balance;
+             font: 400 calc(var(--u) * 13)/1.0 var(--cr-display); letter-spacing: -0.025em; color: var(--cr-text); }
+    .plate em { font-style: normal; color: var(--cr-accent); }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="slam-clip" data-start="0" data-duration="3">
+      <div class="slot" id="slot"></div>
+    </div>
+  </div>
+  <script>
+    const v = window.__hyperframes.getVariables();
+    const lines = String(v.text || "").split("/").map(s => s.trim()).filter(Boolean);
+    const given = String(v.beats || "").split(",").map(Number).filter(Number.isFinite);
+    // Where each line lands. Missing beats follow the last one at 0.9s spacing.
+    const beats = lines.map((_, i) => given[i] ?? (i ? (given[i - 1] ?? 0.9 * (i - 1)) + 0.9 : 0.05));
+    for (let i = 1; i < beats.length; i++) beats[i] = Math.max(beats[i], beats[i - 1] + 0.3);
+    const hold = Math.max(0.4, Number(v.hold) || 1);
+    const SLAM = 0.24, OUT = 0.14;
+    const total = Math.round(((beats[beats.length - 1] ?? 0) + hold + OUT) * 100) / 100;
+    document.getElementById("slam-clip").setAttribute("data-duration", String(total));
+
+    const slot = document.getElementById("slot");
+    slot.classList.add(["top", "center", "lower"].includes(v.position) ? v.position : "center");
+    const esc = s => s.replace(/[<&]/g, c => (c === "<" ? "&lt;" : "&amp;"));
+    const accent = String(v.accent || "").trim().toLowerCase();
+    lines.forEach((text, i) => {
+      const words = text.split(/\s+/).map(w => (accent && w.toLowerCase().replace(/[^\p{L}\p{N},%$]/gu, "") === accent.replace(/[^\p{L}\p{N},%$]/gu, "") ? `<em>${esc(w)}</em>` : esc(w)));
+      slot.insertAdjacentHTML("beforeend", `<div class="line" id="l${i}"><div class="plate">${words.join(" ")}</div></div>`);
+    });
+
+    const tl = gsap.timeline({ paused: true });
+    lines.forEach((_, i) => {
+      const el = `#l${i}`, at = beats[i];
+      // Slam: drops from big to size fast, then a short impact shake.
+      tl.fromTo(el, { opacity: 0, scale: 2.4 }, { opacity: 1, scale: 1, duration: SLAM, ease: "expo.out" }, at);
+      tl.to(el, { keyframes: { x: ["0.9%", "-0.7%", "0.4%", "0%"] }, duration: 0.16, ease: "none" }, at + SLAM * 0.55);
+      const next = beats[i + 1];
+      const outAt = next != null ? next - 0.02 : at + (total - OUT - at);
+      tl.to(el, { opacity: 0, scale: 0.94, duration: OUT, ease: "power2.in" }, outAt);
+    });
+    tl.set({}, {}, total);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["root"] = tl;
+  </script>
+</body>
+</html>

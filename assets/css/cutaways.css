@@ -1,0 +1,299 @@
+/* ==========================================================================
+   cutaways.css — the design tokens and primitives Cutroom's graphics build on
+   (paper/ink, one teal accent, Fraunces + Inter, hairline rules, 2px radius,
+   no shadows, no gradients, whisper-quiet motion). The user's brand overrides
+   the colour and font tokens per video: see graphics/overlay.js applyBrand().
+
+   Structure
+     1. Tokens (light + dark)
+     2. Gallery chrome (.cw-*)       — the page you preview and record from
+     3. Stage                         — the 360 x 640 design canvas
+     4. Type + layout primitives
+     5. Shapes + components
+     6. Motion vocabulary
+     7. Reduced motion, record + render modes
+
+   Scene primitives are unprefixed but only apply inside .stage, so they
+   never leak into a host page. Gallery chrome is prefixed cw-.
+   ========================================================================== */
+
+@import url("fonts.css");   /* bundled Fraunces, Inter, JetBrains Mono in ../fonts */
+
+/* ---------- 1. Tokens ---------- */
+:root{
+  --background:#f7f5f0;
+  --foreground:#181614;
+  --muted-foreground:#6f695f;
+  --border:#e4dfd5;
+  --accent:#0f766e;
+  --grid:#dcd6ca;
+
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+
+  --ease:cubic-bezier(.45,0,.55,1);          /* smoothstep-like, no overshoot */
+  --ease-ui:cubic-bezier(.4,0,.2,1);         /* 150ms interaction feedback */
+  --t-in:.6s;                                 /* the longest single transition */
+  --t-out:.5s;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --background:#141310; --foreground:#f3f0e9; --muted-foreground:#9d978b;
+    --border:#2c2924; --accent:#3e8b82; --grid:#2a2722; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --background:#141310; --foreground:#f3f0e9; --muted-foreground:#9d978b;
+  --border:#2c2924; --accent:#3e8b82; --grid:#2a2722; color-scheme:dark;
+}
+
+/* ---------- 2. Gallery chrome ---------- */
+*{box-sizing:border-box}
+html,body{margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--background);color:var(--foreground);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 50%,transparent);outline-offset:2px}
+
+.cw-wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.cw-header{padding:56px 0 28px;border-bottom:1px solid var(--border)}
+.cw-header h1{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4.2vw,46px);line-height:1.08;letter-spacing:-.01em;margin:0 0 14px}
+.cw-header p{margin:0;max-width:60ch;color:var(--muted-foreground);font-size:16px;line-height:1.6}
+.cw-controls{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;margin-top:24px;font-size:14px}
+.cw-seg{display:inline-flex;border:1px solid var(--border);border-radius:2px}
+.cw-seg button{background:transparent;border:0;padding:7px 12px;cursor:pointer;color:var(--muted-foreground);transition:color .15s var(--ease-ui)}
+.cw-seg button+button{border-left:1px solid var(--border)}
+.cw-seg button[aria-pressed="true"]{color:var(--foreground);background:color-mix(in srgb,var(--border) 55%,transparent)}
+.cw-seg button:hover{color:var(--foreground)}
+.cw-link{background:none;border:0;padding:0;cursor:pointer;color:var(--muted-foreground);text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:4px;transition:color .15s var(--ease-ui),text-decoration-color .15s var(--ease-ui)}
+.cw-link:hover{color:var(--foreground);text-decoration-color:var(--foreground)}
+.cw-link:active,.cw-seg button:active{transform:translateY(1px)}
+.cw-toggle{display:flex;gap:8px;align-items:center;color:var(--muted-foreground);cursor:pointer}
+.cw-toggle input{accent-color:var(--accent)}
+
+.cw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0 28px;padding:8px 0 96px}
+.cw-scene{border-top:1px solid var(--border);padding:22px 0 34px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.cw-meta{display:flex;gap:12px;align-items:baseline}
+.cw-num{font-size:13px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.cw-line{font-family:var(--serif);font-size:17px;line-height:1.45;margin:0}
+.cw-acts{display:flex;gap:18px;font-size:14px;align-items:baseline}
+.cw-dur{margin-left:auto;font-size:12px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+
+.cw-frame{position:relative;width:100%;aspect-ratio:9/16;overflow:hidden;border:1px solid var(--border);border-radius:2px;background:var(--background)}
+
+/* Reels safe zones (preview only, never recorded) */
+.cw-safe{position:absolute;inset:0;pointer-events:none;display:none;z-index:50}
+body.cw-show-safe .cw-grid .cw-safe{display:block}
+.cw-safe i{position:absolute;background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--foreground) 14%,transparent) 0 1px,transparent 1px 7px)}
+.cw-safe .t{left:0;right:0;top:0;height:9%;border-bottom:1px dashed var(--muted-foreground)}
+.cw-safe .b{left:0;right:0;bottom:0;height:21%;border-top:1px dashed var(--muted-foreground)}
+.cw-safe .r{right:0;top:45%;bottom:21%;width:13%;border-left:1px dashed var(--muted-foreground)}
+
+/* ---------- 3. Stage: a fixed 360 x 640 canvas, scaled by cutaways.js ---------- */
+.stage{
+  position:absolute;left:0;top:0;width:360px;height:640px;transform-origin:0 0;overflow:hidden;
+  background-color:var(--background);
+  background-image:radial-gradient(circle,var(--grid) 1px,transparent 1.3px);
+  background-size:22px 22px;background-position:11px 11px;
+  color:var(--foreground);font-family:var(--sans);font-size:14px;line-height:1.35;
+}
+.stage.no-grid{background-image:none}
+
+/* ---------- 4. Type + layout primitives ---------- */
+.stage .abs{position:absolute}
+.stage .bracket{position:absolute;left:18px;top:56px;width:40px;height:40px;border-left:1.5px solid var(--accent);border-top:1.5px solid var(--accent)}
+.stage .hl{position:absolute;left:34px;right:28px;top:76px;font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.08;letter-spacing:-.015em}
+.stage .hl.xl{font-size:58px;line-height:1.02}
+.stage .sub{position:absolute;left:34px;top:122px;font-size:13px;color:var(--muted-foreground)}
+.stage .note{position:absolute;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--muted-foreground);white-space:nowrap}
+.stage .say{font-family:var(--serif);font-size:20px;line-height:1.3}             /* a serif statement line */
+.stage .quote{font-family:var(--serif);font-style:italic;color:var(--muted-foreground)}
+.stage .label{font-size:12px;color:var(--muted-foreground)}
+.stage .serif{font-family:var(--serif)}
+.stage .mono{font-family:var(--mono)}
+.stage .muted{color:var(--muted-foreground)}
+.stage .accent{color:var(--accent)}
+.stage .rule{display:block;height:1px;background:var(--border)}
+.stage .hair{display:block;height:1px;background:var(--foreground)}
+
+/* Icons: <svg class="ic"><use href="#i-mail"/></svg> (sprite injected by cutaways.js) */
+.stage .ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.stage .ic.lg{width:28px;height:28px;stroke-width:1.25}
+.stage .ic.xl{width:36px;height:36px;stroke-width:1.25}
+
+/* Wires: an absolutely positioned SVG in stage coordinates.
+   <svg class="wires" viewBox="0 0 360 640"><path class="draw" pathLength="1" d="…"/></svg> */
+.stage .wires{position:absolute;inset:0;width:360px;height:640px;overflow:visible;pointer-events:none}
+.stage .wires path,.stage .wires line,.stage .wires circle,.stage .wires polyline{fill:none;stroke:var(--muted-foreground);stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1}
+.stage .wires .ink{stroke:var(--foreground)}
+.stage .wires .teal{stroke:var(--accent)}
+
+/* ---------- 5. Shapes + components ---------- */
+/* Box: the basic outlined rectangle. Position it with inline left/top/width/height. */
+.stage .box{position:absolute;background:var(--background);border:1px solid var(--foreground);border-radius:2px}
+.stage .box.soft{border-color:var(--border)}
+.stage .box.teal{border-color:var(--accent);color:var(--accent)}
+.stage .box.fill{background:var(--foreground);color:var(--background);border-color:var(--foreground)}
+.stage .box.static{position:relative}
+
+/* App tile: icon over label, optional <small> sub-label */
+.stage .app{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:12.5px}
+.stage .app.row{flex-direction:row;gap:8px}
+.stage .app small{font-family:var(--mono);font-size:10px;color:var(--muted-foreground)}
+
+/* Centered label in a box (options, nodes, workflow steps, chain links) */
+.stage .center{display:grid;place-items:center;text-align:center}
+
+/* Command pill: <div class="cmd" style="…">recon "Apple"</div> */
+.stage .cmd{position:absolute;display:flex;align-items:center;justify-content:center;border:1px solid var(--accent);border-radius:2px;background:var(--background);font-family:var(--mono);font-size:15px;color:var(--accent);white-space:nowrap}
+
+/* Chips (filters, categories). Pair with .chip-on overlay to switch one on. */
+.stage .chip{position:absolute;height:26px;padding:0 9px;border:1px solid var(--border);border-radius:2px;display:grid;place-items:center;font-size:11.5px;background:var(--background);white-space:nowrap}
+.stage .chip.on{border-color:var(--foreground)}
+.stage .chip-on{position:absolute;height:26px;border:1px solid var(--foreground);border-radius:2px;pointer-events:none}
+
+/* Highlight rings: teal = the answer / the pick; ink = "it noticed this" */
+.stage .ring{position:absolute;border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
+.stage .inkring{position:absolute;border:1px solid var(--foreground);border-radius:2px;pointer-events:none}
+
+/* Form field */
+.stage .field{position:absolute;border:1px solid var(--border);border-radius:2px;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:13px;background:var(--background)}
+
+/* Avatar / actor: <div class="actor" style="left;top"><div class="face"><svg class="ic lg">…</svg></div>You</div> */
+.stage .actor{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px}
+.stage .actor .face{width:56px;height:56px;border:1px solid var(--foreground);border-radius:2px;background:var(--background);display:grid;place-items:center}
+.stage .actor.lg .face{width:72px;height:72px}
+
+/* Window: an app window with a title bar and hairline content rows */
+.stage .win{position:absolute;width:184px;height:120px;background:var(--background);border:1px solid var(--border);border-radius:2px}
+.stage .win .bar{height:30px;display:flex;align-items:center;gap:7px;padding:0 10px;font-size:12.5px;border-bottom:1px solid var(--border);color:var(--muted-foreground)}
+.stage .win .rows{padding:12px;display:grid;gap:13px}
+.stage .win .rows i{display:block;height:1px;background:var(--border)}
+.stage .win.cur{border-color:var(--foreground);z-index:3}
+.stage .win.cur .bar{color:var(--foreground)}
+
+/* Browser: <div class="browser" style="…"><div class="bar"><i></i><i></i><i></i><span>shop.com</span></div>…</div> */
+.stage .browser{position:absolute;background:var(--background);border:1px solid var(--foreground);border-radius:2px;overflow:hidden}
+.stage .browser>.bar{height:26px;display:flex;align-items:center;gap:6px;padding:0 10px;border-bottom:1px solid var(--border)}
+.stage .browser>.bar i{width:7px;height:7px;border-radius:50%;border:1px solid var(--muted-foreground);display:block}
+.stage .browser>.bar span{font-family:var(--mono);font-size:10px;color:var(--muted-foreground);margin-left:10px}
+
+/* Terminal: same shape, mono body, .kv rows for aligned key/value output */
+.stage .term{position:absolute;background:var(--background);border:1px solid var(--foreground);border-radius:2px}
+.stage .term>.bar{height:26px;display:flex;align-items:center;gap:6px;padding:0 10px;border-bottom:1px solid var(--border)}
+.stage .term>.bar i{width:8px;height:8px;border-radius:50%;border:1px solid var(--muted-foreground);display:block}
+.stage .term>.body{padding:14px 14px 16px;font:400 13px/1.8 var(--mono)}
+.stage .kv{display:grid;grid-template-columns:11ch 1fr}
+.stage .kv>:first-child{color:var(--muted-foreground)}
+
+/* Brief: a ruled list instead of a card */
+.stage .brief{position:absolute;border-top:2px solid var(--accent);padding-top:14px}
+.stage .brief-h{font-family:var(--serif);font-size:26px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.stage .brief-h span{font-family:var(--sans);font-size:13px;color:var(--muted-foreground)}
+.stage .brow{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--border);font-size:15px}
+.stage .brow .k{width:74px;flex:none;color:var(--muted-foreground);font-size:13px;padding-top:1px}
+
+/* Key/value extraction row: <div class="xrow" style="top:…"><span class="k">Fonts</span>…</div> */
+.stage .xrow{position:absolute;left:34px;right:34px;display:flex;align-items:center;gap:12px;height:26px;font-size:14px}
+.stage .xrow .k{width:62px;font-size:12px;color:var(--muted-foreground);flex:none}
+.stage .swatch{display:block;width:18px;height:18px;border:1px solid var(--border);border-radius:2px}
+
+/* Ruled list row with optional leading mark */
+.stage .lrow{position:relative;display:flex;align-items:center;gap:10px;height:44px;border-top:1px solid var(--border);font-size:14.5px;padding-left:12px}
+.stage .lrow .mark{position:absolute;left:0;top:12px;bottom:12px;width:2px;background:var(--foreground)}
+
+/* Use-case row: icon box + serif title + muted sub */
+.stage .usecase{position:absolute;left:34px;right:40px;display:flex;gap:14px;align-items:center}
+.stage .usecase .icbox{position:relative;width:44px;height:44px;flex:none;display:grid;place-items:center;border:1px solid var(--foreground);border-radius:2px}
+.stage .usecase .t{font-family:var(--serif);font-size:19px}
+.stage .usecase .s{font-size:13px;color:var(--muted-foreground);margin-top:2px}
+
+/* Phone frame (for "a video", "a reel", storyboard panels). Add .sm for thumbnails. */
+.stage .phone{position:absolute;width:60px;height:106px;border:1px solid var(--foreground);border-radius:2px;background:var(--background);overflow:hidden}
+.stage .phone.sm{width:30px;height:53px}
+.stage .phone::before{content:"";position:absolute;left:6px;top:6px;width:10px;height:10px;border-left:1px solid var(--foreground);border-top:1px solid var(--foreground)}
+.stage .phone.sm::before{left:3px;top:3px;width:6px;height:6px}
+.stage .phone i{position:absolute;display:block}
+
+/* Document thumbnail */
+.stage .doc{position:relative;width:36px;height:40px;border:1px solid var(--foreground);border-radius:2px;background:var(--background);padding:9px 7px;display:grid;gap:6px;align-content:start}
+.stage .doc>i{display:block;height:1px;background:var(--border)}
+
+/* Comment CTA: <div class="comment" style="top:250px"><span class="avatar"></span><span class="txt in">JEV</span><span class="muted">→</span></div> */
+.stage .comment{position:absolute;left:34px;right:34px;display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--foreground)}
+.stage .comment .avatar{width:30px;height:30px;border-radius:50%;border:1px solid var(--muted-foreground);flex:none}
+.stage .comment .txt{flex:1;font-family:var(--mono);font-size:17px;color:var(--accent)}
+
+/* Generated grid cells (see data-gen in cutaways.js) */
+.stage .cell-sq{position:relative;display:block;width:14px;height:14px;border:1px solid var(--border)}
+.stage .cell-sq>b{position:absolute;inset:3px;background:var(--foreground)}
+.stage .cell-dot{display:block;width:4px;height:4px;border-radius:50%;background:var(--muted-foreground)}
+.stage .cell-doc{position:relative}
+.stage .cell-doc .hit{position:absolute;right:-4px;top:-4px;width:9px;height:9px;border-radius:50%;background:var(--foreground)}
+.stage .cell-doc .scan{position:absolute;inset:-4px;border:1px solid var(--muted-foreground);border-radius:2px}
+
+/* ---------- 6. Motion vocabulary ----------
+   Rules: only opacity, small transforms (<= 12px), stroke and border color.
+   Every single transition is <= 600ms. Scenes are paced with delays (--d).
+   Nothing runs until the stage has .play; the resting state IS the final
+   frame, so reduced-motion and screenshots get a composed still for free.
+
+   Per-element variables
+     --d    delay in seconds (when it starts)
+     --to   resting opacity for .gone (default 0, use .25-.35 to dim)
+     --dur  duration for .flash / .dot (defaults below)               */
+
+.stage.play .in  {animation:cw-in   var(--t-in) var(--ease) both;animation-delay:var(--d,0s)}
+.stage.play .up  {animation:cw-up   var(--t-in) var(--ease) both;animation-delay:var(--d,0s)}
+.stage.play .draw{animation:cw-draw var(--t-in) var(--ease) both;animation-delay:var(--d,0s)}
+.stage .gone{opacity:var(--to,0)}
+.stage.play .gone{animation:cw-gone var(--t-out) var(--ease) both;animation-delay:var(--d,0s)}
+
+/* .flash: appears, holds, disappears (a "look here" outline). Resting: hidden. */
+.stage .flash{opacity:0}
+.stage.play .flash{animation:cw-flash var(--dur,1.1s) var(--ease) both;animation-delay:var(--d,0s)}
+
+/* .dot: travels along an offset-path once. style="offset-path:path('M10 10 L200 200');--d:1s" */
+.stage .dot{position:absolute;left:0;top:0;width:7px;height:7px;border-radius:50%;background:var(--foreground);offset-rotate:0deg;offset-anchor:center;opacity:0}
+.stage.play .dot{animation:cw-travel var(--dur,.6s) var(--ease) both;animation-delay:var(--d,0s)}
+.stage.play .dot.loop{animation-timing-function:linear}
+
+/* .focus: border goes ink and the element comes forward, then settles (attention moving
+   between windows). Add .cur to the one that should end focused. */
+.stage.play .win.focus{animation:cw-focus 1.5s linear 2 both;animation-delay:var(--d,0s)}
+.stage.play .win.focus .bar{animation:cw-focus-txt 1.5s linear 2 both;animation-delay:var(--d,0s)}
+.stage.play .win.focus.cur{animation-name:cw-focus-end}
+.stage.play .win.focus.cur .bar{animation-name:cw-focus-txt-end}
+
+@keyframes cw-in{from{opacity:0}}
+@keyframes cw-up{from{opacity:0;transform:translateY(12px)}}
+@keyframes cw-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes cw-gone{from{opacity:1}to{opacity:var(--to,0)}}
+@keyframes cw-flash{0%{opacity:0}20%,78%{opacity:1}100%{opacity:0}}
+@keyframes cw-travel{0%{offset-distance:0%;opacity:0}15%{opacity:1}85%{opacity:1}100%{offset-distance:100%;opacity:0}}
+@keyframes cw-focus{0%{border-color:var(--border);z-index:1}6%,30%{border-color:var(--foreground);z-index:4}40%,100%{border-color:var(--border);z-index:1}}
+@keyframes cw-focus-txt{0%{color:var(--muted-foreground)}6%,30%{color:var(--foreground)}40%,100%{color:var(--muted-foreground)}}
+@keyframes cw-focus-end{0%{border-color:var(--border);z-index:1}6%,30%{border-color:var(--foreground);z-index:4}40%,99%{border-color:var(--border);z-index:1}100%{border-color:var(--foreground);z-index:4}}
+@keyframes cw-focus-txt-end{0%{color:var(--muted-foreground)}6%,30%{color:var(--foreground)}40%,99%{color:var(--muted-foreground)}100%{color:var(--foreground)}}
+
+/* ---------- 7. Reduced motion, record + render modes ---------- */
+@media (prefers-reduced-motion:reduce){
+  body:not(.cw-render) .stage *{animation:none!important;transition:none!important}
+}
+
+/* Full-screen record mode (opened from the gallery) */
+.cw-rec{position:fixed;inset:0;z-index:100;background:var(--background);display:none;align-items:center;justify-content:center}
+.cw-rec.on{display:flex}
+.cw-rec .cw-frame{width:auto;border:0;border-radius:0}
+.cw-rec .cw-hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);color:var(--muted-foreground);font-size:13px;white-space:nowrap;transition:opacity .3s}
+.cw-rec .cw-close{position:fixed;top:16px;right:18px;transition:opacity .3s}
+.cw-rec .cw-hide{opacity:0}
+.cw-rec:hover .cw-hide{opacity:1}
+
+/* Headless render mode (?render=N) — one stage, full viewport, nothing else */
+body.cw-render{overflow:hidden}
+body.cw-render>*:not(.cw-render-host):not(#cw-sprite){display:none!important}
+.cw-render-host{position:fixed;inset:0}
+.cw-render-host .cw-frame{width:100vw;height:100vh;aspect-ratio:auto;border:0;border-radius:0}

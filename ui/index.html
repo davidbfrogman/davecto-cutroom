@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+  Cutroom editor UI: tokens in ui/tokens.css. The graphics drawn into the
+  video are a separate page (graphics/), in the Cutaways style recoloured by
+  the user's brand, shown here inside an iframe so the two never share a page.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cutroom</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css">
+  <link rel="stylesheet" href="/ui/tokens.css">
+  <link rel="icon" href="/ui/favicon.svg">
+  <link rel="stylesheet" href="/ui/app.css">
+  <script>
+    // Theme before first paint: saved choice, else the system's.
+    (function () {
+      var t = localStorage.getItem('cutroom-theme');
+      if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+    })();
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/ui/app.js"></script>
+</body>
+</html>

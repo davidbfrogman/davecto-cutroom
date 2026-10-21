@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id":"text","type":"string","label":"Text","default":"Most founders build for months"},
+  {"id":"eyebrow","type":"string","label":"Eyebrow","default":""},
+  {"id":"position","type":"string","label":"Position (top, center, lower)","default":"center"}
+]'>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <meta name="cutroom:kind" content="text" />
+  <meta name="description" content="Big serif line, words rising in one by one on a band that draws across. For a hook, a key claim or a section title over talking." />
+  <title>Kinetic title</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    :root { /* brand defaults; Cutroom injects the user's */
+            --cr-plate: #141310; --cr-text: #f3f0e9; --cr-accent: #3e8b82; --cr-display: Fraunces, Georgia, serif; --cr-body: Inter, system-ui, sans-serif;
+            --cr-w: 1080px; --cr-h: 1920px;
+            --u: calc(min(var(--cr-w), var(--cr-h)) / 100); }
+    html, body { margin: 0; overflow: hidden; background: transparent; }
+    #root { position: relative; width: var(--cr-w); height: var(--cr-h); overflow: hidden; }
+    .clip { position: absolute; inset: 0; }
+    .block { position: absolute; left: 6%; right: 10%; }
+    .block.top { top: 9%; } .block.center { top: 50%; transform: translateY(-50%); } .block.lower { bottom: 26%; }
+    .band { position: absolute; inset: calc(var(--u) * -3.2) calc(var(--u) * -3.6); background: color-mix(in srgb, var(--cr-plate) 90%, transparent); border-radius: 2px; transform-origin: 0 50%; }
+    .eyebrow { position: relative; font: 500 calc(var(--u) * 2.6)/1 var(--cr-body); letter-spacing: 0.2em; text-transform: uppercase; color: var(--cr-accent); margin-bottom: calc(var(--u) * 2.6); }
+    .rule { position: relative; height: calc(var(--u) * 0.3); width: calc(var(--u) * 10); background: var(--cr-accent); transform-origin: 0 50%; margin-bottom: calc(var(--u) * 3); }
+    .words { position: relative; font: 400 calc(var(--u) * 10.5)/1.04 var(--cr-display); letter-spacing: -0.02em; color: var(--cr-text); }
+    .w { display: inline-block; white-space: pre; }
+    .mask { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.08em; }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="title-clip" data-start="0" data-duration="3.2">
+      <div class="block" id="block">
+        <div class="band" id="band"></div>
+        <div class="eyebrow" id="eyebrow"></div>
+        <div class="rule" id="rule"></div>
+        <div class="words" id="words"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const { text, eyebrow, position } = window.__hyperframes.getVariables();
+    const block = document.getElementById("block");
+    block.classList.add(["top", "center", "lower"].includes(position) ? position : "center");
+    const eb = document.getElementById("eyebrow");
+    if (eyebrow) eb.textContent = eyebrow; else { eb.remove(); document.getElementById("rule").remove(); }
+    document.getElementById("words").innerHTML = String(text).split(/\s+/).filter(Boolean)
+      .map(w => `<span class="mask"><span class="w">${w.replace(/[<&]/g, c => (c === "<" ? "&lt;" : "&amp;"))} </span></span>`).join("");
+
+    const tl = gsap.timeline({ paused: true });
+    tl.from("#band", { scaleX: 0, duration: 0.45, ease: "power3.out" }, 0);
+    if (eyebrow) {
+      tl.from("#eyebrow", { opacity: 0, duration: 0.3, ease: "power2.out" }, 0.15);
+      tl.from("#rule", { scaleX: 0, duration: 0.4, ease: "power3.out" }, 0.18);
+    }
+    tl.from(".w", { yPercent: 105, duration: 0.5, ease: "power3.out", stagger: 0.07 }, 0.2);
+    tl.to(".w", { yPercent: -105, duration: 0.35, ease: "power2.in", stagger: 0.03 }, 2.6);
+    if (eyebrow) tl.to(["#eyebrow", "#rule"], { opacity: 0, duration: 0.25 }, 2.6);
+    tl.to("#band", { scaleX: 0, transformOrigin: "100% 50%", duration: 0.4, ease: "power3.in" }, 2.75);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["root"] = tl;
+  </script>
+</body>
+</html>

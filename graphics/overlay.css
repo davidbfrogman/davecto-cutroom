@@ -1,0 +1,125 @@
+/* ==========================================================================
+   Cutroom graphics: overlays for edited talking-head video.
+   Cutaways style: cutaways.css tokens (paper/ink, one teal accent, Fraunces +
+   Inter), hairlines, 2px radius, no shadows, no gradients. Over live video,
+   text sits on a plate so it reads on any frame. The user's brand (their
+   colours and fonts) overrides those tokens per stage: see applyBrand() in overlay.js.
+
+   Coordinates are stage units, like Cutaways: a 360-wide stage for 9:16, 640
+   for 16:9, 480 for 1:1, scaled to the output by overlay.js.
+
+   Teal budget per frame: the corner bracket plus one thing (the number, the
+   chapter rule, the CTA keyword). Captions never use teal.
+
+   Motion is set from JS (opacity and ≤10px rise, 500ms in, 400ms out) so a
+   frame can be computed for any time t. Resting state = finished frame.
+   ========================================================================== */
+
+html, body { background: transparent !important; margin: 0; overflow: hidden; }
+/* cutaways.css sets color-scheme per theme. In an iframe, a scheme that differs from the
+   host page makes Chrome paint an opaque backdrop, which would hide the preview video. */
+:root, :root[data-theme] { color-scheme: normal !important; }
+.cr-root { position: absolute; inset: 0; }
+.cr-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; overflow: hidden; font-family: var(--sans); color: var(--foreground); line-height: 1.3; -webkit-font-smoothing: antialiased; }
+.cr-stage * { box-sizing: border-box; }
+
+/* Pieces */
+.cr-ov { position: absolute; will-change: opacity, transform; }
+.cr-plate { position: relative; background: color-mix(in srgb, var(--background) 93%, transparent); border: 1px solid var(--border); border-radius: 2px; }
+.cr-bracket { position: absolute; left: -7px; top: -7px; width: 26px; height: 26px; border-left: 1.5px solid var(--accent); border-top: 1.5px solid var(--accent); }
+.cr-serif { font-family: var(--serif); font-weight: 400; letter-spacing: -0.012em; }
+.cr-eyebrow { font-size: 9.5px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-foreground); }
+.cr-eyebrow.teal { color: var(--accent); }
+.cr-rule { display: block; height: 1px; background: var(--border); transform-origin: 0 50%; }
+.cr-rule.teal { background: var(--accent); height: 1.5px; }
+.cr-muted { color: var(--muted-foreground); }
+
+/* Headline: the hook line, top of frame */
+.cr-headline { left: 22px; right: 22px; top: 64px; }
+.cr-headline .cr-plate { padding: 14px 16px 15px; }
+.cr-headline .t { font-size: 24px; line-height: 1.13; }
+.L-h .cr-headline { left: 40px; right: auto; top: 36px; max-width: 380px; }
+.L-h .cr-headline .t { font-size: 26px; }
+.L-sq .cr-headline { left: 28px; right: 28px; top: 40px; }
+
+/* Lower third: name and role */
+.cr-lower { left: 22px; top: 362px; }
+.cr-lower .cr-plate { padding: 10px 14px 11px; display: grid; gap: 6px; }
+.cr-lower .n { font-size: 20px; line-height: 1.1; }
+.cr-lower .cr-rule { width: 28px; }
+.L-h .cr-lower { left: 40px; top: auto; bottom: 74px; }
+.L-sq .cr-lower { left: 28px; top: auto; bottom: 96px; }
+
+/* Chapter: list item number and title */
+.cr-chapter { left: 22px; right: 60px; top: 64px; }
+.cr-chapter .cr-plate { padding: 12px 16px 14px; display: grid; gap: 7px; }
+.cr-chapter .t { font-size: 24px; line-height: 1.12; }
+.cr-chapter .cr-rule { width: 100%; }
+.L-h .cr-chapter { left: 40px; right: auto; top: 36px; max-width: 360px; }
+.L-sq .cr-chapter { left: 28px; top: 40px; }
+
+/* Stat: a number worth seeing */
+.cr-stat { left: 22px; top: 64px; max-width: 300px; }
+.cr-stat .cr-plate { padding: 12px 16px 14px; display: grid; gap: 4px; }
+.cr-stat .v { font-size: 54px; line-height: 1; color: var(--accent); }
+.cr-stat .s { font-size: 13px; line-height: 1.35; color: var(--muted-foreground); max-width: 250px; }
+.L-h .cr-stat { left: 40px; top: 36px; }
+.L-sq .cr-stat { left: 28px; top: 40px; }
+
+/* Keyword: one or two words, big */
+.cr-keyword { left: 22px; top: 64px; }
+.cr-keyword .cr-plate { padding: 10px 16px 12px; }
+.cr-keyword .t { font-size: 40px; line-height: 1.05; }
+.L-h .cr-keyword { left: 40px; top: 36px; }
+
+/* Quote: a line said on camera, pulled out */
+.cr-quote { left: 22px; right: 40px; top: 64px; }
+.cr-quote .cr-plate { padding: 12px 16px 14px 18px; border-left: 2px solid var(--accent); }
+.cr-quote .t { font-family: var(--serif); font-style: italic; font-size: 21px; line-height: 1.25; }
+.cr-quote .s { margin-top: 8px; }
+.L-h .cr-quote { left: 40px; right: auto; top: 36px; max-width: 420px; }
+
+/* Call to action: "Comment WORD." */
+.cr-cta { left: 22px; right: 48px; top: 150px; }
+.cr-cta .cr-plate { padding: 18px 18px 18px; display: grid; gap: 10px; }
+.cr-cta .t { font-size: 40px; line-height: 1.04; }
+.cr-cta .s { font-size: 13.5px; color: var(--muted-foreground); }
+.cr-cta .row { display: flex; align-items: center; gap: 12px; padding: 12px 0 2px; border-top: 1px solid var(--border); margin-top: 4px; }
+.cr-cta .row .av { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--muted-foreground); flex: none; }
+.cr-cta .row .kw { flex: 1; font-family: var(--mono); font-size: 16px; color: var(--accent); }
+.L-h .cr-cta { left: 40px; right: auto; top: 60px; width: 340px; }
+.L-sq .cr-cta { left: 28px; right: 28px; top: 120px; }
+
+/* Card: a full-frame title, the Cutaways stage itself */
+.cr-card { left: 0; top: 0; width: 100%; height: 100%; background-color: var(--background);
+  background-image: radial-gradient(circle, var(--grid) 1px, transparent 1.3px); background-size: 22px 22px; background-position: 11px 11px; }
+.cr-card .br { position: absolute; left: 18px; top: 56px; width: 40px; height: 40px; border-left: 1.5px solid var(--accent); border-top: 1.5px solid var(--accent); }
+.cr-card .e { position: absolute; left: 34px; top: 160px; }
+.cr-card .t { position: absolute; left: 34px; right: 30px; top: 182px; font-size: 40px; line-height: 1.06; }
+.cr-card .s { position: absolute; left: 34px; right: 40px; top: 300px; font-size: 14px; color: var(--muted-foreground); }
+.L-h .cr-card .br { left: 32px; top: 32px; }
+.L-h .cr-card .e { left: 52px; top: 118px; }
+.L-h .cr-card .t { left: 52px; right: 120px; top: 140px; font-size: 44px; }
+.L-h .cr-card .s { left: 52px; top: 250px; }
+.L-sq .cr-card .e { top: 150px; }
+.L-sq .cr-card .t { top: 172px; }
+
+/* Captions: phrase at a time; the 'word' style dims words not yet said */
+.cr-caps { position: absolute; left: 22px; width: 290px; top: 452px; display: flex; justify-content: center; text-align: center; pointer-events: none; }
+.cr-caps .cr-plate { display: inline-block; padding: 6px 10px 7px; font-family: var(--cap-font, var(--sans)); font-size: calc(17px * var(--cap-scale, 1)); font-weight: 500; line-height: 1.25; letter-spacing: -0.005em; }
+.cr-caps .w { transition: none; }
+.cr-caps.word .w { color: var(--muted-foreground); }
+.cr-caps.word .w.on { color: var(--foreground); }
+.L-h .cr-caps { left: 80px; width: 480px; top: auto; bottom: 22px; }
+.L-h .cr-caps .cr-plate { font-size: calc(15px * var(--cap-scale, 1)); }
+/* Captions in a font of their own (settings.captions.font) set --cap-font and --cap-scale.
+   Instrument Serif is condensed and tight, like Apple's Garamond ads. */
+.cr-caps.serif .cr-plate { font-weight: 400; line-height: 1.02; letter-spacing: -0.025em; padding: 5px 11px 7px; }
+.L-sq .cr-caps { left: 40px; width: 400px; top: auto; bottom: 34px; }
+
+/* Sample gallery (no query string) */
+body.cr-sample { background: #3a3631 !important; overflow: auto; }
+.cr-sample .cr-root { position: relative; display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; }
+.cr-sample .cr-cell { position: relative; overflow: hidden; background: repeating-linear-gradient(135deg, #5b544b 0 18px, #4f4942 18px 36px); border: 1px solid #222; }
+.cr-sample .cr-inner { position: absolute; inset: 0; }
+.cr-sample .cr-cell span { position: absolute; left: 6px; bottom: 4px; font: 11px/1 monospace; color: #ddd; }

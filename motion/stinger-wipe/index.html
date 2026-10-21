@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id":"label","type":"string","label":"Label on the wipe","default":""},
+  {"id":"direction","type":"string","label":"Direction (left, right, up)","default":"left"}
+]'>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <meta name="cutroom:kind" content="transition" />
+  <meta name="cutroom:cut" content="0.5" />
+  <meta name="description" content="A panel in the plate colour with an accent leading edge sweeps across, covers the cut, and sweeps off. Optional label while it covers. Use between sections." />
+  <title>Stinger wipe</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    :root { /* brand defaults; Cutroom injects the user's */
+            --cr-plate: #141310; --cr-text: #f3f0e9; --cr-accent: #3e8b82; --cr-display: Fraunces, Georgia, serif; --cr-body: Inter, system-ui, sans-serif;
+            --cr-w: 1080px; --cr-h: 1920px;
+            --u: calc(min(var(--cr-w), var(--cr-h)) / 100); }
+    html, body { margin: 0; overflow: hidden; background: transparent; }
+    #root { position: relative; width: var(--cr-w); height: var(--cr-h); overflow: hidden; }
+    .clip { position: absolute; inset: 0; }
+    .panel { position: absolute; inset: 0; background: var(--cr-plate); }
+    .edge { position: absolute; top: 0; bottom: 0; right: 0; width: calc(var(--u) * 0.6); background: var(--cr-accent); }
+    .panel.up .edge { top: 0; left: 0; right: 0; bottom: auto; width: auto; height: calc(var(--u) * 0.6); }
+    .label { position: absolute; left: 8%; right: 8%; top: 50%; transform: translateY(-50%); text-align: center;
+             font: 400 calc(var(--u) * 8)/1.05 var(--cr-display); letter-spacing: -0.015em; color: var(--cr-text); }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="wipe-clip" data-start="0" data-duration="1.1">
+      <div class="panel" id="panel"><i class="edge"></i><div class="label" id="label"></div></div>
+    </div>
+  </div>
+  <script>
+    const { label, direction } = window.__hyperframes.getVariables();
+    const panel = document.getElementById("panel");
+    const dir = ["left", "right", "up"].includes(direction) ? direction : "left";
+    if (dir === "up") panel.classList.add("up");
+    document.getElementById("label").textContent = label || "";
+    // Covered from 0.45s to 0.65s; the cut sits at 0.55s (cutroom:cut 0.5 of 1.1s).
+    const from = dir === "up" ? { yPercent: 100 } : { xPercent: dir === "left" ? -100 : 100 };
+    const to = dir === "up" ? { yPercent: -100 } : { xPercent: dir === "left" ? 100 : -100 };
+    if (dir === "right") panel.querySelector(".edge").style.cssText = "left:0;right:auto";
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#panel", from, { xPercent: 0, yPercent: 0, duration: 0.45, ease: "power3.in" }, 0);
+    if (label) tl.fromTo("#label", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.4);
+    tl.to("#panel", { ...to, duration: 0.45, ease: "power3.out" }, 0.65);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["root"] = tl;
+  </script>
+</body>
+</html>

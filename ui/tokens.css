@@ -1,0 +1,149 @@
+/* ============================================================================
+   Cutroom editor tokens: the editor's own colours, type and motion.
+   (Not the user's brand: that lives in settings.brand and only touches what's
+   drawn into the video. See shared/brand.mjs.)
+
+   Fonts come from /assets/css/fonts.css:
+     Fraunces (weight 400 only) -> --font-fraunces
+     Inter                      -> --font-inter
+   ============================================================================ */
+
+@custom-variant dark (&:is(.dark *));
+
+/* --- Tailwind v4 theme mapping ------------------------------------------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+
+  --width-content: var(--content-width);
+  --width-content-narrow: var(--content-width-narrow);
+  --width-content-prose: var(--content-width-prose);
+
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+
+  --shadow-subtle: var(--shadow-subtle);
+}
+
+/* --- Light theme (default) ------------------------------------------------ */
+:root {
+  /* Surfaces */
+  --background: #f7f5f0; /* warm paper — never #fff */
+  --foreground: #181614; /* warm ink — never #000 */
+  --surface: #ffffff;
+  --popover: #ffffff;
+  --popover-foreground: #181614;
+
+  /* Interactive */
+  --primary: #181614;
+  --primary-foreground: #f7f5f0;
+  --secondary: #f1ede6;
+  --secondary-foreground: #181614;
+  --muted: #f1ede6;
+  --muted-foreground: #6b655c;
+  --accent: #0f766e; /* deep teal — use sparingly */
+  --accent-foreground: #f7f5f0;
+  --destructive: #8c3b2e;
+
+  /* Structure */
+  --border: #e4dfd5;
+  --input: #e4dfd5;
+  --ring: #0f766e;
+
+  /* Print / low-fidelity accent (OG images, PDFs, small marks) */
+  --accent-print: #1e4a46;
+
+  /* Layout tokens */
+  --content-width: 80rem;
+  --content-width-narrow: 64rem;
+  --content-width-prose: 42rem;
+  --space-section: clamp(4rem, 8vw, 8rem);
+  --radius: 0.125rem; /* effectively square */
+  --shadow-subtle: 0 1px 2px rgb(24 22 20 / 0.04);
+
+  /* Letterspacing tiers for the uppercase eyebrow treatment */
+  --tracking-eyebrow: 0.2em; /* section + page eyebrows */
+  --tracking-label: 0.15em; /* nav, field labels, kickers */
+  --tracking-meta: 0.1em; /* inline metadata */
+
+  /* Font fallbacks — safe if the webfonts fail to load */
+  --font-fraunces: Fraunces, Georgia, "Times New Roman", serif;
+  --font-inter: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* --- Dark theme ----------------------------------------------------------- */
+.dark {
+  --background: #141310;
+  --foreground: #f3f0e9;
+  --surface: #1c1a16;
+  --popover: #1c1a16;
+  --popover-foreground: #f3f0e9;
+
+  --primary: #f3f0e9;
+  --primary-foreground: #141310;
+  --secondary: #211e19;
+  --secondary-foreground: #f3f0e9;
+  --muted: #211e19;
+  --muted-foreground: #948c7f;
+  --accent: #3e8b82; /* lightened — #0f766e is too dark on ink */
+  --accent-foreground: #0d1f1d;
+  --destructive: #c76a5c;
+
+  --border: #2c2822;
+  --input: #2c2822;
+  --ring: #3e8b82;
+
+  --shadow-subtle: 0 1px 2px rgb(0 0 0 / 0.3);
+}
+
+/* --- Base layer ----------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans scroll-smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+}
+
+/* --- Reduced motion — ship this, it's part of the brand ------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

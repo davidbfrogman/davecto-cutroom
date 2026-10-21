@@ -1,0 +1,6 @@
+# Cutroom's Python side: transcription and YouTube downloads.
+# Installed into ~/Library/Application Support/Cutroom/venv by setup.
+faster-whisper>=1.1
+yt-dlp
+# Optional second engine (pulls in PyTorch, ~2 GB): node setup.mjs --with-whisper
+# openai-whisper

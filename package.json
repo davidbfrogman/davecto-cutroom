@@ -1,0 +1,25 @@
+{
+  "name": "cutroom",
+  "version": "0.1.0",
+  "description": "Edit talking-head videos with Claude Code: a local storyboard editor, a notes loop, and ffmpeg renders.",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=22" },
+  "os": ["darwin"],
+  "scripts": {
+    "start": "node server.mjs --open",
+    "dev": "node --watch server.mjs --open",
+    "setup": "node setup.mjs",
+    "cli": "node cli.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "gsap": "3.14.2",
+    "hyperframes": "0.8.80",
+    "playwright": "1.64.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.7"
+  }
+}
