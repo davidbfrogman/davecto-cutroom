@@ -15,7 +15,7 @@ Everything runs on your Mac. Your footage never leaves it.
 In Claude Code:
 
 ```
-/plugin marketplace add <owner>/cutroom
+/plugin marketplace add davidbfrogman/davecto-cutroom
 /plugin install cutroom@cutroom
 ```
 
