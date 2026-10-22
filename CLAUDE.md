@@ -25,6 +25,11 @@ and the file map.
 - Render clips are cached by a hash of everything that affects them (`clipSpec`). If you add a
   setting that changes clip pixels or audio, add it to `clipSpec` and bump `CLIP_VERSION` when the
   clip recipe changes. Animations are cached by `motionKey` (files, size, vars, brand).
+- Cutouts (`lib/cutout.mjs`): the matte tool is `swift/matte.swift`, compiled into DATA/bin and
+  keyed by its source hash. Render mattes are cached per clip (`matteKey()`); bump
+  `MATTE_VERSION` when the matte recipe changes outside the Swift file. Which shots need one and
+  when the speaker is laid back over the picture come from `cutouts()` in `shared/timeline.mjs`,
+  which both the render and the preview use.
 - Paths inside ffmpeg filter strings go through `esc()`.
 - Paths come from `lib/paths.mjs`: CUTROOM (this folder, replaced on every plugin update, so
   never write into it at runtime), HOME (`~/Movies/Cutroom`, the user's work), DATA

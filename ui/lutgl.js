@@ -2,6 +2,9 @@
   WebGL2 preview renderer: draws a cropped video frame through up to two 3D
   LUTs (conversion, then look), the same .cube files ffmpeg's lut3d uses.
   Falls back to a plain 2D canvas (no LUT) without WebGL2.
+
+  For a cutout the video is the picture with the speaker's matte stacked
+  underneath (lib/cutout.mjs); `matte` draws only the speaker, the matte as alpha.
 */
 
 const VS = `#version 300 es
@@ -22,13 +25,16 @@ uniform sampler2D u_tex;
 uniform sampler3D u_lut0, u_lut1;
 uniform float u_n0, u_n1;       // LUT sizes; 0 = off
 uniform float u_gain, u_alpha;
+uniform float u_matte;          // > 0: the matte sits this far below the picture (0.5 when stacked)
 out vec4 o;
 vec3 lut(sampler3D l, float n, vec3 c) { return texture(l, clamp(c, 0.0, 1.0) * (n - 1.0) / n + 0.5 / n).rgb; }
 void main() {
   vec3 c = texture(u_tex, v_uv).rgb;
   if (u_n0 > 0.0) c = lut(u_lut0, u_n0, c);
   if (u_n1 > 0.0) c = lut(u_lut1, u_n1, c);
-  o = vec4(c * u_gain, u_alpha);
+  float a = u_alpha;
+  if (u_matte > 0.0) a *= texture(u_tex, v_uv + vec2(0.0, u_matte)).r;
+  o = vec4(c * u_gain, a);
 }`;
 
 export function parseCube(text) {
@@ -46,7 +52,7 @@ export function parseCube(text) {
 export class GLView {
   constructor(canvas) {
     this.canvas = canvas;
-    const gl = canvas.getContext('webgl2', { premultipliedAlpha: false, preserveDrawingBuffer: true });
+    const gl = canvas.getContext('webgl2', { premultipliedAlpha: true, preserveDrawingBuffer: true });
     this.gl = gl;
     if (!gl) { this.ctx = canvas.getContext('2d'); return; }
     const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
@@ -62,7 +68,7 @@ export class GLView {
     const loc = gl.getAttribLocation(prog, 'a_pos');
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    this.u = Object.fromEntries(['u_crop', 'u_tex', 'u_lut0', 'u_lut1', 'u_n0', 'u_n1', 'u_gain', 'u_alpha'].map(n => [n, gl.getUniformLocation(prog, n)]));
+    this.u = Object.fromEntries(['u_crop', 'u_tex', 'u_lut0', 'u_lut1', 'u_n0', 'u_n1', 'u_gain', 'u_alpha', 'u_matte'].map(n => [n, gl.getUniformLocation(prog, n)]));
     gl.uniform1i(this.u.u_tex, 0);
     gl.uniform1i(this.u.u_lut0, 1);
     gl.uniform1i(this.u.u_lut1, 2);
@@ -71,7 +77,8 @@ export class GLView {
     for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
     this.luts = [null, null];
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    // Premultiplied output, so a layer drawn on a clear canvas composites over the page correctly.
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   }
 
   /** slot 0 = conversion, 1 = look. cube = parsed .cube or null. */
@@ -96,16 +103,25 @@ export class GLView {
     if (this.canvas.width !== W || this.canvas.height !== H) { this.canvas.width = W; this.canvas.height = H; }
   }
 
-  clear() {
-    if (this.gl) { this.gl.viewport(0, 0, this.canvas.width, this.canvas.height); this.gl.clearColor(0.08, 0.075, 0.063, 1); this.gl.clear(this.gl.COLOR_BUFFER_BIT); }
+  /** Clear to the preview's backdrop, or to nothing (a layer over other layers). */
+  clear({ transparent = false } = {}) {
+    if (this.gl) { this.gl.viewport(0, 0, this.canvas.width, this.canvas.height); this.gl.clearColor(...(transparent ? [0, 0, 0, 0] : [0.08, 0.075, 0.063, 1])); this.gl.clear(this.gl.COLOR_BUFFER_BIT); }
+    else if (transparent) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     else { this.ctx.fillStyle = 'rgb(20 19 16)'; this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height); }
   }
 
-  /** Draw a video (or image) cropped to crop {x,y,w,h} in source pixels. */
-  draw(media, crop, { alpha = 1, gain = 1, lut = true } = {}) {
+  /** Can it draw a matte? (Not on the 2D fallback.) */
+  get mattes() { return !!this.gl; }
+
+  /**
+    Draw a video (or image) cropped to crop {x,y,w,h} in source pixels. matte: the video is
+    picture-over-matte (crop is within the top half); draw the picture with the matte as alpha.
+  */
+  draw(media, crop, { alpha = 1, gain = 1, lut = true, matte = false } = {}) {
     const vw = media.videoWidth || media.naturalWidth, vh = media.videoHeight || media.naturalHeight;
     if (!vw || !vh) return false;
     if (!this.gl) {
+      if (matte) return false;
       this.ctx.globalAlpha = alpha;
       this.ctx.drawImage(media, crop.x, crop.y, crop.w, crop.h, 0, 0, this.canvas.width, this.canvas.height);
       this.ctx.globalAlpha = 1;
@@ -125,6 +141,7 @@ export class GLView {
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1f(this.u.u_gain, gain);
     gl.uniform1f(this.u.u_alpha, alpha);
+    gl.uniform1f(this.u.u_matte, matte ? 0.5 : 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     return true;
   }

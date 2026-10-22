@@ -7,10 +7,16 @@
   through WebGL with the project's crop, punch-in and LUTs. The graphics page
   (graphics/overlay.html) sits on top in an iframe and is seeked to the same
   time, so titles and captions are the ones the render will draw.
+
+  Layers, bottom to top, as in the render: the picture, animations behind the
+  speaker, the cut-out speaker, the other animations, the graphics page, then
+  stingers. For a cutout both video elements play the proxy with the speaker's
+  matte stacked underneath (setCutout), so picture and matte can't drift apart;
+  a second canvas draws just the speaker while an animation sits behind them.
 */
 import { GLView, parseCube } from './lutgl.js';
 import { cropRect, shotFraming, zoomAt } from '/shared/framing.mjs';
-import { overlayData } from '/shared/timeline.mjs';
+import { cutouts, overlayData } from '/shared/timeline.mjs';
 import { h } from './dom.js';
 import { mediaUrl } from './api.js';
 
@@ -28,12 +34,20 @@ export class Player {
     this.msg = h('div.pv-msg', 'Loading preview…');
     // Animations (HyperFrames renders, transparent WebM) sit between the picture and the graphics page.
     this.motionBox = h('div.pv-motion');
+    this.behindBox = h('div.pv-motion');
     this.motionVids = new Map();
     this.motionLayers = [];
     this.motionSrc = () => null;
     this.motionBlend = () => 'normal';
-    this.el = h('div.pv-frame', this.canvas, this.motionBox, this.iframe, this.msg);
+    // The cut-out speaker, over animations that sit behind them.
+    this.speakerCanvas = h('canvas.pv-speaker');
+    this.badge = h('div.pv-badge', { hidden: true });
+    this.el = h('div.pv-frame', this.canvas, this.behindBox, this.speakerCanvas, this.motionBox, this.iframe, this.badge, this.msg);
     this.gl = new GLView(this.canvas);
+    this.speaker = new GLView(this.speakerCanvas);
+    this.proxyUrl = proxyUrl;
+    this.cutoutUrl = null;
+    this.windows = [];
     const mk = () => {
       const v = h('video', { preload: 'auto', playsInline: true, crossOrigin: 'anonymous' });
       v.addEventListener('seeked', () => this.requestDraw());
@@ -41,7 +55,7 @@ export class Player {
       return v;
     };
     this.vids = [mk(), mk()];
-    this.vids.forEach(v => { v.src = proxyUrl; v.muted = true; v.seg = null; });
+    this.vids.forEach(v => { v.src = proxyUrl; v.muted = true; v.seg = null; v.stacked = false; });
     this.broll = mk();
     this.broll.muted = true;
     // In the document (Chrome won't decode frames for detached elements), but invisible: the canvas shows them.
@@ -63,10 +77,28 @@ export class Player {
     }
     for (const v of this.vids) v.seg = null;
     this.motionLayers = tl.overlays.filter(o => o.type === 'motion').map(o => ({ o, url: this.motionSrc(o), blend: this.motionBlend(o) }));
+    this.windows = cutouts(tl).windows;
     this.t = Math.min(this.t, tl.duration);
     this.layout();
     this.loadOverlay();
     this.requestDraw();
+  }
+
+  /**
+    Play the proxy with the speaker's matte underneath (url), or the plain proxy (null).
+    Both video elements switch, and get put back on their segments on the next frame.
+  */
+  setCutout(url) {
+    if ((url || null) === this.cutoutUrl) return;
+    this.cutoutUrl = url || null;
+    for (const v of this.vids) { v.src = url || this.proxyUrl; v.stacked = !!url; v.seg = null; }
+    this.requestDraw();
+  }
+
+  /** A line over the preview (the cutout being made), or null to hide it. */
+  setBadge(text) {
+    this.badge.hidden = !text;
+    this.badge.textContent = text || '';
   }
 
   /** LUTs for preview: conversion (Apple Log; HDR is already in the proxy) and look. */
@@ -75,10 +107,11 @@ export class Player {
     await Promise.all(want.map(async (key, slot) => {
       if (this.lutKeys[slot] === key) return;
       this.lutKeys[slot] = key;
-      if (!key) { this.gl.setLut(slot, null); return; }
+      if (!key) { this.gl.setLut(slot, null); this.speaker.setLut(slot, null); return; }
       const [id, k] = key.split('@');
       const text = await fetch(`/api/luts/${encodeURIComponent(id)}.cube?k=${k}`).then(r => (r.ok ? r.text() : null)).catch(() => null);
-      if (this.lutKeys[slot] === key) this.gl.setLut(slot, text ? parseCube(text) : null);
+      const cube = text ? parseCube(text) : null;
+      if (this.lutKeys[slot] === key) { this.gl.setLut(slot, cube); this.speaker.setLut(slot, cube); }
     }));
     this.requestDraw();
   }
@@ -96,6 +129,7 @@ export class Player {
       this.el.style.width = `${w}px`;
       this.el.style.height = `${hh}px`;
       this.gl.resize(w, hh);
+      this.speaker.resize(w, hh);
       this.size = { w, h: hh };
       this.loadOverlay();
     }
@@ -216,29 +250,38 @@ export class Player {
       v.volume = isCur ? (prev ? p : 1) : isPrev ? 1 - p : 0;
     }
 
-    // Picture.
-    this.gl.clear();
-    let drew = false;
-    const layer = (seg, alpha, gain) => {
-      if (!seg || seg.card) return;
-      const it = seg.item;
-      const b = this.brollFor(it, t);
-      if (b) { drew = this.gl.draw(b, cover(b, this.tl), { alpha, gain, lut: !!it.shot.broll.grade }) || drew; return; }
-      const v = this.vids.find(x => x.seg === seg);
-      if (!v || v.readyState < 2) return;
-      const fr = shotFraming(it.shot, this.project.settings);
-      const z = zoomAt(fr, t - it.start, it.dur);
-      drew = this.gl.draw(v, cropRect(v.videoWidth, v.videoHeight, this.tl.width, this.tl.height, z, fr.fx, fr.fy), { alpha, gain }) || drew;
+    // Picture: the whole frame, then (over animations behind the speaker) just the speaker.
+    // B-roll has nobody to cut out.
+    const picture = (view, matte) => {
+      let drew = false;
+      const layer = (seg, alpha, gain) => {
+        if (!seg || seg.card) return;
+        const it = seg.item;
+        const b = this.brollFor(it, t);
+        if (b) { if (!matte) drew = view.draw(b, cover(b, this.tl), { alpha, gain, lut: !!it.shot.broll.grade }) || drew; return; }
+        const v = this.vids.find(x => x.seg === seg);
+        if (!v || v.readyState < 2 || (matte && !v.stacked)) return;
+        const fr = shotFraming(it.shot, this.project.settings);
+        const z = zoomAt(fr, t - it.start, it.dur);
+        const vh = v.stacked ? v.videoHeight / 2 : v.videoHeight;
+        drew = view.draw(v, cropRect(v.videoWidth, vh, this.tl.width, this.tl.height, z, fr.fx, fr.fy), { alpha, gain, matte }) || drew;
+      };
+      if (prev) {
+        const type = cur.item.trans.type;
+        if (DIP.has(type)) {
+          if (p < 0.5) layer(prev, 1, 1 - p * 2); else layer(cur, 1, p * 2 - 1);
+        } else {
+          layer(prev, 1, 1);
+          layer(cur, p, 1);
+        }
+      } else layer(cur, 1, 1);
+      return drew;
     };
-    if (prev) {
-      const type = cur.item.trans.type;
-      if (DIP.has(type)) {
-        if (p < 0.5) layer(prev, 1, 1 - p * 2); else layer(cur, 1, p * 2 - 1);
-      } else {
-        layer(prev, 1, 1);
-        layer(cur, p, 1);
-      }
-    } else layer(cur, 1, 1);
+    this.gl.clear();
+    const drew = picture(this.gl, false);
+    const behind = this.cutoutUrl && this.speaker.mattes && this.windows.some(w => t >= w.start && t < w.end);
+    this.speakerCanvas.style.visibility = behind ? 'visible' : 'hidden';
+    if (behind) { this.speaker.clear({ transparent: true }); picture(this.speaker, true); }
     if (drew) this.everDrew = true;
     if (!this.segs.length) { this.msg.textContent = 'Every shot is switched off.'; this.msg.hidden = false; }
     else this.msg.hidden = drew || this.everDrew || act.some(s => s.card);
@@ -262,7 +305,7 @@ export class Player {
         v.addEventListener('seeked', () => this.requestDraw());
         this.motionVids.set(o.id, v);
       }
-      const box = o.props?.top ? this.el : this.motionBox;
+      const box = o.props?.top ? this.el : o.props?.behind ? this.behindBox : this.motionBox;
       if (v.parentElement !== box) { if (o.props?.top) this.el.insertBefore(v, this.msg); else box.append(v); }
       v.classList.toggle('top', !!o.props?.top);
       // Invert masks are drawn in white, so difference shows the picture in negative, as the render does.

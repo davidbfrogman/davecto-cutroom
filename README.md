@@ -40,6 +40,10 @@ gives you the editor link.
 You can also edit by hand: click words to cut or restore them, drag shots, set framing, add
 graphics, B-roll and title cards.
 
+Ask for animations the way you'd brief an editor: *"make this line pop"*, *"count up to 160,000
+and burst"*, *"put STARS huge behind me"*. Claude writes a new animation for the moment, shows
+you frames over your shot, and changes it when you reply with notes.
+
 ## Your brand
 
 Settings → **Brand**: plate, text and accent colours, a titles font and a labels font, your name and
@@ -100,9 +104,17 @@ saving on top of a newer revision gets the new version instead of overwriting it
 
 Text animations, stinger transitions and animated title cards are [HyperFrames](https://hyperframes.heygen.com)
 compositions: HTML and GSAP, rendered to transparent WebM and composited by ffmpeg. Built in:
-**Kinetic title**, **Slam text**, **Invert stat** (the number shows the video in negative) and
-**Stinger wipe**. Claude writes new ones per video or for your library. Each takes variables (the
-text, a label, a position), so one animation serves many shots, and each picks up your brand.
+**Kinetic title**, **Slam text**, **Pop words**, **Invert stat** (the number shows the video in
+negative) and **Stinger wipe**. Claude writes new ones per video or for your library
+(`skills/cutroom/animations.md` is its recipe book), timed to your words. Each takes variables
+(the text, a label, a position), so one animation serves many shots, and each picks up your brand.
+
+**Behind the speaker.** Any animation on a shot can sit behind you: the editor's **Sits: Behind the
+speaker**, or tell Claude. Cutroom cuts you out of the shot with Apple's Vision person
+segmentation (on your Mac) and lays you back over the animation, so text and shapes slide behind
+you, in front of the background. Titles and captions stay on top. The preview makes its cutout
+once per video (about 40 seconds per minute of footage on an M-series Mac); the render makes a
+finer one for each shot that needs it.
 
 ## Looks (colour)
 
@@ -119,6 +131,7 @@ Conversions, applied before the look: **Apple Log → Rec.709** (Settings → So
 | Transcription with word timestamps | faster-whisper (or openai-whisper: `node setup.mjs --with-whisper`) |
 | YouTube sources and B-roll | yt-dlp |
 | Titles, lower thirds, captions | `graphics/overlay.html` in headless Chromium (Playwright) |
+| Cutouts (the speaker in front of an animation) | Apple Vision person segmentation (`swift/matte.swift`, built with the Command Line Tools) |
 | Animations and stinger transitions | HyperFrames 0.8.80 (`lib/motion.mjs`) |
 | Claude Code | `mcp.mjs` (MCP over stdio) and `lib/collab.mjs` (notes, live edits, wait-for-notes) |
 
@@ -139,7 +152,8 @@ shared/               pure modules, used by Node and the browser
   timeline.mjs          storyboard → frame-exact timeline
   brand.mjs             the user's colours and fonts → CSS for graphics and animations
   framing.mjs, text.mjs, ops.mjs
-lib/                  Node only: ingest, render, motion, collab, luts, media, deps, paths, …
+lib/                  Node only: ingest, render, motion, cutout, collab, luts, media, deps, paths, …
+swift/matte.swift     the speaker matte (Apple Vision), compiled on first use
 py/transcribe.py      Whisper → words and loudness envelope
 graphics/             the overlay page drawn into the video
 ui/                   the editor
@@ -168,3 +182,5 @@ node cli.mjs render <id> --preview
 - 4K 10-bit HEVC decodes slowly: a 30-second 4K take renders in about 75 seconds on an M2.
   Quick draft (540p) is much faster for checking.
 - No face tracking: framing uses one focus point per project, overridable per shot.
+- Cutouts find people, not objects: a guitar or a mug in your hand may go behind the animation,
+  and busy cushions or a second person nearby can get picked up. They need macOS 12 or newer.

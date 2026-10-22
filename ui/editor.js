@@ -17,7 +17,7 @@
 import { h, clear, debounce, toast, menu, uid } from './dom.js';
 import { api, follow, frameUrl } from './api.js';
 import { Player } from './player.js';
-import { buildTimeline, clock, keptWords } from '/shared/timeline.mjs';
+import { buildTimeline, clock, cutouts, keptWords } from '/shared/timeline.mjs';
 import { shotFraming, cropRect } from '/shared/framing.mjs';
 import { diffShots } from '/shared/ops.mjs';
 import { joinWords } from '/shared/text.mjs';
@@ -43,8 +43,9 @@ const CLAUDE_STATE = {
   listening: ['Claude is listening', 'Claude Code is waiting for your notes.'],
   working: ['Claude is working', 'Claude Code is working on your notes.'],
   idle: ['Claude connected', 'Claude Code was here a moment ago. Ask it to wait for notes.'],
-  away: ['Claude not connected', 'In Claude Code, ask: "work on my Cutroom video". It will wait for the notes you send.'],
+  away: ['Claude not connected', 'No Claude Code session is waiting for notes. In Claude Code (with the Cutroom plugin installed), ask: "work on my Cutroom video". Your notes are saved meanwhile.'],
 };
+const OFFLINE = ['Cutroom server stopped', "The editor can't reach the Cutroom server, so changes and notes aren't being saved. Start it again (npm run dev, or ask Claude to open your Cutroom video); the editor reconnects by itself and catches up."];
 const FIELDS = { headline: ['text'], lowerThird: ['text', 'sub'], chapter: ['eyebrow', 'text'], stat: ['text', 'sub'], keyword: ['text'], quote: ['text', 'sub'], cta: ['text', 'sub', 'keyword'] };
 const FIELD_LABEL = { text: 'Text', sub: 'Second line', eyebrow: 'Eyebrow', keyword: 'Keyword' };
 const MODELS = [['small.en', 'Small (English, fast)'], ['medium.en', 'Medium (English)'], ['large-v3-turbo', 'Large v3 Turbo (best)'], ['small', 'Small (any language)'], ['large-v3', 'Large v3 (any language, slow)']];
@@ -127,8 +128,9 @@ export async function mountEditor(root, id) {
       if (r.status === 409) { adopt(r.project, 'Claude changed the edit while you were working; your last change was not saved.'); return; }
       if (!r.ok) throw new Error(r.error || 'Save failed');
       S.rev = r.rev;
+      S.unsaved = false;
       saveEl.textContent = 'Saved';
-    } catch (e) { saveEl.textContent = 'Not saved'; toast(e.message); }
+    } catch (e) { S.unsaved = true; saveEl.textContent = 'Not saved'; toast(e.message, 6000); }
   };
   const save = debounce(saveNow, 600);
   saveEl.textContent = 'Saved';
@@ -156,29 +158,45 @@ export async function mountEditor(root, id) {
   }
 
   // Live updates from the server: Claude's edits, notes, and whether Claude is listening.
+  // If the server goes away, say so; when it's back (EventSource reconnects by itself), catch up
+  // on what changed meanwhile and retry a save that didn't make it.
   const events = new EventSource(`/api/projects/${id}/events`);
+  events.onerror = () => { if (root.isConnected && events.readyState !== EventSource.OPEN && !S.offline) { S.offline = true; showClaude(S.claude); } };
   events.onmessage = async ev => {
     if (!root.isConnected) { events.close(); return; }
     const e = JSON.parse(ev.data);
+    if (e.type === 'hello' && S.offline) {
+      S.offline = false;
+      if (S.unsaved) await saveNow();
+      const { project } = await api.project(id).catch(() => ({}));
+      if (project && (project.rev || 0) > S.rev) adopt(project, 'Back online. The edit changed while the server was away.');
+      else if (project) showThreads(project.threads || []);
+      toast('Reconnected to the Cutroom server.', 2500);
+    }
     if (e.claude || e.type === 'claude') showClaude(e.claude || e);
     if (e.type === 'changed' && e.by !== S.client && e.rev > S.rev) {
       if (save.pending()) await save.flush();     // a local edit in flight: its save gets the 409 and adopts
       const { project } = await api.project(id);
       if ((project.rev || 0) > S.rev) adopt(project, e.by === 'claude' ? null : 'The edit changed in another window.');
     }
-    if (e.type === 'threads') {
-      S.project.threads = e.threads;
-      renderStoryboard();
-      // Don't wipe a note you're halfway through typing.
-      if (!inspEl.contains(document.activeElement) || document.activeElement.tagName !== 'TEXTAREA' || !document.activeElement.value) renderInspector();
-      else renderThreadsInPlace();
-    }
+    if (e.type === 'threads') showThreads(e.threads);
   };
+
+  /** New note threads (from the server, or straight from a note you just saved). */
+  function showThreads(threads) {
+    S.project.threads = threads;
+    renderStoryboard();
+    // Don't wipe a note you're halfway through typing.
+    if (!inspEl.contains(document.activeElement) || document.activeElement.tagName !== 'TEXTAREA' || !document.activeElement.value) renderInspector();
+    else renderThreadsInPlace();
+  }
+  /** Show a thread the server just saved, without waiting for the live update. */
+  const upsertThread = t => showThreads([...(S.project.threads || []).filter(x => x.id !== t.id), t].sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt))));
 
   function showClaude(c) {
     S.claude = c;
-    const [label, tip] = CLAUDE_STATE[c.state] || CLAUDE_STATE.away;
-    claudeEl.className = `claude ${c.state}`;
+    const [label, tip] = S.offline ? OFFLINE : CLAUDE_STATE[c.state] || CLAUDE_STATE.away;
+    claudeEl.className = `claude ${S.offline ? 'offline' : c.state}`;
     claudeEl.title = tip;
     claudeEl.textContent = label;
     const drafts = (S.project.threads || []).filter(t => t.status === 'draft').length;
@@ -190,8 +208,11 @@ export async function mountEditor(root, id) {
   async function sendToClaude() {
     try {
       const r = await api.sendNotes(id);
-      toast(['listening', 'working'].includes(S.claude.state) ? `Sent ${r.sent} note${r.sent === 1 ? '' : 's'} to Claude.` : `Sent ${r.sent} note${r.sent === 1 ? '' : 's'}. Claude picks them up when it next waits for notes.`, 3500);
-    } catch (e) { toast(e.message); }
+      const n = plural(r.sent, 'note');
+      toast(['listening', 'working'].includes(r.claude?.state || S.claude.state) ? `Sent ${n} to Claude.`
+        : `Sent ${n}. No Claude Code session is listening yet: in Claude Code, ask "work on my Cutroom video" and it picks them up.`, 6000);
+      api.project(id).then(x => showThreads(x.project.threads || [])).catch(() => {});
+    } catch (e) { toast(e.message, 6000); }
   }
 
   /* Animations: render (cached on the server) the first time the preview needs one. */
@@ -223,6 +244,38 @@ export async function mountEditor(root, id) {
     }
   }
 
+  /*
+    Cutouts: an animation behind the speaker needs the proxy with the speaker's matte under it.
+    The server makes it once per project (under a minute per minute of video); until then the
+    animation previews in front.
+  */
+  function syncCutout() {
+    if (!cutouts(S.tl).windows.length) { S.player.setCutout(null); return; }
+    if (S.cutout?.url) { S.player.setCutout(S.cutout.url); return; }
+    if (S.cutout) return;               // being made, or failed (shown once; try again after a reload)
+    S.cutout = {};
+    const step = async start => {
+      if (!root.isConnected) return;
+      try {
+        const c = await api.cutout(id, start);
+        if (c.state === 'ready') {
+          S.cutout = { url: c.url };
+          S.player.setBadge(null);
+          if (cutouts(S.tl).windows.length) S.player.setCutout(c.url);
+          return;
+        }
+        if (c.state === 'error') throw new Error(c.error);
+        S.player.setBadge(`Cutting out the speaker for the preview… ${Math.round(c.progress * 100)}%`);
+        setTimeout(() => step(false), 1000);
+      } catch (e) {
+        S.cutout = { error: e.message };
+        S.player.setBadge(null);
+        toast(`Couldn't cut out the speaker: ${e.message}`, 8000);
+      }
+    };
+    step(true);
+  }
+
   function refresh() {
     S.tl = buildTimeline(S.project, S.analysis);
     durEl.textContent = `${clock(S.project.source.duration)} → ${clock(S.tl.duration)}`;
@@ -234,6 +287,7 @@ export async function mountEditor(root, id) {
     S.player.motionSrc = motionUrl;
     S.player.motionBlend = o => S.motionCache.get(motionKey(o))?.blend;
     S.player.setTimeline(S.tl, S.project);
+    syncCutout();
     const s = S.project.settings;
     S.player.setLuts(S.project.source.hdr ? null : (s.inputLut && !['auto', 'none'].includes(s.inputLut) ? s.inputLut : null), s.lut?.id, s.lut?.intensity ?? 1);
   }
@@ -365,7 +419,7 @@ export async function mountEditor(root, id) {
     const chips = h('div.chips');
     for (const o of shot.overlays || []) {
       const label = o.type === 'motion' ? o.vars?.text || o.vars?.label || motionByName(o.name)?.title || o.name : o.text;
-      chips.append(h('button.chip', { onclick: e => { e.stopPropagation(); select(shot.id); } }, h('b', GNAME[o.type] || o.type), label ? ` ${String(label).slice(0, 28)}` : ''));
+      chips.append(h('button.chip', { onclick: e => { e.stopPropagation(); select(shot.id); } }, h('b', GNAME[o.type] || o.type), label ? ` ${String(label).slice(0, 28)}` : '', o.behind ? ' · behind' : ''));
     }
     if (shot.broll?.file) chips.append(h('span.chip', h('b', 'B-roll'), ` ${shot.broll.file.split('/').pop().slice(0, 24)}`));
     if (shot.transition?.stinger) chips.prepend(h('span.chip', h('b', 'Stinger'), ` ${shot.transition.stinger.name}`));
@@ -541,39 +595,52 @@ export async function mountEditor(root, id) {
   }
 
   /* ---------- notes for Claude ---------- */
+  /*
+    One box at a time, so it's clear what you're writing: a thread's reply box shows when Claude
+    has asked you something (or you press Reply), and the new-note box sits behind "New note"
+    once the shot already has notes.
+  */
   function threadEl(t) {
-    const reply = h('textarea', { rows: 2, placeholder: t.status === 'question' ? 'Answer Claude…' : 'Add to this note…' });
+    const asked = t.status === 'question';
+    const reply = h('textarea', { rows: 2, placeholder: asked ? 'Answer Claude…' : t.status === 'done' ? 'Follow up on this note (it goes back to Claude)…' : 'Add to this note…' });
     const send = async () => {
       if (!reply.value.trim()) return;
-      try { await api.reply(id, t.id, { text: reply.value.trim() }); reply.value = ''; } catch (e) { toast(e.message); }
+      try { const r = await api.reply(id, t.id, { text: reply.value.trim() }); reply.value = ''; upsertThread(r.thread); } catch (e) { toast(e.message, 6000); }
     };
     reply.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); } });
+    const busy = t.status === 'working' || t.status === 'sent';
+    const box = h('div.reply', { hidden: !asked }, reply, h('button.btn.sm', { onclick: send }, asked ? 'Answer' : 'Reply'));
+    const open = () => { box.hidden = false; replyBtn.remove(); reply.focus(); };
+    const replyBtn = busy || asked ? null : h('button.link', { onclick: open }, 'Reply');
     return h('div.thread', { class: t.status },
       t.messages.map(m => h('div.msg', { class: m.from }, h('span.who', m.from === 'claude' ? 'Claude' : 'You'), h('div.say', m.text),
         m.changes?.length ? h('ul.changes', m.changes.map(c => h('li', c))) : null)),
-      h('div.row', h('span.meta.grow', NOTE_STATUS[t.status] || t.status),
-        t.status !== 'done' ? h('button.link', { onclick: () => api.setThread(id, t.id, { status: 'done' }).catch(e => toast(e.message)) }, 'Mark done') : null,
-        h('button.link.danger', { onclick: () => api.deleteThread(id, t.id).catch(e => toast(e.message)) }, 'Delete')),
-      t.status === 'working' || t.status === 'sent' ? null : h('div.reply', reply, h('button.btn.sm', { onclick: send }, 'Add')));
+      h('div.row', h('span.meta.grow', NOTE_STATUS[t.status] || t.status), replyBtn,
+        t.status !== 'done' ? h('button.link', { onclick: () => api.setThread(id, t.id, { status: 'done' }).then(r => upsertThread(r.thread), e => toast(e.message, 6000)) }, 'Mark done') : null,
+        h('button.link.danger', { onclick: () => api.deleteThread(id, t.id).then(() => showThreads((S.project.threads || []).filter(x => x.id !== t.id)), e => toast(e.message, 6000)) }, 'Delete')),
+      busy ? null : box);
   }
 
   function notesGroup(shotId) {
     const list = h('div.threads');
+    const mine = () => (S.project.threads || []).filter(t => (t.shot || null) === shotId);
     const fill = () => {
       clear(list);
-      const ts = (S.project.threads || []).filter(t => (t.shot || null) === shotId);
-      for (const t of ts) list.append(threadEl(t));
+      for (const t of mine()) list.append(threadEl(t));
     };
     fill();
     const box = h('textarea', { rows: 3, placeholder: shotId ? 'Tell Claude what you want here: an animation, a cut, a title, a different framing…' : 'A note about the whole video…' });
     const add = async () => {
       if (!box.value.trim()) return;
-      try { await api.addNote(id, { shot: shotId, text: box.value.trim() }); box.value = ''; } catch (e) { toast(e.message); }
+      try { const r = await api.addNote(id, { shot: shotId, text: box.value.trim() }); box.value = ''; upsertThread(r.thread); } catch (e) { toast(e.message, 6000); }
     };
     box.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); add(); } });
     S.notesFill = fill;
-    return h('div.grp.notes', h('div.row', h('span.label.grow', shotId ? 'Notes for Claude' : 'Notes for Claude: whole video')),
-      list, box, h('div.row', h('button.btn.sm', { onclick: add }, 'Add note'), h('span.meta', '⌘↩ adds it. Send to Claude (top right) when you’re ready.')));
+    const composer = h('div.composer', { hidden: mine().length > 0 }, h('span.label', 'New note'), box,
+      h('div.row', h('button.btn.sm', { onclick: add }, 'Add note'), h('span.meta', '⌘↩ adds it. Send to Claude (top right) when you’re ready.')));
+    const newBtn = h('button.btn.sm', { hidden: !composer.hidden, onclick: () => { composer.hidden = false; newBtn.hidden = true; box.focus(); } }, 'New note');
+    return h('div.grp.notes', h('div.row', h('span.label.grow', shotId ? 'Notes for Claude' : 'Notes for Claude: whole video'), newBtn),
+      list, composer);
   }
   function renderThreadsInPlace() { S.notesFill?.(); showClaude(S.claude); }
 
@@ -659,6 +726,7 @@ export async function mountEditor(root, id) {
       const isMotion = o.type === 'motion';
       const fields = isMotion
         ? [h('div.field', h('span.label', 'Animation'), motionSelect(o, ['text', 'card'], v => { o.name = v; o.vars = varDefaults(v); delete o.dur; })), ...varFields(o),
+           h('div.field', h('span.label', 'Sits'), seg([['front', 'In front'], ['behind', 'Behind the speaker']], o.behind ? 'behind' : 'front', v => commit(() => { if (v === 'behind') o.behind = true; else delete o.behind; }))),
            h('p.meta', motionByName(o.name)?.description || `No animation called “${o.name}”.`)]
         : (FIELDS[o.type] || ['text']).map(k => h('div.field', h('span.label', FIELD_LABEL[k]),
           h(k === 'text' && ['headline', 'quote'].includes(o.type) ? 'textarea' : 'input', { type: 'text', value: o[k] || '', onchange: e => commit(() => { o[k] = e.target.value; }) })));

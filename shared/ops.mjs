@@ -12,7 +12,7 @@
     { op: 'split', shot, at | phrase }                          new shot starts at that word
     { op: 'merge', shot }                                       join with the next shot
     { op: 'move', shot, before | after }                        reorder (takes the target's section)
-    { op: 'overlay_add', shot, overlay: { type, text, sub, eyebrow, keyword, at, dur, phrase, name, vars } }
+    { op: 'overlay_add', shot, overlay: { type, text, sub, eyebrow, keyword, at, dur, phrase, name, vars, behind } }
     { op: 'overlay_update', id, set }
     { op: 'overlay_remove', id }
     { op: 'card_add', before | after, card: { title, sub, eyebrow, dur, motion?: { name, vars } } }
@@ -25,7 +25,7 @@ import { withDefaults } from './plan.mjs';
 
 const OVERLAY_TYPES = new Set(['headline', 'lowerThird', 'chapter', 'stat', 'keyword', 'quote', 'cta', 'motion']);
 const SHOT_KEYS = new Set(['enabled', 'zoom', 'fx', 'fy', 'motion', 'transition', 'broll', 'card', 'section']);
-const OVERLAY_KEYS = new Set(['text', 'sub', 'eyebrow', 'keyword', 'at', 'dur', 'word', 'enabled', 'name', 'vars', 'type']);
+const OVERLAY_KEYS = new Set(['text', 'sub', 'eyebrow', 'keyword', 'at', 'dur', 'word', 'enabled', 'name', 'vars', 'type', 'behind']);
 
 const rid = p => `${p}${Math.random().toString(36).slice(2, 8)}`;
 
@@ -134,6 +134,7 @@ export function applyOps(project, ops, words) {
           const o = { id: rid('o'), at: 0.2, dur: 3, ...op.overlay };
           if (!OVERLAY_TYPES.has(o.type)) throw new OpError(`Unknown overlay type "${o.type}"`);
           if (o.type === 'motion' && !o.name) throw new OpError('A motion overlay needs the animation name');
+          if (o.behind && o.type !== 'motion') throw new OpError('Only animations (type "motion") can sit behind the speaker');
           if (o.phrase) { o.word = findPhrase(s, words, o.phrase)[0]; delete o.phrase; }
           (s.overlays = s.overlays || []).push(o);
           changed.add(s.id);
@@ -146,6 +147,7 @@ export function applyOps(project, ops, words) {
             if (!OVERLAY_KEYS.has(k)) throw new OpError(`Can't set "${k}" on an overlay`);
             if (v === null) delete o[k]; else o[k] = v;
           }
+          if (o.behind && o.type !== 'motion') throw new OpError('Only animations (type "motion") can sit behind the speaker');
           if (o.type === 'motion') delete o.render;
           changed.add(s.id);
           break;

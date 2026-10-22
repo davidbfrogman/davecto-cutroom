@@ -20,6 +20,8 @@ import { mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { CUTROOM, HOME } from './lib/paths.mjs';
+import { buildTimeline } from './shared/timeline.mjs';
+import { findPhrase } from './shared/ops.mjs';
 
 const PORT = Number(process.env.CUTROOM_PORT || 4100);
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -95,9 +97,10 @@ const text = t => ({ type: 'text', text: t });
 
 /**
   Frames from a video at the given times, side by side. For a transparent
-  animation (alpha), each frame is laid over `bg` (an image file) or a neutral grey.
+  animation (alpha), each frame is laid over `bg` (an image file) or a neutral grey,
+  and under `fg` (a cut-out of the speaker, for animations that sit behind them).
 */
-async function strip(file, times, { width = 300, alpha = false, bg = null, size = null } = {}) {
+async function strip(file, times, { width = 300, alpha = false, bg = null, fg = null, size = null } = {}) {
   const ins = [], f = [];
   const N = times.length;
   for (const t of times) {
@@ -108,9 +111,10 @@ async function strip(file, times, { width = 300, alpha = false, bg = null, size 
     const h = size ? Math.round((width * size.height) / size.width / 2) * 2 : Math.round((width * 16) / 9 / 2) * 2;
     if (bg) { ins.push('-i', bg); f.push(`[${N}:v]scale=${width}:${h},setsar=1,split=${N}${times.map((_, k) => `[b${k}]`).join('')}`); }
     else f.push(`color=c=0x7a7366:s=${width}x${h}:d=1,split=${N}${times.map((_, k) => `[b${k}]`).join('')}`);
+    if (fg) { ins.push('-i', fg); f.push(`[${N + (bg ? 1 : 0)}:v]scale=${width}:${h},setsar=1,format=rgba,split=${N}${times.map((_, k) => `[g${k}]`).join('')}`); }
   }
   times.forEach((t, k) => {
-    if (alpha) f.push(`[${k}:v]trim=start=${t},setpts=PTS-STARTPTS,scale=${width}:-2,setsar=1,format=rgba[f${k}]`, `[b${k}][f${k}]overlay=format=auto:shortest=1[o${k}]`);
+    if (alpha) f.push(`[${k}:v]trim=start=${t},setpts=PTS-STARTPTS,scale=${width}:-2,setsar=1,format=rgba[f${k}]`, `[b${k}][f${k}]overlay=format=auto:shortest=1${fg ? `[p${k}];[p${k}][g${k}]overlay=format=auto` : ''}[o${k}]`);
     else f.push(`[${k}:v]scale=${width}:-2,setsar=1[o${k}]`);
   });
   f.push(N > 1 ? `${times.map((_, k) => `[o${k}]`).join('')}hstack=inputs=${N}[out]` : '[o0]null[out]');
@@ -165,7 +169,7 @@ const OPS_DOC = `Ops (applied in order, all or nothing):
 {op:"cut", shot, phrase:"by the way"}  or {op:"cut", shot, from, to}; add restore:true to bring words back
 {op:"split", shot, phrase} / {op:"split", shot, at}   {op:"merge", shot}   {op:"move", shot, before|after}
 {op:"overlay_add", shot, overlay:{type:"headline"|"lowerThird"|"chapter"|"stat"|"keyword"|"quote"|"cta", text, sub, eyebrow, keyword, at (s into shot), dur (s or "shot"), phrase (start on this phrase)}}
-{op:"overlay_add", shot, overlay:{type:"motion", name, vars:{...}, at, dur (use the duration render_motion reports), phrase}}
+{op:"overlay_add", shot, overlay:{type:"motion", name, vars:{...}, at, dur (use the duration render_motion reports), phrase, behind}}  behind:true puts the animation behind the speaker (they're cut out and laid over it)
 {op:"overlay_update", id, set:{...}}   {op:"overlay_remove", id}
 {op:"card_add", before|after, card:{eyebrow, title, sub, dur, motion?:{name, vars}}}
 {op:"section", id, title}`;
@@ -316,36 +320,63 @@ const TOOLS = [
   },
   {
     name: 'new_motion',
-    description: 'Create a new animation (a HyperFrames composition) to write by hand: copies the blank template, or an existing animation with `from`. Returns the folder. Then edit its index.html with your file tools (read the Animations part of Cutroom\'s CLAUDE.md first), and check it with render_motion.',
+    description: 'Create a new animation (a HyperFrames composition: HTML, CSS and a GSAP timeline) to write yourself: copies the blank template, or an existing animation with `from`. Returns the folder. Then write its index.html with your file tools (the Animations part of the cutroom skill, and its animations.md cookbook), and check it with render_motion. Make one whenever the user asks for something animated that the built-ins don\'t nail.',
     inputSchema: { type: 'object', required: ['project', 'name'], properties: { project: { type: 'string' }, name: { type: 'string', description: 'lowercase-with-dashes' }, from: { type: 'string', description: 'Existing animation to copy' }, scope: { type: 'string', enum: ['project', 'library'], description: 'library = reusable in every video (saved in ~/Movies/Cutroom/motion)' } } },
     run: async a => {
       const { motion } = await http('POST', `/api/projects/${a.project}/motions`, { name: a.name, from: a.from, scope: a.scope });
-      return [text(`Created ${motion.name} at ${motion.path}/index.html (${motion.scope}). Edit that file, then render_motion to check it.\n\nRules: transparent background; size comes from Cutroom (lay out with %, vw/vh or var(--cr-w)/var(--cr-h)); inputs as data-composition-variables; one paused GSAP timeline on window.__timelines["root"]; meta cutroom:kind (text | transition | card) and cutroom:cut for transitions; colours and fonts only from the user's brand: var(--cr-plate), var(--cr-text), var(--cr-accent) (at most twice per frame), var(--cr-display), var(--cr-body), never hard-coded; no bounce or elastic eases.`)];
+      return [text(`Created ${motion.name} at ${motion.path}/index.html (${motion.scope}). Write it, then render_motion to see it.\n\nWhat makes it render: transparent background; size comes from Cutroom (lay out with %, vw/vh or var(--cr-w)/var(--cr-h)); one paused GSAP timeline on window.__timelines["root"] whose length is the animation's length; deterministic (seeded random, never Math.random or Date.now); meta cutroom:kind (text | transition | card), and cutroom:cut for transitions. Start from the brand (var(--cr-plate), --cr-text, --cr-accent, --cr-display, --cr-body) unless the user asks for other colours. Style is open: overshoot, elastic, 3D, SVG, particles, emoji are all fine when the moment calls for them. Use timing to land beats on the words.`)];
     },
   },
   {
     name: 'render_motion',
-    description: 'Render an animation (HyperFrames) for this project\'s format with the given variables, and see it: returns lint findings, its duration, and frames over the shot (or a neutral background). Cached; the final render reuses it.',
-    inputSchema: { type: 'object', required: ['project', 'name'], properties: { project: { type: 'string' }, name: { type: 'string' }, vars: { type: 'object' }, shot: { type: 'string', description: 'Shot to preview it over' }, frames: { type: 'number', description: 'How many frames to show (default 5)' } } },
+    description: 'Render an animation (HyperFrames) for this project\'s format with the given variables, and see it: returns lint findings, its duration, and frames over the shot (or a neutral background). behind:true shows it behind the speaker (cut out and laid on top), as overlay behind:true renders. Cached; the final render reuses it.',
+    inputSchema: { type: 'object', required: ['project', 'name'], properties: { project: { type: 'string' }, name: { type: 'string' }, vars: { type: 'object' }, shot: { type: 'string', description: 'Shot to preview it over' }, behind: { type: 'boolean', description: 'Show the speaker in front of it' }, frames: { type: 'number', description: 'How many frames to show (default 5)' } } },
     run: async a => {
       const lint = await http('POST', `/api/projects/${a.project}/motions/lint`, { name: a.name }, { timeout: 300000 }).catch(e => ({ report: e.message }));
       const r = await http('POST', `/api/projects/${a.project}/motions/render`, { name: a.name, vars: a.vars || {} }, { timeout: 600000 });
       const n = Math.max(2, Math.min(8, a.frames || 5));
       const times = Array.from({ length: n }, (_, k) => Math.min(r.duration - 0.04, ((k + 0.5) / n) * r.duration));
-      let bg = null;
+      let bg = null, fg = null;
       if (a.shot) {
         const [{ project: p }, an] = await Promise.all([http('GET', `/api/projects/${a.project}`), http('GET', `/api/projects/${a.project}/analysis`)]);
         const s = p.storyboard.shots.find(x => x.id === a.shot);
         if (s?.kind === 'talk') {
-          const buf = await http('GET', `/api/projects/${a.project}/frame?${new URLSearchParams({ t: String(an.words[s.w0].start + 0.4), w: '540', z: s.zoom || 1 })}`);
-          bg = join(HOME, 'cache', `bg-${process.pid}.jpg`);
+          const q = { t: String(an.words[s.w0].start + 0.4), w: '540', z: s.zoom || 1, ...(s.fx != null ? { fx: s.fx } : {}), ...(s.fy != null ? { fy: s.fy } : {}) };
           mkdirSync(join(HOME, 'cache'), { recursive: true });
-          writeFileSync(bg, buf);
+          bg = join(HOME, 'cache', `bg-${process.pid}.jpg`);
+          writeFileSync(bg, await http('GET', `/api/projects/${a.project}/frame?${new URLSearchParams(q)}`));
+          if (a.behind) {
+            fg = join(HOME, 'cache', `fg-${process.pid}.png`);
+            writeFileSync(fg, await http('GET', `/api/projects/${a.project}/frame?${new URLSearchParams({ ...q, cutout: '1' })}`, null, { timeout: 300000 }));
+          }
         }
       }
-      const pic = await strip(r.file, times, { width: 240, alpha: true, bg, size: { width: r.width, height: r.height } });
+      const pic = await strip(r.file, times, { width: 240, alpha: true, bg, fg, size: { width: r.width, height: r.height } });
       const report = (lint.report || '').split('\n').filter(l => /error|⚠|✖|warning/i.test(l)).slice(0, 12).join('\n');
       return [img(pic), text(`${a.name}: ${r.duration.toFixed(2)}s at ${times.map(t => t.toFixed(2)).join(', ')}s. Use dur ${r.duration.toFixed(2)} when placing it.\nLint: ${report || 'clean'}`)];
+    },
+  },
+  {
+    name: 'timing',
+    description: 'When each word of a shot is said, in seconds from where an animation placed on it would start (pinned with phrase, or at seconds into the shot, as in overlay_add). Use it to land an animation\'s beats on the words it echoes.',
+    inputSchema: { type: 'object', required: ['project', 'shot'], properties: { project: { type: 'string' }, shot: { type: 'string' }, phrase: { type: 'string', description: 'Start on this phrase (as overlay_add phrase)' }, at: { type: 'number', description: 'Or start this many seconds into the shot' } } },
+    run: async a => {
+      const [{ project: p }, an] = await Promise.all([http('GET', `/api/projects/${a.project}`), http('GET', `/api/projects/${a.project}/analysis`)]);
+      const tl = buildTimeline(p, an);
+      const it = tl.items.find(i => i.id === a.shot);
+      if (!it) throw new Error(`Shot ${a.shot} isn't in the edit (no such shot, or it's switched off)`);
+      // The same start the timeline gives an overlay: 0.2s before its phrase, or `at` into the shot.
+      let start = it.start + (Number(a.at) || 0);
+      if (a.phrase) {
+        const i = findPhrase(it.shot, an.words, a.phrase)[0];
+        const w = tl.words.find(x => x.i === i);
+        if (!w) throw new Error(`"${a.phrase}" is cut from shot ${a.shot}`);
+        start = w.t0 - 0.2;
+      }
+      start = Math.max(it.start, start);
+      const rows = tl.words.filter(w => w.item === it.id && w.t1 > start).map(w => `  ${(Math.max(0, w.t0 - start)).toFixed(2).padStart(5)}  ${w.text}`);
+      const end = it.start + it.dur - start;
+      return [text(`Shot ${it.id} plays ${clock(it.start)}–${clock(it.start + it.dur)} in the edit. An animation starting ${a.phrase ? `on "${a.phrase}"` : `${Number(a.at) || 0}s into the shot`} begins at ${clock(start)}.\nSeconds from its start, word:\n${rows.join('\n') || '  (no words after that point)'}\nThe shot ends at ${end.toFixed(2)}s; an animation can run on into the next shot.`)];
     },
   },
   {
@@ -378,7 +409,7 @@ const TOOLS = [
 /* ---------- JSON-RPC over stdio ---------- */
 
 const send = msg => process.stdout.write(JSON.stringify(msg) + '\n');
-const INSTRUCTIONS = `Cutroom is the user's local video editor (installed at ${CUTROOM}). Read ${join(CUTROOM, 'skills', 'cutroom', 'SKILL.md')} before editing (the notes loop, the user's brand, animation rules). If status says setup is incomplete, call setup first. Typical session: status → (open_video) → give the user the editor URL → wait_for_notes → for each note: storyboard/frame, edit or new_motion+render_motion, render+look to check, reply → wait_for_notes again. Never stop the loop on a timeout unless the user says so.`;
+const INSTRUCTIONS = `Cutroom is the user's local video editor (installed at ${CUTROOM}). Read ${join(CUTROOM, 'skills', 'cutroom', 'SKILL.md')} before editing (the notes loop, the user's brand, animation rules). If status says setup is incomplete, call setup first. Typical session: status → (open_video) → give the user the editor URL → wait_for_notes → for each note: storyboard/frame, edit, or for anything animated write one (new_motion, timing, render_motion), render+look to check, reply → wait_for_notes again. Never stop the loop on a timeout unless the user says so.`;
 
 async function handle(msg) {
   const { id, method, params } = msg;

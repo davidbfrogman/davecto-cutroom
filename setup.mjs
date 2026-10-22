@@ -17,6 +17,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CUTROOM, DATA, HOME, VENV, ensureDirs } from './lib/paths.mjs';
 import { depsReport, hyperframes, playwright, playwrightDir } from './lib/deps.mjs';
+import { matteTool, matteToolPath } from './lib/cutout.mjs';
 
 const args = process.argv.slice(2);
 const flag = f => args.includes(f);
@@ -103,6 +104,16 @@ if (deps.hyperframes) {
     const [cmd, a] = hyperframes(['browser', 'path']);
     if (sh(cmd, a, { quiet: true }).status === 0) ok('HyperFrames browser (animations)'); else { bad('HyperFrames browser not downloaded'); failed = true; }
   }
+}
+
+// Cutouts (animations behind the speaker): Apple Vision, built with the Command Line Tools' swiftc.
+// Optional: everything else works without it.
+if (existsSync(matteToolPath())) ok('Cutouts (Apple Vision)');
+else if (CHECK) bad('Cutouts tool not built yet (optional; built on first use)');
+else {
+  step('building the cutout tool (Apple Vision)');
+  try { await matteTool(); ok('Cutouts (Apple Vision)'); }
+  catch (e) { bad(`Cutouts unavailable (optional): ${e.message.split('\n')[0]}`); }
 }
 
 ensureDirs();

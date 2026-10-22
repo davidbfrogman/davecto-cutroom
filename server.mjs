@@ -22,7 +22,7 @@ import { startIngest } from './lib/ingest.mjs';
 import { startRender } from './lib/render.mjs';
 import { getJob, projectJob, startJob } from './lib/jobs.mjs';
 import { listLuts, lutFile, inputLutId } from './lib/luts.mjs';
-import { frameAt, probe } from './lib/media.mjs';
+import { esc, frameAt, probe } from './lib/media.mjs';
 import { download, isUrl } from './lib/ytdlp.mjs';
 import { run } from './lib/proc.mjs';
 import { depsReport, playwright } from './lib/deps.mjs';
@@ -30,6 +30,7 @@ import { safeJoin, sendFile, serveMounted } from './lib/static.mjs';
 import { plan, withDefaults } from './shared/plan.mjs';
 import { addMessage, addThread, applyClaudeOps, bus, claudeState, commitEdit, deleteThread, sendNotes, setThread, touchClaude, waitForNotes } from './lib/collab.mjs';
 import { createMotion, lintMotion, listMotions, renderMotion } from './lib/motion.mjs';
+import { matteKey, previewCutout, startPreviewCutout, stillCutout } from './lib/cutout.mjs';
 import { cropRectEven } from './shared/framing.mjs';
 import { outputSize } from './shared/timeline.mjs';
 import { BUNDLED_FONTS, USER_FONT_RE, fontLabel, pickBrand, resolveBrand } from './shared/brand.mjs';
@@ -147,9 +148,18 @@ async function frame(req, res, id, q) {
   // HDR is already mapped to SDR in the proxy; a manual conversion (Apple Log) isn't.
   const conv = p.source?.hdr ? null : inputLutId(p.source, p.settings);
   const luts = [conv ? lutFile(conv) : null, lut && lut !== 'none' ? lutFile(lut, k) : null].filter(Boolean);
-  const key = createHash('sha1').update(JSON.stringify([t.toFixed(2), width, crop, luts, statSync(proxy).mtimeMs])).digest('hex').slice(0, 16);
-  const out = join(projectDir(id), 'cache', 'thumbs', `${key}.jpg`);
-  if (!existsSync(out)) await queued(() => frameAt(proxy, t, out, { width, luts, crop }));
+  // cutout=1: just the speaker, as a PNG with the matte as alpha (to lay over an animation).
+  const cut = q.get('cutout') === '1';
+  const key = createHash('sha1').update(JSON.stringify([t.toFixed(2), width, crop, luts, statSync(proxy).mtimeMs, cut ? matteKey() : 0])).digest('hex').slice(0, 16);
+  const out = join(projectDir(id), 'cache', 'thumbs', `${key}.${cut ? 'png' : 'jpg'}`);
+  if (!existsSync(out) && cut) {
+    const pi = await probeProxy(id, proxy);
+    const c = crop || { x: 0, y: 0, w: pi.width, h: pi.height };
+    const h = Math.round((width * c.h) / c.w / 2) * 2;
+    const vf = [crop ? `crop=${c.w}:${c.h}:${c.x}:${c.y}` : null, `scale=${width}:${h}`, ...luts.map(l => `lut3d=file='${esc(l)}'`)].filter(Boolean).join(',');
+    mkdirSync(join(projectDir(id), 'cache', 'thumbs'), { recursive: true });
+    await stillCutout(proxy, t, out, { width, height: h, vf });
+  } else if (!existsSync(out)) await queued(() => frameAt(proxy, t, out, { width, luts, crop }));
   res.setHeader('Cache-Control', 'max-age=3600');
   sendFile(req, res, out);
 }
@@ -385,6 +395,17 @@ async function api(req, res, path, q) {
   }
   const mm = sub.match(/^\/motion\/([a-f0-9]{16})\.webm$/);
   if (mm) return sendFile(req, res, join(projectDir(id), 'cache', 'motion', `${mm[1]}.webm`));
+
+  /* ----- cutouts: the proxy with the speaker's matte underneath, for the preview ----- */
+  if (sub === '/cutout') {
+    const c = method === 'POST' ? startPreviewCutout(id) : previewCutout(id);
+    return json(res, { state: c.state, progress: c.progress, error: c.error || null, url: c.state === 'ready' ? `/api/projects/${id}/cutout.mp4?v=${statSync(c.file).mtimeMs}` : null });
+  }
+  if (sub === '/cutout.mp4') {
+    const c = previewCutout(id);
+    if (c.state !== 'ready') throw new HttpError(404, 'No cutout yet');
+    return sendFile(req, res, c.file);
+  }
 
   if (sub === '/conversion') {
     const p = loadProject(id);
