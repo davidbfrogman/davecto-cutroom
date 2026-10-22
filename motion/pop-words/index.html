@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id":"text","type":"string","label":"Words","default":"this changes everything"},
+  {"id":"beats","type":"string","label":"When each word pops (s, comma-separated)","default":""},
+  {"id":"accent","type":"string","label":"Underlined word (optional)","default":""},
+  {"id":"hold","type":"string","label":"Holds after the last word (s)","default":"0.9"},
+  {"id":"position","type":"string","label":"Position (top, center, lower)","default":"lower"}
+]'>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <meta name="cutroom:kind" content="text" />
+  <meta name="description" content="Playful: each word pops in like a sticker on its beat, tilted, with an overshoot; the accent word gets a hand-drawn underline. Then they all tumble out. Set beats from timing to land each word as it's said. For an energetic line, a joke, a reveal." />
+  <title>Pop words</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    :root { /* brand defaults; Cutroom injects the user's */
+            --cr-plate: #141310; --cr-text: #f3f0e9; --cr-accent: #3e8b82; --cr-display: Fraunces, Georgia, serif; --cr-body: Inter, system-ui, sans-serif;
+            --cr-w: 1080px; --cr-h: 1920px;
+            --u: calc(min(var(--cr-w), var(--cr-h)) / 100); }
+    html, body { margin: 0; overflow: hidden; background: transparent; }
+    #root { position: relative; width: var(--cr-w); height: var(--cr-h); overflow: hidden; }
+    .clip { position: absolute; inset: 0; }
+    .row { position: absolute; left: 6%; right: 6%; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: calc(var(--u) * 2) calc(var(--u) * 2.4); }
+    .row.top { top: 8%; height: 26%; } .row.center { top: 36%; height: 28%; } .row.lower { top: 58%; height: 26%; }
+    .word { position: relative; display: inline-block; padding: calc(var(--u) * 1.4) calc(var(--u) * 3) calc(var(--u) * 2);
+            background: var(--cr-plate); color: var(--cr-text); border-radius: calc(var(--u) * 1.2);
+            font: 700 calc(var(--u) * 11)/1 var(--cr-display); letter-spacing: -0.02em; opacity: 0;
+            box-shadow: 0 calc(var(--u) * 0.8) 0 color-mix(in srgb, var(--cr-plate) 55%, transparent); }
+    .word.accent { color: var(--cr-accent); }
+    .word svg { position: absolute; left: 8%; right: 8%; bottom: 4%; width: 84%; height: 22%; overflow: visible; }
+    .word path { fill: none; stroke: var(--cr-accent); stroke-width: 7; stroke-linecap: round; }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="pop-clip" data-start="0" data-duration="3">
+      <div class="row" id="row"></div>
+    </div>
+  </div>
+  <script>
+    const v = window.__hyperframes.getVariables();
+    const words = String(v.text || "").split(/\s+/).filter(Boolean);
+    const given = String(v.beats || "").split(",").map(Number).filter(Number.isFinite);
+    // Missing beats follow the last one at 0.28s spacing.
+    const beats = words.map((_, i) => given[i] ?? (i ? (given[i - 1] ?? 0.28 * (i - 1)) + 0.28 : 0.05));
+    for (let i = 1; i < beats.length; i++) beats[i] = Math.max(beats[i], beats[i - 1] + 0.08);
+    const hold = Math.max(0.3, Number(v.hold) || 0.9);
+    const POP = 0.42, OUT = 0.4;
+    const total = Math.round(((beats[beats.length - 1] ?? 0) + POP + hold + OUT) * 100) / 100;
+    document.getElementById("pop-clip").setAttribute("data-duration", String(total));
+
+    const row = document.getElementById("row");
+    row.classList.add(["top", "center", "lower"].includes(v.position) ? v.position : "lower");
+    const bare = s => s.toLowerCase().replace(/[^\p{L}\p{N}%$]/gu, "");
+    const accent = bare(String(v.accent || ""));
+    words.forEach((w, i) => {
+      const el = document.createElement("span");
+      el.className = "word" + (accent && bare(w) === accent ? " accent" : "");
+      el.id = `w${i}`;
+      el.textContent = w;
+      if (el.classList.contains("accent")) el.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2,14 C20,6 38,18 55,10 S85,6 98,12" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/></svg>');
+      row.append(el);
+    });
+
+    const tl = gsap.timeline({ paused: true });
+    words.forEach((_, i) => {
+      const el = `#w${i}`, at = beats[i];
+      const tilt = [-5, 4, -3, 5, -4, 3][i % 6];
+      tl.fromTo(el, { opacity: 0, scale: 0.2, rotation: tilt * 3, y: "30%" }, { opacity: 1, scale: 1, rotation: tilt, y: "0%", duration: POP, ease: "back.out(3)" }, at);
+      tl.to(el, { keyframes: { rotation: [tilt - 2, tilt + 1.5, tilt] }, duration: 0.3, ease: "sine.inOut" }, at + POP * 0.8);
+      tl.to(`${el} path`, { strokeDashoffset: 0, duration: 0.35, ease: "power2.inOut" }, at + POP * 0.6);
+    });
+    // Everything tumbles out together, last word first.
+    const outAt = total - OUT;
+    words.forEach((_, i) => tl.to(`#w${i}`, { opacity: 0, y: "60%", rotation: `+=${i % 2 ? 14 : -14}`, scale: 0.85, duration: OUT - 0.12, ease: "power2.in" }, outAt + (words.length - 1 - i) * (0.12 / Math.max(1, words.length - 1))));
+    tl.set({}, {}, total);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["root"] = tl;
+  </script>
+</body>
+</html>

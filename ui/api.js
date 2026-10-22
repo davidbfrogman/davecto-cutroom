@@ -1,10 +1,17 @@
 /* The app server's JSON API. */
 
+export const OFFLINE_MESSAGE = "Couldn't reach the Cutroom server, so this wasn't saved. Start it again and the editor reconnects by itself.";
+
+/** fetch, with a clear error when the server isn't there (instead of "Failed to fetch"). */
+async function reach(url, opt) {
+  try { return await fetch(url, opt); } catch { throw new Error(OFFLINE_MESSAGE); }
+}
+
 async function req(method, url, body, raw) {
   const opt = { method, headers: {} };
   if (raw) { opt.body = raw; }
   else if (body !== undefined) { opt.body = JSON.stringify(body); opt.headers['Content-Type'] = 'application/json'; }
-  const r = await fetch(url, opt);
+  const r = await reach(url, opt);
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.error || `${r.status} ${r.statusText}`);
   return data;
@@ -32,7 +39,7 @@ export const api = {
   saveBrand: brand => req('PUT', '/api/brand', brand),
   /** Save with the rev you loaded. Returns { ok, status, project, rev, error } (409 = someone else saved first). */
   saveRev: async (id, b) => {
-    const r = await fetch(`/api/projects/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
+    const r = await reach(`/api/projects/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
     const d = await r.json().catch(() => ({}));
     return { ok: r.ok, status: r.status, ...d };
   },
@@ -43,6 +50,8 @@ export const api = {
   sendNotes: id => req('POST', `/api/projects/${id}/send`),
   motions: id => req('GET', `/api/projects/${id}/motions`),
   renderMotion: (id, b) => req('POST', `/api/projects/${id}/motions/render`, b),
+  /** The preview cutout (proxy + speaker matte): start: true makes it if it isn't there. */
+  cutout: (id, start) => req(start ? 'POST' : 'GET', `/api/projects/${id}/cutout`),
 };
 
 /** Follow a job over server-sent events. onUpdate(snapshot) until it ends; resolves with the last snapshot. */

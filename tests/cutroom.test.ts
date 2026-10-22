@@ -229,6 +229,32 @@ describe("cutroom animations in the timeline", () => {
     expect(tl.overlays.map((o: any) => o.type).sort()).toEqual(["keyword", "motion"]);
     expect(overlayData(tl, {}).overlays.map((o: any) => o.type)).toEqual(["keyword"]);
   });
+
+  it("cuts the speaker out only where an animation sits behind them, and never on cards", async () => {
+    const { cutouts } = (await import("../shared/timeline.mjs")) as any;
+    const tl = buildTimeline(p([
+      { id: "s1", kind: "talk", section: "a", w0: 0, w1: 2, cut: {}, overlays: [{ id: "front", type: "motion", name: "x", dur: 0.5 }, { id: "back", type: "motion", name: "x", at: 0.2, dur: 30, behind: true }] },
+      { id: "c1", kind: "card", section: "a", card: { title: "Card", dur: 1 } },
+      { id: "s2", kind: "talk", section: "a", w0: 3, w1: 5, cut: {}, transition: { type: "cut", stinger: { name: "stinger-wipe", dur: 1, behind: true } } },
+    ]), { words: w, envelope: null });
+    const c = cutouts(tl);
+    expect(c.windows.map((x: any) => x.id)).toEqual(["back"]);
+    // Runs to the end of the edit: covers the card and s2, but the card has nobody to cut out.
+    expect(c.items).toEqual(["s1", "s2"]);
+    // Once the animation's real length is known, a shorter one doesn't reach the later shots.
+    const short = cutouts(tl, new Map([["back", tl.items[0].start + 0.5]]));
+    expect(short.items).toEqual(["s1"]);
+    expect(cutouts(buildTimeline(p([{ id: "s1", kind: "talk", section: "a", w0: 0, w1: 2, cut: {} }]), { words: w, envelope: null })).windows).toEqual([]);
+  });
+
+  it("lets only animations sit behind the speaker", async () => {
+    const { applyOps } = (await import("../shared/ops.mjs")) as any;
+    const base = () => ({ settings: withDefaults({}), storyboard: { sections: [{ id: "a", title: "A" }], shots: [{ id: "s1", kind: "talk", section: "a", w0: 0, w1: 2, cut: {}, overlays: [{ id: "o1", type: "motion", name: "x" }, { id: "o2", type: "keyword", text: "Hi" }] }] } });
+    const r = applyOps(base(), [{ op: "overlay_update", id: "o1", set: { behind: true } }], w);
+    expect(r.project.storyboard.shots[0].overlays[0].behind).toBe(true);
+    expect(() => applyOps(base(), [{ op: "overlay_update", id: "o2", set: { behind: true } }], w)).toThrow(/Only animations/);
+    expect(() => applyOps(base(), [{ op: "overlay_add", shot: "s1", overlay: { type: "headline", text: "Hi", behind: true } }], w)).toThrow(/Only animations/);
+  });
 });
 
 describe("cutroom brand", () => {

@@ -2,16 +2,16 @@
 <!--
   Cutroom animation (a HyperFrames composition). Start here.
 
-  Rules (cutroom/CLAUDE.md has the rest):
+  What makes it render (skills/cutroom/SKILL.md has the rest, animations.md the recipes):
   · Transparent background: it plays over the video.
   · Cutroom sets the size for each render. Lay out in %, vw/vh, or var(--cr-w) / var(--cr-h).
-  · Inputs are variables (data-composition-variables below); read them with window.__hyperframes.getVariables().
-  · One paused GSAP timeline on window.__timelines["root"]. Deterministic: no Date.now(), no Math.random().
-  · Brand: colours and fonts come from the user's brand. Use var(--cr-plate) (band/plate behind text),
-    var(--cr-text), var(--cr-accent) (at most twice per frame), var(--cr-display) for statements and
-    var(--cr-body) for labels. Never hard-code them. Smooth eases (power2/power3/expo), no bounce or elastic.
+  · One paused GSAP timeline on window.__timelines["root"]; its length is the animation's length.
+    Deterministic: no Date.now(), no Math.random() (use a seeded one), no CSS animations.
   · Set cutroom:kind to text, transition or card. Transitions also set cutroom:cut: the point (0..1)
     where the clip fully hides the picture, which is where Cutroom puts the cut.
+  Style is open. Start from the user's brand: var(--cr-plate) (band/plate behind text), var(--cr-text),
+  var(--cr-accent), var(--cr-display) for statements, var(--cr-body) for labels. Inputs that change
+  between uses are variables (data-composition-variables); read them with window.__hyperframes.getVariables().
 -->
 <html lang="en" data-composition-variables='[{"id":"text","type":"string","label":"Text","default":"Your line here"}]'>
 <head>

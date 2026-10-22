@@ -143,6 +143,9 @@ input[type=checkbox] { accent-color: var(--foreground); width: 14px; height: 14p
 .pv-motion, .pv-frame > video.top { position: absolute; inset: 0; pointer-events: none; }
 .pv-motion video, .pv-frame > video.top { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
 .pv-frame > video.top { z-index: 2; }
+.pv-frame canvas.pv-speaker { pointer-events: none; visibility: hidden; }
+.pv-frame .pv-badge { position: absolute; left: 8px; bottom: 8px; z-index: 3; padding: 3px 7px; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: 2px; pointer-events: none; }
+.pv-frame .pv-badge[hidden] { display: none; }
 .pv-frame .pv-msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted-foreground); font-size: 12px; text-align: center; padding: 20px; }
 .pv-bar { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .pv-bar .t { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted-foreground); min-width: 92px; }
@@ -237,6 +240,9 @@ input.swatch { width: 100%; height: 30px; padding: 2px; border: 1px solid var(--
 .ed-head .claude.working { color: var(--foreground); }
 .ed-head .claude.working::before { background: var(--foreground); border-color: var(--foreground); }
 .ed-head .claude.idle::before { background: var(--muted-foreground); }
+.ed-head .claude.offline { color: var(--destructive); cursor: help; }
+.ed-head .claude.offline::before { background: var(--destructive); border-color: var(--destructive); }
+.ed-head .claude.away { cursor: help; }
 
 .notes textarea { font-size: 13px; }
 .threads { display: grid; gap: 0; }
@@ -249,6 +255,9 @@ input.swatch { width: 100%; height: 30px; padding: 2px; border: 1px solid var(--
 .thread .msg.claude .say { font-family: var(--font-fraunces); font-size: 15px; line-height: 1.45; }
 .thread .changes { margin: 2px 0 0; padding-left: 16px; font-size: 12px; color: var(--muted-foreground); }
 .thread .reply { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.thread .reply[hidden], .notes .composer[hidden], .notes button[hidden] { display: none; }
+.notes .composer { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.notes .threads:empty + .composer { padding-top: 0; border-top: 0; }
 .thread.done { opacity: .7; }
 .chip.note.question, .chip.note.sent, .chip.note.working { color: var(--foreground); border-color: var(--muted-foreground); }
 .shot.remote { background: var(--secondary); transition: background-color 300ms ease-in-out; }

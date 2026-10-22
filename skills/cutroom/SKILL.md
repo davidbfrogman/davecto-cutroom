@@ -33,8 +33,9 @@ with Homebrew, then the transcription model's Python packages and two headless b
    the call returns them, marked working. On a timeout, call it again. Keep looping until the
    user tells you to stop.
 3. For each note: read `storyboard`, look with `frame`, change things with `edit` (ops, all or
-   nothing) or build an animation (below), check with `render` (draft) and `look`, then `reply`
-   with status `done`, or `question` when they need to choose. List what changed in `changes`.
+   nothing) or write an animation for it (below), check with `render` (draft) and `look`, then
+   `reply` with status `done`, or `question` when they need to choose. List what changed in
+   `changes`.
 4. Back to `wait_for_notes`.
 
 Your edits land in the open editor live, highlighted, one undo step each. Never write
@@ -60,29 +61,65 @@ contrast between plate and text, set them, render a draft and show them a frame 
 
 ## Animations (HyperFrames)
 
-Text animations, stingers (transitions) and animated title cards are HyperFrames compositions:
-HTML plus a GSAP timeline, rendered to transparent video. Built-ins: `kinetic-title`,
-`slam-text`, `invert-stat`, `stinger-wipe`. Write one-offs for a video with `new_motion` (copy a
-built-in with `from` when it's close), edit its `index.html`, and check it with `render_motion`
-(lint plus frames over the shot). `scope: "library"` saves it to `~/Movies/Cutroom/motion` for
-every video.
+Animations are where a video gets its personality, and you write them: each one is a HyperFrames
+composition (HTML, CSS and a GSAP timeline) rendered to transparent video and laid over the edit.
+Anything a browser can draw works: kinetic type, stickers, emoji, SVG scribbles and arrows,
+counters, 3D flips, particle bursts, masks, text that slides behind the speaker.
 
-Conventions:
+**When the user asks for something animated, make it for this moment.** "Make this fun", "add some
+energy here", "something pops up when I say 160,000": write a new composition with `new_motion`
+rather than reaching for the nearest built-in or a static graphic. The built-ins (`kinetic-title`,
+`slam-text`, `pop-words`, `invert-stat`, `stinger-wipe`) are good starting points (`from`) and
+quick defaults when the user only wants a title. They aren't the menu.
+
+How to work it, conversationally:
+1. **Read the moment.** `storyboard` for the words, `frame` for the picture (where the speaker
+   is, where there's room), `timing` for when each word lands.
+2. **Pick an idea and say it in a line** ("the number counts up and bursts, then 'stars' drops in
+   behind you"). Don't ask permission for a small idea: build it and show it. Ask first only when
+   the note is vague and the options differ a lot.
+3. **Build it.** `new_motion` (from a built-in when one is close), then write `index.html`.
+   `animations.md` (next to this skill) has the recipes: per-word timing, overshoot pops, drawn
+   SVG lines, seeded particle bursts, counters, masks and 3D.
+4. **Look at it.** `render_motion` with `shot` (and `behind: true` if it sits behind the speaker)
+   shows frames over the real picture. Check timing against `timing`, readability, and that
+   nothing important is hidden. Iterate until it's good, then place it with `edit`.
+5. **Show the user** in your reply what you made and one way to push it ("want it bigger and
+   louder, or calmer?"). Their next note is the next iteration: change the composition, not just
+   its variables, when they ask for a different feel.
+
+Behind the speaker: an `overlay_add` of type `motion` with `behind: true` (or the editor's
+**Sits: Behind the speaker**) cuts the speaker out of the shot and lays them back over the
+animation, the "text behind the person" look. Make it big: giant type or shapes that pass
+behind the head and shoulders, with the words that matter clear of the body (`frame` shows
+where they are). The speaker is cut out of the picture only; titles, captions and other
+animations stay in front.
+
+What makes it render (these are firm):
 - Transparent background. Cutroom sizes it per render: lay out with %, vw/vh or `var(--cr-w)` /
-  `var(--cr-h)`, never fixed px for layout.
-- Colours and fonts come from the brand, never hard-coded: `var(--cr-plate)` (the band or plate
-  behind text), `var(--cr-text)`, `var(--cr-accent)` (at most twice per frame), `var(--cr-display)`
-  for statements, `var(--cr-body)` for labels. Text over video sits on a plate so it reads on any frame.
-- Inputs are `data-composition-variables` (text, labels, options); each use passes `vars`. Make it
-  reusable rather than baking in one line.
+  `var(--cr-h)`, never fixed px.
+- One paused GSAP timeline on `window.__timelines["root"]`; its length is the animation's
+  length (end with `tl.set({}, {}, total)`). Deterministic: a seeded random, never
+  `Math.random()` or `Date.now()`.
+- Every element starts hidden or off-screen if it shouldn't show on frame 0.
 - `<meta name="cutroom:kind" content="text | transition | card">`. Transitions also set
   `cutroom:cut` (0..1): the moment the frame is fully covered; Cutroom puts the cut there.
-- `<meta name="cutroom:blend" content="invert">` makes the animation a mask: wherever it draws,
-  the video below shows in negative. Draw in white. `invert-stat` is the example.
-- Deterministic: one paused GSAP timeline on `window.__timelines["root"]`, no `Date.now()` or
-  `Math.random()`. Smooth eases (power2, power3, expo), no bounce or elastic.
+- `<meta name="cutroom:blend" content="invert">` makes it a mask: wherever it draws, the video
+  below shows in negative. Draw in white. `invert-stat` is the example.
+
+Style (defaults, not rules; the user's taste wins):
+- Start from the brand: `var(--cr-plate)`, `var(--cr-text)`, `var(--cr-accent)`,
+  `var(--cr-display)`, `var(--cr-body)`, so it matches their titles and captions. Use other
+  colours when the idea needs them or they ask (emoji, a red "NO", a highlighter yellow).
+- Text has to read on any frame: a plate, a stroke, a shadow or a dark band behind it.
+- Match the energy they asked for. Playful: overshoot (`back.out`), elastic, wiggles, tilts,
+  pops. Serious: smooth `power2`/`expo`, nothing bouncing. Land beats on the words (`timing`).
+- Variables (`data-composition-variables`) are for what changes between uses. A one-off for
+  this video can just have its text in the HTML; make it reusable when it's going to the library
+  (`scope: "library"`, saved to `~/Movies/Cutroom/motion` for every video).
 - Place it with `edit`: `overlay_add` type `motion` (with `dur` from `render_motion`, pinned with
-  `phrase`), a shot `transition.stinger`, or `card_add` with `card.motion`.
+  `phrase`, `behind: true` to sit behind the speaker), a shot `transition.stinger`, or
+  `card_add` with `card.motion`.
 
 For HyperFrames details: `npx hyperframes@0.8.80 docs <topic>` (compositions, data-attributes, gsap).
 

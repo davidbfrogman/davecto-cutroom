@@ -249,6 +249,20 @@ export function chunkCaptions(placed, items, opt = {}, vertical = true) {
   return out;
 }
 
+/**
+  Animations that sit behind the speaker (overlay `behind: true`): the windows, in output
+  seconds, where the cut-out speaker is laid back over the picture, and the shots that need
+  a matte for it (talking shots overlapping a window; cards have nobody to cut out).
+  `ends` (overlay id → end) overrides an animation's end once its real length is known.
+*/
+export function cutouts(tl, ends = null) {
+  const windows = tl.overlays.filter(o => o.type === 'motion' && o.props.behind && !o.props.top)
+    .map(o => ({ id: o.id, start: o.start, end: ends?.get(o.id) ?? o.end }))
+    .filter(w => w.end > w.start);
+  const items = tl.items.filter(it => it.kind !== 'card' && windows.some(w => it.start < w.end && it.start + it.dur > w.start)).map(it => it.id);
+  return { windows, items };
+}
+
 /** What the graphics page (graphics/overlay.js) needs to draw a timeline's overlay track. */
 export function overlayData(tl, s = {}) {
   return {
