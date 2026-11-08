@@ -1,0 +1,6 @@
+#!/bin/sh
+# lutmatch launcher: runs the CLI with this folder's own Python environment (./setup.sh makes it).
+DIR=$(cd "$(dirname "$0")" && pwd)
+PY="$DIR/.venv/bin/python"
+if [ ! -x "$PY" ]; then echo "No Python environment yet. Run: $DIR/setup.sh" >&2; exit 1; fi
+cd "$DIR" && exec "$PY" -m lutmatch.cli "$@"
