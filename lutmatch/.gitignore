@@ -1,0 +1,9 @@
+# Python environment (./setup.sh)
+.venv/
+__pycache__/
+# Downloaded reels, extracted frames, grids: big, re-made by ./lm frames, and not ours to redistribute
+families/*/work/
+work/
+# 65-point cubes are 7 MB each and rebuild with ./lm build
+families/*/luts/65-point/
+families/*/luts/check.png

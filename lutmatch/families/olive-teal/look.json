@@ -1,0 +1,517 @@
+{
+ "name": "olive-teal",
+ "about": "Two Sydney creator reels: dense shadows, teal blacks, olive/mint highlights, muted colour, skin on the skin line. Built 2026-11-08.",
+ "camera": "x-t5-flog2",
+ "sources": {
+  "ref1": {
+   "url": "https://www.instagram.com/reel/DONrZsHCX5g/"
+  },
+  "ref2": {
+   "url": "https://www.instagram.com/reel/DFhy1K7JgXl/"
+  }
+ },
+ "frames": [
+  {
+   "source": "ref1",
+   "fps": 1,
+   "prefix": "ref1_"
+  },
+  {
+   "source": "ref2",
+   "fps": 1,
+   "prefix": "ref2_"
+  },
+  {
+   "source": "ref1",
+   "fps": 4,
+   "start": 3,
+   "duration": 6,
+   "prefix": "r1_",
+   "digits": 2,
+   "note": "top-down, wide and night shots at 4 fps"
+  }
+ ],
+ "crop": [
+  40,
+  330,
+  1040,
+  1590
+ ],
+ "crop_note": "the picture inside the reels' rounded frame (1080x1920 video)",
+ "ignore_rows": [
+  540,
+  740
+ ],
+ "ignore_rows_note": "caption band, in crop coordinates, left out of whole-frame stats",
+ "stats": {
+  "pattern": "ref*_[0-9]*",
+  "skip": [
+   "ref2_014",
+   "ref2_015",
+   "ref1_014",
+   "ref1_015"
+  ],
+  "stride": 3,
+  "skip_note": "editor screen recordings and the text-only outro"
+ },
+ "patches": [
+  {
+   "frame": "ref2_005",
+   "box": [
+    20,
+    20,
+    280,
+    180
+   ],
+   "label": "white wall (coffee)",
+   "role": "neutral",
+   "white_anchor": true
+  },
+  {
+   "frame": "ref2_005",
+   "box": [
+    860,
+    760,
+    980,
+    1000
+   ],
+   "label": "white tee (coffee)",
+   "role": "neutral",
+   "white_anchor": true
+  },
+  {
+   "frame": "ref2_009",
+   "box": [
+    190,
+    800,
+    260,
+    880
+   ],
+   "label": "white bowl side",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_009",
+   "box": [
+    420,
+    960,
+    680,
+    1020
+   ],
+   "label": "white bowl front",
+   "role": "neutral",
+   "white_anchor": true
+  },
+  {
+   "frame": "ref2_007",
+   "box": [
+    620,
+    940,
+    760,
+    990
+   ],
+   "label": "white keyboard",
+   "role": "neutral",
+   "white_anchor": true
+  },
+  {
+   "frame": "ref2_007",
+   "box": [
+    205,
+    790,
+    235,
+    860
+   ],
+   "label": "silver monitor stand",
+   "role": "neutral",
+   "metal": true
+  },
+  {
+   "frame": "ref2_016",
+   "box": [
+    60,
+    520,
+    160,
+    700
+   ],
+   "label": "white plate rim L",
+   "role": "neutral",
+   "white_anchor": true
+  },
+  {
+   "frame": "ref2_016",
+   "box": [
+    320,
+    250,
+    680,
+    320
+   ],
+   "label": "white plate rim top",
+   "role": "neutral",
+   "white_anchor": true
+  },
+  {
+   "frame": "ref1_006",
+   "box": [
+    300,
+    300,
+    400,
+    500
+   ],
+   "label": "grey sofa",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref1_006",
+   "box": [
+    650,
+    800,
+    800,
+    870
+   ],
+   "label": "silver laptop",
+   "role": "neutral",
+   "metal": true
+  },
+  {
+   "frame": "ref1_001",
+   "box": [
+    560,
+    860,
+    640,
+    980
+   ],
+   "label": "white sweater",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_018",
+   "box": [
+    760,
+    720,
+    940,
+    940
+   ],
+   "label": "white tee (coffee #2)",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_018",
+   "box": [
+    60,
+    60,
+    240,
+    240
+   ],
+   "label": "wall (coffee #2)",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_010",
+   "box": [
+    100,
+    40,
+    300,
+    150
+   ],
+   "label": "overcast sky L",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_010",
+   "box": [
+    700,
+    40,
+    950,
+    200
+   ],
+   "label": "overcast sky R",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_010",
+   "box": [
+    40,
+    760,
+    240,
+    1000
+   ],
+   "label": "concrete wall",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_010",
+   "box": [
+    420,
+    1080,
+    600,
+    1220
+   ],
+   "label": "black shorts",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_018",
+   "box": [
+    80,
+    670,
+    160,
+    730
+   ],
+   "label": "black camera body",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_011",
+   "box": [
+    500,
+    740,
+    700,
+    900
+   ],
+   "label": "black shorts (pullup)",
+   "role": "neutral"
+  },
+  {
+   "frame": "ref2_005",
+   "box": [
+    690,
+    230,
+    760,
+    300
+   ],
+   "label": "cheek (coffee)",
+   "role": "skin",
+   "skin_anchor": true
+  },
+  {
+   "frame": "ref2_007",
+   "box": [
+    860,
+    730,
+    950,
+    820
+   ],
+   "label": "hand on mouse",
+   "role": "skin"
+  },
+  {
+   "frame": "ref2_007",
+   "box": [
+    240,
+    910,
+    360,
+    990
+   ],
+   "label": "hand on cup",
+   "role": "skin"
+  },
+  {
+   "frame": "ref2_010",
+   "box": [
+    420,
+    700,
+    580,
+    800
+   ],
+   "label": "chest (outdoor)",
+   "role": "skin",
+   "skin_anchor": true
+  },
+  {
+   "frame": "ref2_010",
+   "box": [
+    450,
+    340,
+    550,
+    440
+   ],
+   "label": "face (outdoor)",
+   "role": "skin"
+  },
+  {
+   "frame": "ref1_001",
+   "box": [
+    490,
+    745,
+    535,
+    800
+   ],
+   "label": "face (blue desk)",
+   "role": "skin"
+  }
+ ],
+ "looks": [
+  {
+   "name": "olive-teal",
+   "kind": "reference",
+   "soft": 0.6,
+   "title": "Olive Teal"
+  },
+  {
+   "name": "warm",
+   "kind": "wb",
+   "soft": 0.6,
+   "title": "Warm",
+   "why": "The reference's sunlit shots use the same grade; they look warm because of sun on orange parquet. So: move the light. Neutrals land where the grade renders sunlit concrete.",
+   "targets": [
+    {
+     "frame": "r1_04",
+     "box": [
+      560,
+      240,
+      700,
+      360
+     ],
+     "label": "sunlit concrete tile",
+     "role": "target"
+    },
+    {
+     "frame": "r1_03",
+     "box": [
+      560,
+      240,
+      700,
+      360
+     ],
+     "label": "sunlit concrete tile",
+     "role": "target"
+    },
+    {
+     "frame": "r1_04",
+     "box": [
+      760,
+      120,
+      880,
+      220
+     ],
+     "label": "sunlit concrete tile",
+     "role": "target"
+    }
+   ],
+   "ceiling_frames": {
+    "frames": [
+     "r1_03",
+     "r1_04",
+     "r1_05",
+     "r1_06",
+     "r1_07",
+     "r1_08",
+     "r1_09",
+     "r1_10",
+     "r1_11",
+     "r1_12",
+     "r1_13"
+    ],
+    "stride": 2
+   }
+  },
+  {
+   "name": "blue-hour",
+   "kind": "wb",
+   "soft": 0.6,
+   "title": "Blue Hour",
+   "why": "The night shot: daylight-lit walls go teal, while the face stays on the skin line (131-132 deg) and lamps stay warm.",
+   "targets": [
+    {
+     "frame": "r1_15",
+     "box": [
+      840,
+      330,
+      960,
+      450
+     ],
+     "label": "wall far right (lit only by blue daylight)",
+     "role": "target"
+    }
+   ],
+   "evidence": [
+    {
+     "frame": "r1_15",
+     "box": [
+      660,
+      345,
+      750,
+      450
+     ],
+     "label": "wall right of window (near black)",
+     "role": "evidence"
+    },
+    {
+     "frame": "r1_15",
+     "box": [
+      705,
+      705,
+      795,
+      765
+     ],
+     "label": "white sofa (next to a tungsten lamp)",
+     "role": "evidence"
+    },
+    {
+     "frame": "r1_15",
+     "box": [
+      900,
+      592,
+      960,
+      630
+     ],
+     "label": "table lamp",
+     "role": "evidence"
+    },
+    {
+     "frame": "r1_14",
+     "box": [
+      475,
+      562,
+      497,
+      582
+     ],
+     "label": "face (cheek)",
+     "role": "evidence"
+    },
+    {
+     "frame": "r1_15",
+     "box": [
+      475,
+      562,
+      497,
+      582
+     ],
+     "label": "face (cheek)",
+     "role": "evidence"
+    },
+    {
+     "frame": "r1_16",
+     "box": [
+      475,
+      562,
+      497,
+      582
+     ],
+     "label": "face (cheek)",
+     "role": "evidence"
+    }
+   ],
+   "skin_key": {
+    "half": 45.0,
+    "c0": 0.01,
+    "c1": 0.03
+   }
+  },
+  {
+   "name": "clean",
+   "kind": "clean",
+   "title": "Clean",
+   "grey_ire": 42,
+   "white_ire": 90,
+   "skin_scope": 123.0,
+   "why": "No reference: true neutrals, skin on the skin line, broadcast exposure. The counterpart to the moody looks."
+  },
+  {
+   "name": "tone-only",
+   "kind": "tone-only",
+   "title": "Olive Teal tone only, no colour"
+  }
+ ]
+}
