@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Trending Repos, Vol. 2 · Share Card</title>
+<!-- 1200x630 share card for /trending-repos-2, in the same layout as the /resources cards.
+     Rendered to /assets/images/og/trending-repos-2.png by export-cards.sh. -->
+<link rel="stylesheet" href="../assets/css/fonts.css">
+<style>
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+body { background: #E8B53E url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%231e1e1e' fill-opacity='.5'/%3E%3C/svg%3E"); background-size: 4px 4px;
+       color: rgba(30,30,30,.86); font-family: "Inter Tight"; position: relative; }
+.c { position: absolute; top: 18px; left: 20px; right: 20px; display: flex; justify-content: space-between; font: 300 14px "JetBrains Mono"; }
+.top { position: absolute; top: 56px; left: 64px; right: 64px; display: flex; justify-content: space-between; font: 400 15px "JetBrains Mono"; letter-spacing: .06em; }
+.top span { background: #E8B53E; }
+.crop { position: absolute; left: 64px; top: 104px; width: 660px; height: 360px; box-sizing: border-box; padding: 26px 30px 30px; --c: #1E1E1E;
+  background: linear-gradient(var(--c),var(--c)) top left/18px 2px no-repeat, linear-gradient(var(--c),var(--c)) top left/2px 18px no-repeat,
+    linear-gradient(var(--c),var(--c)) top right/18px 2px no-repeat, linear-gradient(var(--c),var(--c)) top right/2px 18px no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom left/18px 2px no-repeat, linear-gradient(var(--c),var(--c)) bottom left/2px 18px no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom right/18px 2px no-repeat, linear-gradient(var(--c),var(--c)) bottom right/2px 18px no-repeat, #E8B53E;
+  display: flex; flex-direction: column; }
+.inv { align-self: flex-start; background: #1E1E1E; color: #E8B53E; font: 34px/1 VT323; padding: 4px 8px 6px; }
+h1 { margin: 22px 0 0; font-weight: 600; font-size: 120px; line-height: .86; letter-spacing: -.05em; text-transform: capitalize; }
+.win { position: absolute; right: 64px; top: 118px; width: 370px; background: #FEFEFE; border: 2px solid #1E1E1E; box-shadow: 5px 5px 0 rgba(30,30,30,.55); }
+.bar { background: #1E1E1E; color: #FEFEFE; font: 28px/1 VT323; padding: 3px 10px 6px; display: flex; justify-content: space-between; }
+.body { margin: 3px; border: 2px solid #1E1E1E; background: #DEDEDE; padding: 10px 16px 14px; font: 26px/1.2 VT323; }
+.row { display: flex; justify-content: space-between; gap: 12px; border-bottom: 2px dashed rgba(30,30,30,.35); padding: 6px 0; white-space: nowrap; overflow: hidden; }
+.row:last-child { border: 0; }
+.row span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.acts { position: absolute; left: 64px; bottom: 52px; display: flex; gap: 10px; }
+.acts span { font: 32px/1 VT323; padding: 5px 12px 7px; background: #03AA5C; color: #FEFEFE; }
+.url { position: absolute; right: 64px; bottom: 52px; font: 400 32px VT323; background: #1E1E1E; color: #FEFEFE; padding: 5px 10px 7px; }
+</style>
+</head>
+<body>
+<div class="c"><span>∵ ⩆</span><span>⩆ ∵</span></div>
+<div class="top"><span>FREE · ONE EMAIL TO UNLOCK</span><span>@DAVECTO</span></div>
+<div class="crop"><span class="inv">Repo List · Vol. 2 · 10 Picks</span><h1 id="t">Trending Repos</h1></div>
+<div class="win"><div class="bar"><span>Repo.List</span><span>✣</span></div><div class="body">
+  <div class="row"><span>01 Claude SEO</span><span>SEO</span></div>
+  <div class="row"><span>02 e2e</span><span>Testing</span></div>
+  <div class="row"><span>04 T3 Code</span><span>Remote</span></div>
+  <div class="row"><span>+7 more</span><span>10 total</span></div>
+</div></div>
+<div class="acts"><span>Open The List ▶</span></div>
+<div class="url">davecto.com/trending-repos-2</div>
+<script>
+// shrink the headline until it fits inside the crop marks
+document.fonts.ready.then(() => {
+  const t = document.getElementById("t"), box = t.parentElement; let s = 120;
+  while (s > 40 && (t.offsetTop + t.offsetHeight > box.clientHeight - 24 || t.scrollWidth > t.clientWidth)) { s -= 4; t.style.fontSize = s + "px"; }
+});
+</script>
+</body>
+</html>

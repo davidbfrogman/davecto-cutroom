@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro OS — Design &amp; Style Guide</title>
+<link rel="stylesheet" href="assets/css/retro-os.css">
+<style>
+  /* ---------- page scaffolding (guide only, not part of the system) ---------- */
+  * { box-sizing: border-box; }
+  html { scroll-behavior: auto; }   /* hard cuts, even when jumping between sections */
+  body { margin: 0; background: var(--paper); color: var(--ink-86); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  section { position: relative; padding: 110px 0 120px; }
+  section > .glyph-corners { position: absolute; left: 0; right: 0; top: 8px; }
+  .topnav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; justify-content: space-between; pointer-events: none; }
+  .topnav .tabs { pointer-events: auto; }
+  .sec-head { margin-bottom: 70px; padding: 44px 0; text-align: center; }
+  .sec-head .t-display { font-size: clamp(56px, 8.4vw, 120px); }
+  .sec-num { display: block; margin-bottom: 26px; }
+  .grid { display: grid; gap: 28px; }
+  .g2 { grid-template-columns: repeat(2, 1fr); } .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 860px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } }
+  .spec { font-family: var(--f-mono); font-size: 12px; line-height: 1.55; font-weight: 400; letter-spacing: .02em; }
+  .spec b { font-weight: 500; }
+  .spec code, .t-body code, .t-lead code { font-family: var(--f-mono); font-size: .82em; background: rgba(30,30,30,.1); padding: 1px 4px; }
+  .world-ink .spec code, .world-ink .t-body code { background: rgba(254,254,254,.14); }
+  .demo { min-height: 120px; display: flex; align-items: center; justify-content: center; padding: 26px; }
+  .label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  table.tbl { width: 100%; border-collapse: collapse; font-family: var(--f-mono); font-size: 12px; }
+  .tbl th { text-align: left; font-weight: 500; padding: 8px 10px 8px 0; border-bottom: 1px solid currentColor; text-transform: capitalize; }
+  .tbl td { padding: 8px 10px 8px 0; border-bottom: 1px dashed rgba(30,30,30,.35); vertical-align: top; }
+  .world-ink .tbl td { border-bottom-color: rgba(254,254,254,.25); }
+
+  /* ---------- hero desktop ---------- */
+  .boot-screen { height: 560px; display: grid; place-items: center; transition: none; }
+  .boot-stack { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .desk { padding: 26px 0 60px; }
+  .desk__frame { position: relative; height: 640px; border: 1px solid var(--ink); overflow: hidden; }
+  .desk__frame > canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .desk__frame > .chip-inv { position: absolute; top: 0; left: 0; z-index: 3; }
+  .desk .win { position: absolute; z-index: 2; }
+  .glider { display: grid; grid-template-columns: repeat(3, 14px); gap: 0; margin: 2px 0 6px; }
+  .glider i { width: 14px; height: 14px; border: 1px solid var(--ink); margin: 0 -1px -1px 0; display: grid; place-items: center; }
+  .glider i.on::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); }
+  .race-row { display: grid; grid-template-columns: 150px 1fr auto; align-items: center; gap: 6px 14px; padding: 8px 0 0; font-family: var(--f-pixel); font-size: 20px; }
+  .race-row .slider { grid-column: 1 / -1; }
+  .logo-mark { width: 26px; height: 26px; flex: none; }
+
+  /* ---------- swatches ---------- */
+  .sw .win__body { flex: none; height: 130px; margin: 0; border: 0; border-top: 1px solid var(--ink); }
+  .sw .meta { padding: 8px 6px 6px; background: var(--paper); font-family: var(--f-mono); font-size: 11px; line-height: 1.45; border-top: 1px solid var(--ink); }
+  .ratio { display: flex; height: 54px; border: 1px solid var(--ink); }
+  .ratio > div { display: flex; align-items: flex-end; padding: 4px 6px; font-family: var(--f-mono); font-size: 10px; }
+  .worlds { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--ink); }
+  .worlds > div { height: 170px; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--ink); }
+  .worlds > div:last-child { border-right: 0; }
+  @media (max-width: 860px) { .worlds { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---------- type specimens ---------- */
+  .specimen { border-top: 1px solid var(--ink); padding: 26px 0 40px; display: grid; grid-template-columns: 240px 1fr; gap: 30px; }
+  @media (max-width: 860px) { .specimen { grid-template-columns: 1fr; } }
+
+  /* ---------- micrographic tiles ---------- */
+  .tile { border: 1px solid currentColor; display: flex; flex-direction: column; }
+  .tile__demo { flex: 1; min-height: 170px; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }
+  .tile__cap { border-top: 1px solid currentColor; padding: 10px; }
+
+  /* ---------- instagram cards ---------- */
+  .ig-row { display: flex; flex-wrap: wrap; gap: 36px; align-items: flex-start; }
+  .ig-item { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .ig-frame { width: calc(1080px * var(--s)); height: calc(var(--h) * var(--s)); overflow: hidden; outline: 1px solid var(--ink); flex: none; }
+  .btn { font-family: var(--f-pixel); font-size: 20px; background: var(--ink); color: var(--paper); border: 0; padding: 4px 10px 6px; cursor: pointer; }
+  .btn:hover { background: var(--paper); color: var(--ink); outline: 1px solid var(--ink); }
+
+  /* solo mode: index.html?card=<id> renders one card at 1:1 for export */
+  body.solo { background: #000; }
+  body.solo > *:not(#solo-host) { display: none !important; }
+  #solo-host .ig { transform: none; }
+
+  /* do / don't */
+  .dd { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .dd ul { margin: 0; padding: 0; list-style: none; }
+  .dd li { padding: 9px 0; border-bottom: 1px dashed rgba(30,30,30,.4); font-size: 17px; line-height: 1.25; display: grid; grid-template-columns: 26px 1fr; }
+  @media (max-width: 860px) { .dd { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<div class="topnav">
+  <nav class="tabs"><a href="#top">Retro OS</a></nav>
+  <nav class="tabs">
+    <a href="#color">Color</a><a href="#type">Type</a><a href="#micro">Micrographics</a><a href="#texture">Texture</a>
+    <a href="#components">Components</a><a href="#motion">Motion</a><a href="#instagram">Instagram</a>
+  </nav>
+  <nav class="tabs"><a href="#rules">Rules</a><a class="is-cta" href="DESIGN.md">DESIGN.md</a></nav>
+</div>
+
+<!-- ============ 00 BOOT ============ -->
+<div id="top" class="boot-screen" data-boot-screen style="background: var(--boot)">
+  <div class="boot-stack">
+    <div class="spinner"></div>
+    <div class="win boot" data-ros="boot" data-loop>
+      <div class="win__bar">RetroOS 1.1</div>
+      <div class="win__body">Loading ...<br>Style Guide, Tokens<div class="boot__bar"><i></i><b>0%</b></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 01 DESKTOP HERO ============ -->
+<div class="world-paper"><div class="glyph-corners" style="padding:10px 6px"></div></div>
+<div class="world-pink desk">
+  <div class="wrap">
+    <div class="desk__frame dots">
+      <canvas class="dither" data-ros="dither" data-opts='{"pixel":2,"seed":4,"blobs":[{"x":.12,"y":.9,"r":.2},{"x":.95,"y":.62,"r":.19},{"x":.5,"y":1.1,"r":.24},{"x":.22,"y":.55,"r":.08}]}'></canvas>
+      <canvas class="life" data-ros="life" data-opts='{"cell":2,"fps":10,"seed":8,"gliders":24}'></canvas>
+      <span class="chip-inv">RETRO.OS1</span>
+
+      <div class="win" style="left:9%; top:15%; width:170px">
+        <div class="win__bar">Color</div>
+        <div class="win__body"><span class="win__badge">CLR</span><div style="margin:6px 0">5 worlds, 1 ink</div><div class="win__row"><span class="chip">pink</span><span class="chip">teal</span></div></div>
+      </div>
+      <div class="win" style="left:19%; top:25%; width:170px">
+        <div class="win__bar">Type</div>
+        <div class="win__body"><span class="win__badge">Aa</span><div style="margin:6px 0">grotesk + pixel</div><div class="win__row"><span class="chip">mono</span></div></div>
+      </div>
+      <div class="win" style="left:37%; top:10%; width:260px">
+        <div class="win__bar">Motion</div>
+        <div class="win__body"><span class="win__badge">FPS</span><div style="margin:6px 0">linear, stepped, never springy</div><div class="win__row"><span class="chip">2s blink</span><span class="chip">18s race</span></div></div>
+      </div>
+
+      <div class="win" style="left:25%; top:30%; width:540px">
+        <div class="win__bar">Spec.Sheet</div>
+        <div style="display:flex; gap:2px; margin:2px">
+          <div style="width:88px; background:var(--paper); border:1px solid var(--ink); position:relative"><span class="chip-inv chip-inv--paper" style="position:absolute; bottom:0; left:0; font-size:17px">RetroOS</span></div>
+          <div style="flex:1; background:var(--paper); border:1px solid var(--ink); padding:6px; font-family:var(--f-pixel); font-size:20px"><span class="win__badge">R.OS</span><div style="margin-top:6px">retro desktop software,<br>printed on pink paper</div></div>
+        </div>
+        <div style="margin:0 2px 2px; background:var(--paper); border:1px solid var(--ink); padding:4px 10px 0">
+          <div class="race-row race"><span class="chip-inv chip-inv--paper">Line Weight</span><span>1px</span><span>always</span><div class="slider"><i style="--d:2"></i></div></div>
+          <div class="race-row race"><span class="chip-inv chip-inv--paper">Corner Radius</span><span>0px</span><span>never</span><div class="slider"><i style="--d:9"></i></div></div>
+          <div class="race-row race"><span class="chip-inv chip-inv--paper">Worlds</span><span>7</span><span>1 per section</span><div class="slider"><i style="--d:5"></i></div></div>
+          <div class="race-row race"><span class="chip-inv chip-inv--paper">Easing</span><span>linear</span><span>steps()</span><div class="slider"><i style="--d:13"></i></div></div>
+          <div class="dots--fine dots" style="height:34px; margin:8px -10px 0"></div>
+        </div>
+      </div>
+
+      <div class="win win--clear" style="right:1%; top:4%; width:200px" data-ros="clock">
+        <div class="win__bar">Clock Tool 1.1</div>
+        <div class="win__body" style="font-size:19px; background:var(--pink)"><div data-date></div><div data-time style="margin-top:6px"></div></div>
+      </div>
+      <div class="win win--flat" style="left:1%; bottom:2%; width:260px">
+        <div class="win__bar">Retro OS</div>
+        <div class="win__body" style="display:flex; gap:8px; font-size:17px; line-height:1">
+          <svg class="logo-mark" viewBox="0 0 26 26" fill="none" stroke="currentColor"><path d="M13 2l9 5v12l-9 5-9-5V7z"/><path d="M13 2v22M4 7l9 5 9-5"/></svg>
+          <div>Version 1.0<br>©2026. Your Name Here.<br>Made With Claude.</div>
+        </div>
+      </div>
+      <div class="win" style="right:1%; bottom:4%; width:104px">
+        <div class="win__bar">Glider 1.1</div>
+        <div class="win__body" style="font-size:17px"><div class="glider"><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i></div>Game of Life</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="crop" style="margin-top:90px; padding:40px 20px 34px; text-align:center">
+      <h1 class="t-display" style="margin:0">Desktop Software, Printed On Pink Paper</h1>
+    </div>
+    <div class="grid" style="grid-template-columns: 1fr 1fr 170px; margin-top:50px; gap:40px">
+      <div class="rule-col"><span class="t-micro">What This Is</span><p class="t-lead" style="margin:0">A design system extracted from typesafe.ai and rebuilt for Instagram guides, carousels and reel cards. It looks like an early-80s windowed operating system (think Lisa or Mac System 1), laid over editorial Swiss typography, on saturated flat color.</p></div>
+      <div class="rule-col"><span class="t-micro">The Feel</span><p class="t-lead" style="margin:0">Precise, nerdy, warm. Big confident grotesk headlines up top. Tiny machine details around the edges: crop marks, base-64 noise, glyph corners, Game of Life pixels. Everything is on purpose, and nothing is rounded.</p></div>
+      <div class="b64" data-ros="b64" data-msg="Retro OS style guide. Everything is a window." data-len="520"></div>
+    </div>
+    <div class="grid g3" style="margin-top:80px">
+      <div class="rule-col rule-col--tight"><span class="t-micro">Everything Is A Window</span><p class="t-body" style="margin:0">Data, lists, tools, photos all live inside 1px windows with an ink title bar.</p></div>
+      <div class="rule-col rule-col--tight"><span class="t-micro">Color Is A Place</span><p class="t-body" style="margin:0">Each section is one flat world color. Sections change with hard cuts and no gradients.</p></div>
+      <div class="rule-col rule-col--tight"><span class="t-micro">Two Voices</span><p class="t-body" style="margin:0">The human voice is the grotesk. The machine voice is pixel and mono type. Don't mix them in one line.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 02 COLOR ============ -->
+<section id="color" class="world-pink" style="padding-top:40px">
+  <div class="glyph-corners"></div>
+  <div class="wrap">
+    <div class="sec-head crop"><span class="t-micro sec-num">02 / Color</span><h2 class="t-display" style="margin:0">Color Is A Place</h2></div>
+
+    <div class="label-row"><span class="chip-inv">Worlds</span><span class="t-micro">Full-bleed section backgrounds. One per section.</span></div>
+    <div class="grid g4" style="margin-bottom:40px">
+      <div class="win sw"><div class="win__bar">Pink / Primary</div><div class="win__body" style="background:var(--pink)"></div><div class="meta"><b>#F386A1</b> · rgb 243 134 161<br>Home desktop, product, stats. The default world.</div></div>
+      <div class="win sw"><div class="win__bar">Teal / Manifesto</div><div class="win__body" style="background:var(--teal)"></div><div class="meta"><b>#09AEA1</b> · rgb 9 174 161<br>Long reads and opinions. Pair with pink highlighter.</div></div>
+      <div class="win sw"><div class="win__bar">Magenta / People</div><div class="win__body" style="background:var(--magenta)"></div><div class="meta"><b>#D45BB6</b> · rgb 212 91 182<br>Team and people. Also the "News" tag.</div></div>
+      <div class="win sw"><div class="win__bar">Sage / Archive</div><div class="win__body" style="background:var(--sage)"></div><div class="meta"><b>#ABBAB9</b> · rgb 171 186 185<br>Blog and archive. The quiet world. Duotone imagery sits here.</div></div>
+    </div>
+    <div class="label-row"><span class="chip-inv">Neutrals</span><span class="t-micro">Never pure black. Never pure white on surfaces.</span></div>
+    <div class="grid g4" style="margin-bottom:40px">
+      <div class="win sw"><div class="win__bar">Ink</div><div class="win__body" style="background:var(--ink)"></div><div class="meta"><b>#1E1E1E</b> · text at 86% = <b>#1E1E1EDB</b><br>Title bars, rules, dots, dither, the FAQ world.</div></div>
+      <div class="win sw"><div class="win__bar">Paper</div><div class="win__body" style="background:var(--paper)"></div><div class="meta"><b>#FEFEFE</b><br>Active window panes, nav tabs, text on ink.</div></div>
+      <div class="win sw"><div class="win__bar">Window / Win-2</div><div class="win__body" style="background:linear-gradient(90deg,var(--win) 50%,var(--win-2) 50%)"></div><div class="meta"><b>#DEDEDE</b> window body · <b>#C4C4C4</b> inactive pane, ✣ chips</div></div>
+      <div class="win sw"><div class="win__bar">Boot / Boot-dim</div><div class="win__body" style="background:linear-gradient(90deg,var(--boot) 50%,var(--boot-dim) 50%)"></div><div class="meta"><b>#E2E2E2</b> → <b>#999999</b><br>Loader screen, which dims once loading finishes.</div></div>
+    </div>
+    <div class="label-row"><span class="chip-inv">Data Accents</span><span class="t-micro">Only as tiny label chips in charts. Never as backgrounds.</span></div>
+    <div class="win win--paper" style="margin-bottom:60px">
+      <div class="win__bar">PRICE PER THING [USD]</div>
+      <div class="win__body" style="display:grid; gap:10px">
+        <div><span class="chip-inv chip-inv--green">You</span> <span class="t-pixel">#03AA5C · the hero / winner</span><div class="seg-bar" style="--v:.04; margin-top:3px"></div></div>
+        <div><span class="chip-inv chip-inv--cool">Competitor A</span> <span class="t-pixel">#3D6CB9 · cool (approx.)</span><div class="seg-bar" style="--v:.72; margin-top:3px"></div></div>
+        <div><span class="chip-inv chip-inv--warm">Competitor B</span> <span class="t-pixel">#8C4A33 · warm (approx.)</span><div class="seg-bar" style="--v:1; margin-top:3px"></div></div>
+        <div><span class="chip-inv chip-inv--magenta">News</span> <span class="t-pixel">#D45BB6 · category tag</span></div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="gap:40px">
+      <div>
+        <div class="label-row"><span class="chip-inv">Page Order</span></div>
+        <div class="worlds">
+          <div style="background:var(--boot)"><span class="t-micro">01 Boot</span><span class="t-micro">#E2E2E2</span></div>
+          <div style="background:var(--paper)"><span class="t-micro">02 Nav</span><span class="t-micro">#FEFEFE</span></div>
+          <div style="background:var(--pink)"><span class="t-micro">03 Hero + Product</span><span class="t-micro">#F386A1</span></div>
+          <div style="background:var(--sage)"><span class="t-micro">04 Blog</span><span class="t-micro">#ABBAB9</span></div>
+          <div style="background:var(--ink); color:var(--paper)"><span class="t-micro">05 FAQ + Footer</span><span class="t-micro">#1E1E1E</span></div>
+          <div style="background:var(--teal)"><span class="t-micro">Page: Manifesto</span><span class="t-micro">#09AEA1</span></div>
+          <div style="background:var(--magenta)"><span class="t-micro">Page: Team</span><span class="t-micro">#D45BB6</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="label-row"><span class="chip-inv">Usage Ratio</span><span class="t-micro">Per card</span></div>
+        <div class="ratio">
+          <div style="flex:60; background:var(--pink)">World 60</div>
+          <div style="flex:18; background:var(--ink); color:var(--paper)">Ink 18</div>
+          <div style="flex:14; background:var(--paper)">Paper/Win 14</div>
+          <div style="flex:8; background:var(--teal)">8</div>
+        </div>
+        <table class="tbl" style="margin-top:22px">
+          <tr><th>On</th><th>Text</th><th>Contrast</th></tr>
+          <tr><td>Pink</td><td>Ink 86%</td><td>≈ 6.9 : 1 ✓</td></tr>
+          <tr><td>Teal</td><td>Ink 86%</td><td>≈ 6.0 : 1 ✓</td></tr>
+          <tr><td>Ink</td><td>Paper</td><td>≈ 16 : 1 ✓</td></tr>
+          <tr><td>Pink</td><td>Paper</td><td>≈ 2.4 : 1 · highlight only, ≥ 40px on IG</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 TYPE ============ -->
+<section id="type" class="world-sage">
+  <div class="glyph-corners"></div>
+  <div class="wrap">
+    <div class="sec-head crop"><span class="t-micro sec-num">03 / Typography</span><h2 class="t-display" style="margin:0">Two Voices, Four Faces</h2></div>
+
+    <div class="specimen">
+      <div class="rule-col rule-col--tight"><span class="t-micro">Display · Human Voice</span>
+        <div class="spec"><b>Original</b> Die Grotesk C Medium<br><b>Use</b> Inter Tight 600<br><b>Size</b> 150px / lh 0.8<br><b>Track</b> −0.045em (Inter Tight)<br><b>Case</b> Title Case (CSS capitalize)<br><b>Align</b> centered in a crop frame</div></div>
+      <div class="t-display" style="font-size:clamp(60px,9vw,132px)">We Built The Opposite Thing</div>
+    </div>
+    <div class="specimen">
+      <div class="rule-col rule-col--tight"><span class="t-micro">Headings</span>
+        <div class="spec"><b>H2</b> 64 / 0.9 · −0.04em<br><b>H3</b> 48 / 0.9 · −0.035em<br><b>H4</b> 30 / 0.9 · −0.02em<br>All Title Case, weight 600 / 500</div></div>
+      <div><div class="t-h2">Intelligence Per Dollar, Off The Charts.</div><div class="t-h3" style="margin-top:22px">Introducing The Tuesday Workflow</div><div class="t-h4" style="margin-top:22px">The Bitterest Lesson</div></div>
+    </div>
+    <div class="specimen">
+      <div class="rule-col rule-col--tight"><span class="t-micro">Body · Human Voice</span>
+        <div class="spec"><b>Original</b> Die Grotesk C Regular<br><b>Use</b> Inter Tight 400<br><b>Lead</b> 22 / 1.2 · +0.05em orig. (+0.01em Inter)<br><b>Body</b> 17 / 1.2<br><b>Small</b> 15 / 1.0<br><b>Color</b> Ink at 86% (#1E1E1EDB)<br><b>Measure</b> 30–45 characters. Narrow.</div></div>
+      <div style="max-width:470px"><p class="t-lead" style="margin:0 0 18px">Most tools are built to please people. That makes them great at conversation and bad at being reliable. So we started over, building for the software on the other end.</p><p class="t-body" style="margin:0">Body copy is set in narrow columns, always under a micro label, always with a 1px rule to its left. Paragraphs are short. Emphasis comes from a highlighter block, not bold or italic.</p></div>
+    </div>
+    <div class="specimen">
+      <div class="rule-col rule-col--tight"><span class="t-micro">Pixel · Machine Voice</span>
+        <div class="spec"><b>Original</b> LisaTerminal Paper 2X3Y Medium<br><b>Use</b> VT323 (Google, free)<br><b>Alt</b> Departure Mono (OFL)<br><b>Size</b> 16–18 UI · 28 tags · 36 badges<br><b>VT323</b> runs small, so size up about 15%<br><b>Where</b> window bars, chips, data, badges</div></div>
+      <div>
+        <div class="t-pixel-xl" style="font-size:64px">Clock Tool 1.1 — 16:03:33</div>
+        <div class="t-pixel" style="font-size:26px; margin:14px 0">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 $%&amp;*[]&lt;&gt;✣</div>
+        <div class="win__row"><span class="chip-inv">Inverted Label</span><span class="chip">plus chip</span><span class="win__badge">LLM</span></div>
+      </div>
+    </div>
+    <div class="specimen">
+      <div class="rule-col rule-col--tight"><span class="t-micro">Micro Mono · Machine Voice</span>
+        <div class="spec"><b>Font</b> JetBrains Mono 300<br><b>Size</b> 10–13px · lh 1.2<br><b>Track</b> +0.05em<br><b>Case</b> Title Case<br><b>Where</b> column labels, FAQ questions, footnotes, glyph corners, base-64</div></div>
+      <div>
+        <div class="t-micro" style="font-size:13px">What Are System Tools? How Does It Work?</div>
+        <div class="t-micro" style="margin-top:14px">Decisions, Not Strings &nbsp;·&nbsp; Calibrated Confidence &nbsp;·&nbsp; More Like Code</div>
+        <div class="footnote" style="margin-top:14px">*Based On My Own Workflows, Measured Weekly <u>(Proof)</u></div>
+      </div>
+    </div>
+
+    <div class="label-row" style="margin-top:30px"><span class="chip-inv">Scale</span><span class="t-micro">Web (site) → Instagram 1080 canvas</span></div>
+    <table class="tbl">
+      <tr><th>Role</th><th>Font</th><th>Web</th><th>IG 1080px</th><th>Notes</th></tr>
+      <tr><td>Display</td><td>Inter Tight 600</td><td>150 / 0.8</td><td>170–210 / 0.8</td><td>−0.045em, 2–4 words per line</td></tr>
+      <tr><td>H2</td><td>Inter Tight 600</td><td>64 / 0.9</td><td>110 / 0.9</td><td>Stats, section titles</td></tr>
+      <tr><td>H3</td><td>Inter Tight 600</td><td>48 / 0.9</td><td>80 / 0.9</td><td>Article titles</td></tr>
+      <tr><td>Lead</td><td>Inter Tight 400</td><td>22 / 1.2</td><td>42 / 1.15</td><td>Max about 7 lines</td></tr>
+      <tr><td>Body</td><td>Inter Tight 400</td><td>17 / 1.2</td><td>34 / 1.2</td><td>Captions under stats</td></tr>
+      <tr><td>Pixel UI</td><td>VT323</td><td>18–20</td><td>40–44</td><td>Window bars, chips</td></tr>
+      <tr><td>Pixel badge</td><td>VT323</td><td>36–44</td><td>88–100</td><td>Acronym badges: LLM, MCP</td></tr>
+      <tr><td>Micro mono</td><td>JetBrains Mono</td><td>10–13 · 300</td><td>22–26 · 400</td><td>Bump the weight for phone screens</td></tr>
+      <tr><td>Base-64</td><td>JetBrains Mono</td><td>9</td><td>18</td><td>Texture, not meant to be read</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 04 MICROGRAPHICS ============ -->
+<section id="micro" class="world-teal">
+  <div class="glyph-corners"></div>
+  <div class="wrap">
+    <div class="sec-head crop"><span class="t-micro sec-num">04 / Micrographics</span><h2 class="t-display" style="margin:0">The Tiny Machine Details</h2></div>
+    <div class="grid g3">
+      <div class="tile"><div class="tile__demo"><div class="crop" style="width:80%; height:100px; display:grid; place-items:center"><span class="t-h4">Headline</span></div></div>
+        <div class="tile__cap"><span class="t-micro">Crop Marks</span><div class="spec">10px L-arms, 1px, currentColor. Frames every display headline. <code>.crop</code></div></div></div>
+      <div class="tile"><div class="tile__demo"><div class="crop-t" style="width:80%; height:40px; display:grid; place-items:center"><span class="t-micro">between frames</span></div></div>
+        <div class="tile__cap"><span class="t-micro">T-Marks ├ ┤</span><div class="spec">Mid-edge ticks where two frames stack. <code>.crop-t</code></div></div></div>
+      <div class="tile"><div class="tile__demo"><div class="rule-col" style="gap:22px; width:80%"><span class="t-micro">Not Chat</span><span class="t-body">Typed outputs that software can act on.</span></div></div>
+        <div class="tile__cap"><span class="t-micro">Rule-Left Column</span><div class="spec">1px left rule, micro label, 40px gap, body. Dashed rule = collapsed. <code>.rule-col</code></div></div></div>
+      <div class="tile"><div class="tile__demo" style="flex-direction:column; align-items:stretch; justify-content:space-between"><div class="glyph-corners"></div><div class="glyph-corners"></div></div>
+        <div class="tile__cap"><span class="t-micro">Glyph Corners ∵ ⩆</span><div class="spec">Marks every section seam, mirrored left and right. Mono 12px. <code>.glyph-corners</code></div></div></div>
+      <div class="tile"><div class="tile__demo"><div class="b64" data-ros="b64" data-msg="hidden message for the curious" data-len="300"></div></div>
+        <div class="tile__cap"><span class="t-micro">[B.64] Block</span><div class="spec">Real base-64 of a hidden message. Easter egg plus texture. <code>data-ros="b64"</code></div></div></div>
+      <div class="tile"><div class="tile__demo" style="flex-wrap:wrap; gap:8px"><span class="chip-inv">String Tax</span><span class="chip-inv">Jev.Cost</span><span class="chip-inv chip-inv--paper">Paper</span></div>
+        <div class="tile__cap"><span class="t-micro">Inverted Label</span><div class="spec">Ink block with text in the world color, so it reads as a knockout. Padding 2/3/4. Sits flush top-left of a frame. <code>.chip-inv</code></div></div></div>
+      <div class="tile"><div class="tile__demo" style="gap:6px; flex-wrap:wrap"><span class="chip">gpt</span><span class="chip">claude</span><span class="chip">01</span><span class="win__badge">RLHF</span></div>
+        <div class="tile__cap"><span class="t-micro">✣ Chips + Badges</span><div class="spec">✣ (U+2723) prefix chips on #C4C4C4. Big inverted pixel acronym badges. <code>.chip .win__badge</code></div></div></div>
+      <div class="tile"><div class="tile__demo" style="flex-direction:column; align-items:stretch; gap:14px; width:100%"><div class="seg-bar" style="--v:.62"></div><div class="slider"><i style="--p:.3"></i></div><div class="slider race"><i style="--d:4"></i></div></div>
+        <div class="tile__cap"><span class="t-micro">Segmented Bars + Sliders</span><div class="spec">4 segments with 2px gaps. Slider: 1px track, square thumb. <code>.seg-bar .slider</code></div></div></div>
+      <div class="tile"><div class="tile__demo" style="gap:14px"><span class="toggle is-closed"></span><span class="toggle"></span><span class="t-pixel cursor">ready</span></div>
+        <div class="tile__cap"><span class="t-micro">Toggle Box + Cursor</span><div class="spec">1px square with a chevron. A block cursor blinks with steps(1). <code>.toggle .cursor</code></div></div></div>
+      <div class="tile"><div class="tile__demo"><p class="t-lead" style="margin:0">That should tell us something. <span class="hl">The bottleneck isn't intelligence.</span></p></div>
+        <div class="tile__cap"><span class="t-micro">Highlighter</span><div class="spec">Pink block, paper text, on teal. Use once per card. <code>.hl</code></div></div></div>
+      <div class="tile"><div class="tile__demo"><span class="footnote">*Based On 40 Real Tasks <u>(Proof)</u></span></div>
+        <div class="tile__cap"><span class="t-micro">Footnote</span><div class="spec">Asterisk plus a bracketed, underlined link. Sits under a big stat. <code>.footnote</code></div></div></div>
+      <div class="tile"><div class="tile__demo"><div class="glider"><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i></div></div>
+        <div class="tile__cap"><span class="t-micro">Glider Icon</span><div class="spec">3×3 cell grid showing the Game of Life glider. Tiny icon-scale nerd reference.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 TEXTURE ============ -->
+<section id="texture" class="world-pink">
+  <div class="glyph-corners"></div>
+  <div class="wrap">
+    <div class="sec-head crop"><span class="t-micro sec-num">05 / Texture</span><h2 class="t-display" style="margin:0">Grain, Dither, Dots</h2></div>
+    <div class="grid g2">
+      <div>
+        <div class="label-row"><span class="chip-inv">Dot Grid</span><span class="t-micro">1px dots · 4px pitch · ink 60%</span></div>
+        <div class="dots" style="height:240px; border:1px solid var(--ink)"></div>
+        <p class="spec">The "paper" inside every desktop frame. It works like a printed halftone field. <code>.dots</code> · a denser field (3px pitch) marks demo areas with <code>.dots--fine</code>. On Instagram use 2px dots on an 8px pitch.</p>
+      </div>
+      <div>
+        <div class="label-row"><span class="chip-inv">Dither Blobs</span><span class="t-micro">Bayer 8×8 + jitter · pixelated · multiply</span></div>
+        <div style="height:240px; border:1px solid var(--ink); position:relative"><canvas class="dither" data-ros="dither" style="width:100%; height:100%" data-opts='{"pixel":2,"seed":21,"blobs":[{"x":.25,"y":.6,"r":.28},{"x":.8,"y":.2,"r":.2}]}'></canvas></div>
+        <p class="spec">Big soft circles rendered in 1-bit ordered dither. The core is dense and the edge breaks into scattered single pixels. The site uses 2048² PNGs with <code>mix-blend-mode: multiply</code>. Here they're generated live with <code>data-ros="dither"</code>.</p>
+      </div>
+      <div>
+        <div class="label-row"><span class="chip-inv">Game Of Life</span><span class="t-micro">2–3px cells · 8–10 fps</span></div>
+        <div style="height:240px; border:1px solid var(--ink); position:relative"><canvas class="life" data-ros="life" style="width:100%; height:100%" data-opts='{"cell":3,"fps":9,"seed":2,"gliders":18}'></canvas></div>
+        <p class="spec">Living pixel dust drifting across the desktop. Gliders crawl out of the dither blobs. It stays subtle and sits behind the windows.</p>
+      </div>
+      <div>
+        <div class="label-row"><span class="chip-inv">Film Grain</span><span class="t-micro">feTurbulence · multiply · 16%</span></div>
+        <div class="grain grain--animated" style="height:240px; border:1px solid var(--ink); background: radial-gradient(60% 70% at 25% 30%, #F57BE0 0 30%, transparent 70%), radial-gradient(50% 60% at 80% 70%, #F57BE0 0 25%, transparent 70%), var(--sky)"></div>
+        <p class="spec">This is the Team-page cloud photography: hot-pink clouds on a pale sky, heavily grained. Add <code>.grain</code> to photos and gradient fields. <code>.grain--animated</code> gives it a 4-step boil for reels.</p>
+      </div>
+    </div>
+
+    <div class="label-row" style="margin-top:60px"><span class="chip-inv">Duotone Collage</span><span class="t-micro">Patent drawings + punch cards, mapped to world colors</span></div>
+    <div class="win" style="height:360px">
+      <div style="display:grid; grid-template-columns: 1fr 1.1fr 1fr; height:100%">
+        <div class="world-ink" style="position:relative; color:#cfcfcf"><div data-ros="figure" data-opts='{"seed":3,"fig":"07"}' style="position:absolute; inset:0"></div></div>
+        <div class="world-teal grain" style="color:var(--ink); padding:10px 8px"><div data-ros="punchcard" data-opts='{"cols":26,"seed":12}' style="height:100%"></div></div>
+        <div class="world-sage" style="position:relative; color:var(--ink)"><div data-ros="figure" data-opts='{"seed":14,"fig":"63"}' style="position:absolute; inset:0"></div><span class="chip-inv chip-inv--magenta" style="position:absolute; left:0; bottom:0; font-size:26px">Company News</span></div>
+      </div>
+    </div>
+    <p class="spec" style="max-width:720px">Blog art is a collage of public-domain patent figures ("FIG. 63", reference numerals, gears, hatching) and scanned IBM punch cards, cut into hard rectangles. Each panel gets one flat world color: grayscale image → <code>contrast(1.35)</code> → <code>mix-blend-mode: multiply</code> onto teal / sage / pink, or inverted to light lines on ink. Add a magenta category chip at the bottom-left. Good sources: Google Patents / USPTO drawings, Wikimedia punch-card scans.</p>
+  </div>
+</section>
+
+<!-- ============ 06 COMPONENTS ============ -->
+<section id="components" class="world-paper">
+  <div class="glyph-corners"></div>
+  <div class="wrap">
+    <div class="sec-head crop"><span class="t-micro sec-num">06 / Components</span><h2 class="t-display" style="margin:0">Everything Is A Window</h2></div>
+
+    <div class="grid g3" style="align-items:start">
+      <div>
+        <div class="win"><div class="win__bar">LM</div><div class="win__body"><span class="win__badge">LM</span><div style="margin:6px 0 4px">berts<br>&lt;low intelligence&gt;</div><span class="chip">gpt</span></div></div>
+        <p class="spec"><b>Window / standard.</b> 1px ink border, 2px hard shadow at 55% ink. Ink title bar in pixel type, then a 2px inset, then a second 1px rule (double-rule chrome), then a #DEDEDE body.</p>
+      </div>
+      <div>
+        <div class="win win--paper"><div class="win__bar">TypeSafe · CEO</div><div class="win__body" style="height:120px; background:linear-gradient(160deg,#cfc8d4,#9d97a3)"></div><div style="padding:6px; font-family:var(--f-pixel); font-size:24px; background:var(--paper)"><span class="chip-inv chip-inv--paper" style="font-size:28px">Your Name</span><p class="t-small" style="margin:8px 0 2px; line-height:1.2">One-line bio in body type under the pixel name.</p></div></div>
+        <p class="spec"><b>Window / photo card.</b> The title bar reads "Brand · Role". The photo fills the body, with the name in an inverted pixel label below. Stagger several of these vertically on a magenta world.</p>
+      </div>
+      <div>
+        <div class="win" style="width:190px"><div class="win__bar">Fun fact</div><div class="win__body" style="font-size:18px">♟ Placed 44th at<br>state chess finals<br>in 5th grade</div></div>
+        <p class="spec"><b>Window / tooltip.</b> A tiny window overlapping a photo card's corner. Keep it to three lines max.</p>
+        <div class="win win--clear" style="width:200px; margin-top:20px; background:var(--pink)" data-ros="clock"><div class="win__bar">Clock Tool 1.1</div><div class="win__body" style="font-size:19px"><div data-date></div><div data-time style="margin-top:6px"></div></div></div>
+        <p class="spec"><b>Window / clear.</b> Transparent body over the world color. A live clock goes here.</p>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:50px; align-items:start">
+      <div>
+        <div class="label-row"><span class="chip-inv chip-inv--paper">Data Chart</span></div>
+        <div class="win win--paper"><div class="win__bar">PRICE PER MILLION TOKENS [USD]</div><div class="win__body" style="font-size:18px; display:grid; gap:8px">
+          <div class="t-pixel" style="font-size:17px">input ...</div>
+          <div><span class="chip-inv chip-inv--cool" style="font-size:18px">Model Astra</span> Lab A<div style="display:flex; align-items:center; gap:0; margin-top:2px"><div class="seg-bar" style="--v:1; flex:1"></div><span style="width:70px; text-align:right">$10.00</span></div></div>
+          <div><span class="chip-inv chip-inv--warm" style="font-size:18px">Model Opus</span> Lab B<div style="display:flex; align-items:center; margin-top:2px"><div class="seg-bar" style="--v:.5; flex:1"></div><span style="width:70px; text-align:right">$5.00</span></div></div>
+          <div><span class="chip-inv chip-inv--cool" style="font-size:18px">Model Luna</span> Lab A<div style="display:flex; align-items:center; margin-top:2px"><div class="seg-bar" style="--v:.06; flex:1"></div><span style="width:70px; text-align:right">$0.20</span></div></div>
+          <div><span class="chip-inv chip-inv--green" style="font-size:18px">Ours</span> You<div style="display:flex; align-items:center; margin-top:2px"><div class="seg-bar" style="--v:.01; flex:1"></div><span style="width:70px; text-align:right">FREE</span></div></div>
+        </div></div>
+        <p class="spec">Horizontal segmented bars with a right-aligned value. Colored pixel chips carry the brand. Your own entry is always green and always last, the "and then there's us" beat.</p>
+      </div>
+      <div>
+        <div class="label-row"><span class="chip-inv chip-inv--paper">Stats</span></div>
+        <div class="rule-col" style="flex-direction:row; gap:60px; padding-top:6px"><div><div class="stat__n">$42</div><div class="stat__l">Per billion input tokens.</div></div><div><div class="stat__n">238x</div><div class="stat__l">Lower than the next best.</div></div></div>
+        <div class="crop" style="margin-top:40px; padding:24px 10px 20px"><div class="t-h2" style="font-size:72px">193.6x Faster,<br>444.6x Cheaper.</div><div class="footnote" style="margin-top:14px">*Based On Workflows For Real Tasks <u>(Proof)</u></div></div>
+        <p class="spec">Big numbers go left-aligned (not centered) with a footnote underneath. Use tenths of precision ("193.6x"), because oddly specific numbers read as measured.</p>
+      </div>
+    </div>
+
+    <div class="label-row" style="margin-top:60px"><span class="chip-inv chip-inv--paper">Terminal Race</span><span class="t-micro">The "String Tax" comparison</span></div>
+    <div class="world-pink dots" data-ros="term-race" style="padding:40px 60px; border-left:1px solid var(--ink)">
+      <script type="application/json">{"header":"$ run workflow --task triage","lines":["\"refund_needed?\": {\"p\": 0.91, \"type\": \"bool\"},","\"urgency\": {\"choice\": \"high\", \"conf\": 0.84},","\"churn_risk?\": {\"p\": 0.22, \"type\": \"bool\"},","\"route_to\": {\"choice\": \"billing\", \"conf\": 0.9},","\"needs_human?\": {\"p\": 0.08, \"type\": \"bool\"},","\"sentiment\": {\"choice\": \"annoyed\", \"conf\": 0.77},","\"duplicate?\": {\"p\": 0.64, \"type\": \"bool\"},","\"sla_breach?\": {\"p\": 0.12, \"type\": \"bool\"}"]}</script>
+      <div class="grid g2" style="gap:40px">
+        <div class="win win--paper" data-term data-speed="40"><div class="win__bar">With A Skill</div><div class="win__body" style="display:flex; gap:6px; height:250px; position:relative"><div class="term__gutter"></div><pre class="term" style="margin:0"></pre><div data-stat hidden style="position:absolute; left:8px; bottom:8px"><span class="chip-inv chip-inv--paper" style="font-size:17px">COST $0.00008</span><br><span class="chip-inv chip-inv--paper" style="font-size:17px">Completed in 0.11s</span></div></div></div>
+        <div class="win win--grey" data-term data-speed="650"><div class="win__bar">Raw Prompt</div><div class="win__body" style="display:flex; gap:6px; height:250px; position:relative"><div class="term__gutter"></div><pre class="term" style="margin:0"></pre><div data-stat hidden style="position:absolute; left:8px; bottom:8px"><span class="chip-inv chip-inv--paper" style="font-size:17px">COST $0.0139</span><br><span class="chip-inv chip-inv--paper" style="font-size:17px">Completed in 8.57s</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="label-row" style="margin-top:60px"><span class="chip-inv chip-inv--paper">Nav Tabs</span></div>
+    <div class="world-pink" style="padding:0 0 30px; display:flex; justify-content:space-between"><nav class="tabs"><a href="#">Brand</a></nav><nav class="tabs"><a href="#">Manifesto</a><a href="#">Team</a><a href="#">Docs</a></nav><nav class="tabs"><a href="#">Sign In</a><a class="is-cta" href="#">Contact</a></nav></div>
+    <p class="spec">Flat paper rectangles, flush to the top edge, with a 4px gap and no border. The CTA is inverted to ink. Hover inverts too, instantly, with no transition.</p>
+  </div>
+</section>
+
+<!-- ============ FAQ (ink world) ============ -->
+<section class="world-ink">
+  <div class="glyph-corners"></div>
+  <div class="wrap">
+    <div class="sec-head crop" style="margin-bottom:40px"><h2 class="t-display" style="margin:0; font-size:clamp(48px,6vw,84px)">We Give A FAQ</h2></div>
+    <div style="max-width:590px; display:grid; gap:40px">
+      <div class="rule-col faq"><div class="faq__q"><span class="t-micro-13">What Does The Ink World Hold?</span><span class="toggle"></span></div><div class="faq__a">FAQs, footers, end cards and anything "after the pitch." Text is paper at full opacity. Lines turn light.</div></div>
+      <div class="rule-col rule-col--dashed"><div class="faq__q"><span class="t-micro-13">Why Is The Rule Dashed Here?</span><span class="toggle is-closed"></span></div></div>
+      <div class="rule-col rule-col--dashed"><div class="faq__q"><span class="t-micro-13">Can I Use Color On Ink?</span><span class="toggle is-closed"></span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 07 MOTION ============ -->
+<section id="motion" class="world-ink" style="padding-top:20px">
+  <div class="wrap">
+    <div class="sec-head crop"><span class="t-micro sec-num">07 / Motion</span><h2 class="t-display" style="margin:0">Linear, Stepped, Honest</h2></div>
+    <div class="grid g3" style="margin-bottom:50px">
+      <div class="rule-col rule-col--tight"><span class="t-micro">Principle 01 · No Springs</span><p class="t-body" style="margin:0">Everything is <code>linear</code> or <code>steps()</code>. Nothing bounces, overshoots or eases in or out. It should feel like a 1983 computer drawing each frame.</p></div>
+      <div class="rule-col rule-col--tight"><span class="t-micro">Principle 02 · Hard Cuts</span><p class="t-body" style="margin:0">World colors switch instantly, and windows appear with no fade. Hover states invert in 0ms. If something "moves", it's a process running inside a window.</p></div>
+      <div class="rule-col rule-col--tight"><span class="t-micro">Principle 03 · Always Alive</span><p class="t-body" style="margin:0">Keep a few slow loops running at all times: the clock ticking, Game of Life cells crawling, sliders racing, the cube turning. The desktop is on.</p></div>
+    </div>
+    <table class="tbl">
+      <tr><th>Animation</th><th>Where</th><th>Timing</th><th>How</th></tr>
+      <tr><td>Boot loader</td><td>Page / reel intro</td><td>Bar fills in uneven jumps every 180ms, then the screen dims #E2E2E2 → #999</td><td><code>data-ros="boot"</code> · spinner ring 1s linear</td></tr>
+      <tr><td>Slider race</td><td>Spec tables, comparisons</td><td>18.248s linear loop, each row phase-shifted</td><td><code>.race</code> + <code>--d</code> offset</td></tr>
+      <tr><td>Terminal race</td><td>Before / after</td><td>Fast side: 40ms/line. Slow side: 650ms/line. Gutter squares fill per line.</td><td><code>data-ros="term-race"</code></td></tr>
+      <tr><td>Game of Life</td><td>Desktop background</td><td>8–10 generations/sec, pixel cells</td><td><code>data-ros="life"</code></td></tr>
+      <tr><td>Clock tick</td><td>Clock Tool window</td><td>1s, no tween</td><td><code>data-ros="clock"</code></td></tr>
+      <tr><td>Blink</td><td>Status dots, cursor</td><td>2s linear, 50% duty (cursor: 1s)</td><td><code>.blink</code> <code>.cursor</code></td></tr>
+      <tr><td>Wireframe cube</td><td>Footer / end card</td><td>Slow Y-spin (~25s/turn), random dashed-edge flicker</td><td><code>data-ros="cube"</code> (site uses Unicorn Studio WebGL)</td></tr>
+      <tr><td>Grain boil</td><td>Photos in reels</td><td>4 steps / 0.4s</td><td><code>.grain--animated</code></td></tr>
+    </table>
+    <div class="grid g2" style="margin-top:60px; align-items:center">
+      <div style="height:360px; position:relative" class="crop"><canvas data-ros="cube" style="position:absolute; inset:0; width:100%; height:100%"></canvas><div style="position:absolute; inset:0; display:grid; place-items:center"><span class="t-display" style="font-size:72px">Retro OS</span></div></div>
+      <div class="rule-col"><span class="t-micro">For Reels</span><p class="t-lead" style="margin:0">Animate at 12 fps "on twos" inside a 30 fps export, so motion reads as stepped. Open with the boot loader (≈1.2s), cut hard to the pink desktop, then let windows pop in one per beat at 0ms each. Hold the final frame for 1.5s so the text can be read.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 08 INSTAGRAM ============ -->
+<section id="instagram" class="world-magenta">
+  <div class="glyph-corners"></div>
+  <div class="wrap" style="max-width:1300px">
+    <div class="sec-head crop"><span class="t-micro sec-num">08 / Instagram</span><h2 class="t-display" style="margin:0">Cards &amp; Reel Covers</h2></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; gap:20px; flex-wrap:wrap">
+      <div class="rule-col rule-col--tight" style="max-width:640px"><span class="t-micro">Built At Native Size</span><p class="t-body" style="margin:0">Every card is real 1080px HTML scaled down for preview. Open <code>index.html?card=&lt;id&gt;</code> to render one at 1:1 for export. Reels are 1080×1920 and posts / carousels are 1080×1350. On a 1080 canvas the 1px hairline becomes 2px, the dot pitch 8px, and the crop arms 24px.</p></div>
+      <button class="btn" onclick="document.body.classList.toggle('ig-safe')">Toggle Reel Safe Zones</button>
+    </div>
+
+    <div class="ig-row">
+      <!-- A. Reel cover -->
+      <div class="ig-item"><span class="chip-inv">reel-cover · 9:16</span>
+      <div class="ig-frame" style="--s:.3; --h:1920px"><div class="ig world-pink" id="reel-cover" data-fmt="reel" style="--h:1920px">
+        <div class="glyph-corners" style="position:absolute; top:20px; left:0; right:0"></div>
+        <div class="dots" style="position:absolute; inset:230px 40px 420px; border:2px solid var(--ink)">
+          <canvas class="dither" data-ros="dither" data-opts='{"pixel":5,"seed":31,"blobs":[{"x":.02,"y":.8,"r":.36},{"x":1,"y":.28,"r":.3}]}'></canvas>
+          <canvas class="life" data-ros="life" data-opts='{"cell":5,"seed":6,"fps":8}'></canvas>
+          <span class="chip-inv" style="position:absolute; top:0; left:0">SKILLS.OS1</span>
+          <div class="win" style="position:absolute; left:70px; top:130px; width:360px"><div class="win__bar">Skill.01</div><div class="win__body"><span class="win__badge">MD</span><div style="margin-top:10px">humanize</div></div></div>
+          <div class="win" style="position:absolute; right:60px; top:230px; width:380px"><div class="win__bar">Skill.02</div><div class="win__body"><span class="win__badge">PDF</span><div style="margin-top:10px">extract + fill</div></div></div>
+          <div class="win win--clear" style="position:absolute; right:60px; bottom:60px; width:330px" data-ros="clock" data-fixed="2026-09-29T09:41:00"><div class="win__bar">Clock Tool 1.1</div><div class="win__body" style="font-size:40px; background:var(--pink)"><div data-time></div></div></div>
+        </div>
+        <div class="crop" style="position:absolute; left:80px; right:80px; top:690px; padding:18px">
+          <div class="t-display" style="font-size:176px; text-align:center; background:var(--pink); padding:44px 10px 30px">5 Claude Skills I Use Daily</div>
+        </div>
+        <span class="chip-inv no-case" style="position:absolute; left:40px; bottom:420px">@yourhandle · part 01/03</span>
+      </div></div></div>
+
+      <!-- B. Stat -->
+      <div class="ig-item"><span class="chip-inv">stat · 4:5</span>
+      <div class="ig-frame" style="--s:.4; --h:1350px"><div class="ig world-pink" id="stat" data-fmt="post" style="--h:1350px; padding:70px 70px">
+        <div class="glyph-corners" style="position:absolute; top:24px; left:0; right:0"></div>
+        <div class="rule-col" style="gap:30px; margin-top:40px"><span class="t-micro">The Weekly Report</span><p style="margin:0; font-size:42px; line-height:1.15; font-family:var(--f-body)">I moved one boring workflow into a Claude skill. Here's what happened.</p></div>
+        <div class="crop" style="margin-top:110px; padding:60px 30px 50px">
+          <div class="t-h2" style="font-size:200px; line-height:.82">3 Hrs →<br>11 Min.</div>
+          <div class="footnote" style="margin-top:36px">*Measured Over 6 Weeks Of Real Reports <u>(Proof)</u></div>
+        </div>
+        <div style="flex-direction:row; gap:70px; margin-top:80px" class="rule-col"><div><div class="stat__n" style="font-size:110px">16x</div><div class="stat__l" style="font-size:32px">faster</div></div><div><div class="stat__n" style="font-size:110px">$0.04</div><div class="stat__l" style="font-size:32px">per run</div></div></div>
+        <div class="b64" data-ros="b64" data-msg="swipe for the skill file" data-len="180" style="position:absolute; right:70px; bottom:70px"></div>
+      </div></div></div>
+
+      <!-- C. Terminal race reel -->
+      <div class="ig-item"><span class="chip-inv">race · 9:16</span>
+      <div class="ig-frame" style="--s:.3; --h:1920px"><div class="ig world-pink" id="race" data-fmt="reel" style="--h:1920px">
+        <div class="glyph-corners" style="position:absolute; top:20px; left:0; right:0"></div>
+        <div class="crop" style="position:absolute; left:40px; right:40px; top:240px; padding:40px 20px; text-align:center"><div class="t-display" style="font-size:150px">Prompt vs. Skill</div></div>
+        <div data-ros="term-race" class="dots" style="position:absolute; left:40px; right:40px; top:600px; bottom:420px; padding:40px 30px; border-left:2px solid var(--ink); --term-fs:27px">
+          <script type="application/json">{"header":"$ run triage","lines":["\"refund?\": 0.91,","\"urgency\": \"high\",","\"churn?\": 0.22,","\"route\": \"billing\",","\"human?\": 0.08,","\"dupe?\": 0.64,","\"sla?\": 0.12"]}</script>
+          <span class="chip-inv" style="position:absolute; top:0; left:0">String Tax</span>
+          <div style="display:grid; gap:34px; margin-top:34px">
+            <div class="win win--paper" data-term data-speed="60"><div class="win__bar">With A Skill</div><div class="win__body" style="display:flex; gap:14px; height:318px; position:relative"><div class="term__gutter"></div><pre class="term" style="margin:0"></pre><div data-stat hidden style="position:absolute; right:14px; bottom:14px"><span class="chip-inv chip-inv--paper">0.11s · $0.00008</span></div></div></div>
+            <div class="win win--grey" data-term data-speed="700"><div class="win__bar">Raw Prompt</div><div class="win__body" style="display:flex; gap:14px; height:318px; position:relative"><div class="term__gutter"></div><pre class="term" style="margin:0"></pre><div data-stat hidden style="position:absolute; right:14px; bottom:14px"><span class="chip-inv chip-inv--paper">8.57s · $0.0139</span></div></div></div>
+          </div>
+        </div>
+      </div></div></div>
+
+      <!-- D. List / steps -->
+      <div class="ig-item"><span class="chip-inv">steps · 4:5</span>
+      <div class="ig-frame" style="--s:.4; --h:1350px"><div class="ig world-sage" id="steps" data-fmt="post" style="--h:1350px; padding:80px 70px 70px; display:flex; flex-direction:column">
+        <div class="glyph-corners" style="position:absolute; top:24px; left:0; right:0"></div>
+        <div class="t-h2" style="font-size:120px; margin:30px 0 60px">Install A Skill In 4 Steps</div>
+        <div class="win win--paper"><div class="win__bar">INSTALL.TXT</div><div class="win__body" style="display:grid; gap:52px; padding:40px 26px">
+          <div><span class="chip-inv chip-inv--paper">01</span> Download the .skill file<div class="seg-bar" style="--v:.25; margin-top:10px"></div></div>
+          <div><span class="chip-inv chip-inv--paper">02</span> Settings → Capabilities<div class="seg-bar" style="--v:.5; margin-top:10px"></div></div>
+          <div><span class="chip-inv chip-inv--paper">03</span> Upload + toggle on<div class="seg-bar" style="--v:.75; margin-top:10px"></div></div>
+          <div><span class="chip-inv chip-inv--green">04</span> Ask Claude to use it<div class="seg-bar" style="--v:1; margin-top:10px"></div></div>
+        </div></div>
+        <div style="display:flex; justify-content:space-between; margin-top:auto" class="t-micro"><span>Save This For Later</span><span>02 / 07 →</span></div>
+      </div></div></div>
+
+      <!-- E. Manifesto quote -->
+      <div class="ig-item"><span class="chip-inv">manifesto · 4:5</span>
+      <div class="ig-frame" style="--s:.4; --h:1350px"><div class="ig world-teal" id="manifesto" data-fmt="post" style="--h:1350px; padding:80px 90px 70px; display:flex; flex-direction:column">
+        <div class="glyph-corners" style="position:absolute; top:24px; left:0; right:0"></div>
+        <div class="crop" style="padding:50px 20px; text-align:center; margin-top:20px"><div class="t-display" style="font-size:170px">Build Tools, Not Chats</div></div>
+        <div class="rule-col" style="margin-top:80px; gap:40px"><span class="t-micro">Why I Stopped Prompting</span>
+          <p style="margin:0; font-family:var(--f-body); font-size:50px; line-height:1.15">The models are smart enough already. That tells us something: the bottleneck isn't intelligence. <span class="hl">It's that we keep rebuilding it from scratch.</span></p></div>
+        <div style="margin-top:auto; display:flex; justify-content:space-between; align-items:flex-end"><span class="t-micro no-case">@yourhandle</span><div class="b64" data-ros="b64" data-msg="the bottleneck was never the model" data-len="150"></div></div>
+      </div></div></div>
+
+      <!-- F. FAQ / myth -->
+      <div class="ig-item"><span class="chip-inv">faq · 4:5</span>
+      <div class="ig-frame" style="--s:.4; --h:1350px"><div class="ig world-ink" id="faq" data-fmt="post" style="--h:1350px; padding:90px 80px 70px; display:flex; flex-direction:column">
+        <div class="glyph-corners" style="position:absolute; top:24px; left:0; right:0"></div>
+        <div class="crop" style="padding:40px 20px; text-align:center"><div class="t-display" style="font-size:130px">Real Questions</div></div>
+        <div style="display:grid; gap:60px; margin-top:80px">
+          <div class="rule-col" style="gap:40px"><div class="faq__q"><span class="t-micro" style="font-size:28px">Do I Need To Code To Use Skills?</span><span class="toggle"></span></div><div style="font-family:var(--f-body); font-size:44px; line-height:1.12">No. A skill is a folder with a markdown file. If you can write a checklist, you can write a skill.</div></div>
+          <div class="rule-col rule-col--dashed"><div class="faq__q"><span class="t-micro" style="font-size:28px">Do They Work On Mobile?</span><span class="toggle is-closed"></span></div></div>
+          <div class="rule-col rule-col--dashed"><div class="faq__q"><span class="t-micro" style="font-size:28px">Are They Free?</span><span class="toggle is-closed"></span></div></div>
+          <div class="rule-col rule-col--dashed"><div class="faq__q"><span class="t-micro" style="font-size:28px">Where Do I Find Good Ones?</span><span class="toggle is-closed"></span></div></div>
+          <div class="rule-col rule-col--dashed"><div class="faq__q"><span class="t-micro" style="font-size:28px">Can A Skill Call Other Tools?</span><span class="toggle is-closed"></span></div></div>
+        </div>
+        <div style="margin-top:auto; display:flex; justify-content:space-between" class="t-micro"><span class="no-case">@yourhandle</span><span>Answers In Caption ↓</span></div>
+      </div></div></div>
+
+      <!-- G. End card -->
+      <div class="ig-item"><span class="chip-inv">end · 4:5</span>
+      <div class="ig-frame" style="--s:.4; --h:1350px"><div class="ig world-ink" id="end" data-fmt="post" style="--h:1350px">
+        <div class="crop" style="position:absolute; inset:60px; color:var(--paper)"></div>
+        <canvas data-ros="cube" data-opts='{"speed":.3}'></canvas>
+        <div style="position:absolute; inset:0; display:grid; place-items:center; text-align:center">
+          <div><div class="t-display" style="font-size:180px">Follow For<br>Part 02</div><div class="t-micro no-case" style="margin-top:40px">@yourhandle</div></div>
+        </div>
+        <div class="b64" data-ros="b64" data-msg="thanks for reading all the way down here" data-len="60" style="position:absolute; left:0; right:0; bottom:110px; margin:auto; text-align:center; max-width:none"></div>
+      </div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 09 RULES ============ -->
+<section id="rules" class="world-sage">
+  <div class="glyph-corners"></div>
+  <div class="wrap">
+    <div class="sec-head crop"><span class="t-micro sec-num">09 / Rules</span><h2 class="t-display" style="margin:0">Do This, Not That</h2></div>
+    <div class="dd">
+      <div><span class="chip-inv chip-inv--green">Do</span><ul style="margin-top:14px">
+        <li><span>✣</span>One flat world color per card or section.</li>
+        <li><span>✣</span>1px lines everywhere (2px on a 1080 canvas).</li>
+        <li><span>✣</span>Title Case headlines, tight tracking, 0.8 line-height.</li>
+        <li><span>✣</span>Frame every headline with crop marks.</li>
+        <li><span>✣</span>Put data and lists inside windows with ink title bars.</li>
+        <li><span>✣</span>Give every text block a micro label and a left rule.</li>
+        <li><span>✣</span>Use oddly precise numbers: 193.6x, $0.042.</li>
+        <li><span>✣</span>Hide real messages in base-64 blocks.</li>
+        <li><span>✣</span>Animate linearly or in steps. Keep a slow loop alive.</li>
+      </ul></div>
+      <div><span class="chip-inv">Don't</span><ul style="margin-top:14px">
+        <li><span>✕</span>No rounded corners, pills or soft shadows. Shadows are hard 2px offsets.</li>
+        <li><span>✕</span>No gradients on backgrounds. Grainy photos are the only exception.</li>
+        <li><span>✕</span>No pure #000 or #FFF surfaces.</li>
+        <li><span>✕</span>Don't set body copy in pixel type, or window chrome in the grotesk.</li>
+        <li><span>✕</span>Don't blend two world colors in one section.</li>
+        <li><span>✕</span>No springy or eased motion, and no fades between worlds.</li>
+        <li><span>✕</span>No emoji. Use ✣ ∵ ⩆ ♟ ▶▶▶ and box-drawing glyphs.</li>
+        <li><span>✕</span>Don't put paper text on pink below 40px.</li>
+        <li><span>✕</span>Don't copy the source's logo, cube mark or copy. Borrow the language only.</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="world-ink" style="position:relative; padding:40px 0 20px">
+  <div class="glyph-corners" style="padding:0 220px"></div>
+  <div class="crop" style="margin:60px 30px 0; height:480px; position:relative; color:var(--paper)">
+    <canvas data-ros="cube" style="position:absolute; inset:0; width:100%; height:100%"></canvas>
+    <div style="position:absolute; inset:0; display:grid; place-items:center"><span class="t-display" style="font-size:clamp(64px,9vw,130px)">Retro OS</span></div>
+    <div class="t-micro" data-ros="b64" data-msg="Retro OS Intelligence Now" data-len="36" style="position:absolute; bottom:10px; left:0; right:0; text-align:center; text-transform:none; font-size:9px"></div>
+  </div>
+  <div style="display:flex; justify-content:space-between; padding:24px 30px 0" class="t-small"><span>Retro OS © 2026</span><span>Style guide after typesafe.ai · for Instagram guides &amp; cards</span><span>DESIGN.md · retro-os.css · retro-os.js</span></div>
+</footer>
+
+<script src="assets/js/retro-os.js"></script>
+<script>
+  // Solo mode: index.html?card=reel-cover renders that card alone at 1:1 (for PNG export).
+  (function () {
+    const id = new URLSearchParams(location.search).get("card");
+    if (!id) return;
+    const card = document.getElementById(id);
+    if (!card) return;
+    const host = document.createElement("div"); host.id = "solo-host";
+    document.body.appendChild(host); host.appendChild(card);
+    document.body.classList.add("solo");
+    // Re-run canvases at native size.
+    card.querySelectorAll("[data-ros]").forEach(el => { el.__ros = false; });
+    RetroOS.init(card);
+  })();
+</script>
+</body>
+</html>

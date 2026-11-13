@@ -1,0 +1,179 @@
+/* ==========================================================================
+   RETRO OS · site kit
+   The shared Retro OS components for the standalone web pages (/resources,
+   /skills). Everything is scoped to .rs so it can't touch the Next.js site.
+   Components only one page uses live in that page's own <style> block.
+   Link fonts.css first.
+   ========================================================================== */
+
+/* ---------- tokens ----------
+   .rs-chrome is the shelf bar and site map that scripts/import-guides.mjs puts on every page on
+   the shelf. Same tokens, but not .rs, since .rs marks the email-gated part of a page for Google. */
+.rs, .rs-chrome {
+  --ink: #1E1E1E; --ink-86: rgba(30,30,30,.86); --ink-55: rgba(30,30,30,.55);
+  --paper: #FEFEFE; --win: #DEDEDE; --win-2: #C4C4C4; --boot: #E2E2E2; --green: #03AA5C;
+  --pink: #F386A1; --teal: #09AEA1; --sage: #ABBAB9; --magenta: #D45BB6; --lime: #A6C94B; --lavender: #AE98E6;
+  --f-display: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --f-pixel: "VT323", "Courier New", monospace;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --bg: var(--paper); --fg: var(--ink-86); --knock: var(--paper);
+  font-family: var(--f-display); font-size: 17px; line-height: 1.3; letter-spacing: .01em;
+  color: var(--ink-86); background: var(--paper);
+  -webkit-font-smoothing: antialiased; text-align: left;
+}
+.rs *, .rs *::before, .rs *::after, .rs-chrome *, .rs-chrome *::before, .rs-chrome *::after { box-sizing: border-box; }
+.rs :where(h1, h2, h3, h4, p, ul, ol, pre, figure, blockquote) { margin: 0; padding: 0; }
+.rs :where(ul, ol) { list-style: none; }
+:where(.rs) img { display: block; max-width: 100%; height: auto; }
+:where(.rs) a { color: inherit; }
+.rs .nc { text-transform: none; }
+
+/* ---------- worlds: hard-cut full-bleed color zones ---------- */
+.rs-world { background: var(--bg); color: var(--fg); border-top: 1px solid var(--ink); position: relative; }
+.rs-world--ink { --bg: var(--ink); --fg: var(--paper); --knock: var(--ink); }
+.rs-wrap { max-width: 1180px; margin: 0 auto; padding: 72px 32px; position: relative; }
+.rs-dots { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%231e1e1e' fill-opacity='.5'/%3E%3C/svg%3E"); background-size: 4px 4px; }
+.rs-dots--paper { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23fefefe' fill-opacity='.22'/%3E%3C/svg%3E"); background-size: 4px 4px; }
+.rs-corners { position: absolute; top: 14px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 16px; font: 300 12px/1 var(--f-mono); letter-spacing: .05em; pointer-events: none; }
+.rs-corners::before { content: "\2235\00a0\2A46"; }
+.rs-corners::after  { content: "\2A46\00a0\2235"; }
+
+/* ---------- type ---------- */
+.rs-display { font-family: var(--f-display); font-weight: 600; font-size: clamp(72px, 15vw, 210px); line-height: .8; letter-spacing: -.055em; text-transform: capitalize; }
+.rs-h2 { font-family: var(--f-display); font-weight: 600; font-size: clamp(44px, 7vw, 96px); line-height: .84; letter-spacing: -.045em; text-transform: capitalize; }
+.rs-h3 { font-family: var(--f-display); font-weight: 600; font-size: clamp(30px, 3.4vw, 44px); line-height: .9; letter-spacing: -.035em; text-transform: capitalize; }
+.rs-lead { font-size: clamp(20px, 2.1vw, 26px); line-height: 1.18; letter-spacing: -.005em; }
+.rs-micro { font: 400 12px/1.3 var(--f-mono); letter-spacing: .06em; text-transform: capitalize; }
+.rs-pixel { font-family: var(--f-pixel); font-size: 22px; line-height: 1; }
+.rs-mask { background: var(--bg); }
+
+/* ---------- micrographics ---------- */
+.rs-rule { border-left: 1px solid currentColor; padding: 0 0 2px 12px; display: flex; flex-direction: column; gap: 14px; }
+.rs-rule--dashed { border-left-style: dashed; }
+.rs-crop { --c: currentColor; position: relative; padding: 22px 26px 26px;
+  background:
+    linear-gradient(var(--c),var(--c)) top left/14px 1px, linear-gradient(var(--c),var(--c)) top left/1px 14px,
+    linear-gradient(var(--c),var(--c)) top right/14px 1px, linear-gradient(var(--c),var(--c)) top right/1px 14px,
+    linear-gradient(var(--c),var(--c)) bottom left/14px 1px, linear-gradient(var(--c),var(--c)) bottom left/1px 14px,
+    linear-gradient(var(--c),var(--c)) bottom right/14px 1px, linear-gradient(var(--c),var(--c)) bottom right/1px 14px;
+  background-repeat: no-repeat; }
+.rs-inv { display: inline-block; background: var(--ink); color: var(--knock); font: 400 24px/1 var(--f-pixel); padding: 3px 6px 5px; white-space: nowrap; }
+.rs-world--ink .rs-inv { background: var(--paper); color: var(--ink); }
+.rs-cursor::after { content: "\2588"; margin-left: 2px; animation: rs-blink 1s steps(1) infinite; }
+@keyframes rs-blink { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+/* ---------- window ---------- */
+.rs-win { background: var(--paper); border: 1px solid var(--ink); box-shadow: 3px 3px 0 var(--ink-55); color: var(--ink); display: flex; flex-direction: column; min-width: 0; }
+.rs-world--ink .rs-win { border-color: var(--paper); box-shadow: 3px 3px 0 rgba(254,254,254,.3); }
+.rs-win__bar { background: var(--ink); color: var(--paper); font: 400 22px/1 var(--f-pixel); padding: 2px 8px 4px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.rs-win__body { margin: 2px; border: 1px solid var(--ink); background: var(--win); padding: 14px 16px; flex: 1 0 auto; }
+.rs-win--paper .rs-win__body { background: var(--paper); }
+
+/* ---------- buttons ---------- */
+.rs-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.rs-btn { display: inline-block; font: 400 24px/1 var(--f-pixel); background: var(--ink); color: var(--paper); border: 0; padding: 6px 12px 8px; text-decoration: none; cursor: pointer; }
+.rs-btn:hover, .rs-btn:focus-visible { background: var(--paper); color: var(--ink); outline: 1px solid var(--ink); }
+.rs-btn--ghost { background: transparent; color: inherit; outline: 1px solid currentColor; }
+.rs-btn--go { background: var(--green); color: var(--paper); }
+.rs-world--ink .rs-btn { background: var(--paper); color: var(--ink); }
+.rs-world--ink .rs-btn:hover { background: var(--ink); color: var(--paper); outline-color: var(--paper); }
+
+/* ---------- hero (the grid is per page) ---------- */
+.rs-hero .rs-wrap { padding-top: 88px; padding-bottom: 64px; }
+.rs-hero__top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+.rs-hero__top a { text-decoration: none; }
+.rs-hero__top a:hover { background: var(--ink); color: var(--pink); }
+.rs-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--ink); margin-top: 56px; }
+.rs-stat { padding: 16px 16px 4px 0; }
+.rs-stat + .rs-stat { border-left: 1px solid var(--ink); padding-left: 16px; }
+.rs-stat__n { font-weight: 600; font-size: clamp(44px, 6vw, 80px); line-height: .9; letter-spacing: -.05em; }
+.rs-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 28px; }
+.rs-nav a { background: var(--paper); color: var(--ink-86); text-decoration: none; font-weight: 500; font-size: 16px; padding: 7px 8px 8px; line-height: 1; }
+.rs-nav a:hover { background: var(--ink); color: var(--paper); }
+
+/* ---------- index rows (the column layout is per page) ---------- */
+.rs-index { border-top: 1px solid var(--ink); margin-top: 36px; }
+.rs-row__n { font: 400 30px/1 var(--f-pixel); padding-left: 6px; }
+.rs-row__what { font-size: 16px; line-height: 1.2; opacity: .85; }
+
+/* ---------- big number + star list ---------- */
+.rs-starline { display: grid; grid-template-columns: auto 1fr; gap: 6px 24px; align-items: end; }
+.rs-starline__n { font-weight: 600; font-size: clamp(64px, 8vw, 112px); line-height: .8; letter-spacing: -.055em; font-variant-numeric: tabular-nums; }
+.rs-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; font-size: 16px; line-height: 1.28; }
+.rs-list li { display: grid; grid-template-columns: 16px 1fr; gap: 8px; }
+.rs-list li::before { content: "\2723"; font-family: var(--f-pixel); font-size: 18px; line-height: 1.1; }
+
+/* ---------- Solo Founder Lab callout ----------
+   The "One More Thing" band that closes a resource, just above the footer. Lab pink
+   (the colour of /community), so it needs a non-pink section on either side. */
+.rs-lab .rs-wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+.rs-lab .rs-h2 { font-size: clamp(40px, 5.4vw, 72px); }
+.rs-lab .rs-win { color: var(--ink); }
+.rs-lab .rs-win__body { display: grid; gap: 16px; }
+.rs-lab .rs-btn { background: var(--green); color: var(--paper); justify-self: start; }
+.rs-lab .rs-btn:hover, .rs-lab .rs-btn:focus-visible { background: var(--ink); color: var(--paper); outline: 0; }
+
+/* ---------- Solo Founder Lab pitch ----------
+   The ink band near the top of a resource that pitches the Lab in that resource's terms.
+   Ink, so it needs a non-ink section on either side. Button rules carry .rs-world so they
+   beat page-level ".rs-world--ink .rs-win .rs-btn" overrides (see /trending-repos). */
+.rs-pitch .rs-wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+.rs-pitch .rs-h2 { font-size: clamp(40px, 5.4vw, 72px); text-transform: none; }
+.rs-pitch .rs-inv { background: var(--pink); color: var(--ink); }
+.rs-pitch .rs-win__body { display: grid; gap: 16px; }
+.rs-pitch .rs-list { grid-template-columns: 1fr; font-size: 16.5px; line-height: 1.3; }
+.rs-pitch .rs-list b { font-weight: 600; }
+.rs-world.rs-pitch .rs-btns .rs-btn { background: var(--green); color: var(--paper); }
+.rs-world.rs-pitch .rs-btns .rs-btn--ghost { background: transparent; color: var(--ink); }
+.rs-world.rs-pitch .rs-btns .rs-btn:hover, .rs-world.rs-pitch .rs-btns .rs-btn:focus-visible { background: var(--ink); color: var(--paper); outline: 1px solid var(--ink); }
+.rs-pitch__note { font: 400 12px/1.4 var(--f-mono); letter-spacing: .02em; color: var(--ink-86); }
+
+/* ---------- footer ---------- */
+.rs-foot .rs-wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: end; }
+.rs-b64 { font: 400 10px/1.2 var(--f-mono); letter-spacing: .02em; word-break: break-all; opacity: .7; margin-top: 36px; }
+.rs-b64::before { content: "[B.64]"; display: block; margin-bottom: 8px; }
+
+/* ---------- shelf bar: top of every page on the shelf, so readers know there's a shelf ---------- */
+.rs-shelfbar { background: var(--lime); border-bottom: 1px solid var(--ink); font: 400 21px/1 var(--f-pixel); color: var(--ink); }
+.rs-shelfbar__in { max-width: 1180px; margin: 0 auto; padding: 0 22px; display: flex; justify-content: space-between; align-items: stretch; gap: 12px; min-height: 36px; }
+.rs-shelfbar__path { display: flex; align-items: stretch; min-width: 0; }
+.rs-shelfbar__path span { display: flex; align-items: center; color: var(--ink-86); }
+.rs-shelfbar a { display: flex; align-items: center; padding: 0 10px 2px; color: inherit; text-decoration: none; white-space: nowrap; }
+.rs-shelfbar a:hover, .rs-shelfbar a:focus-visible { background: var(--ink); color: var(--paper); outline: 0; }
+.rs-shelfbar a.rs-shelfbar__go { background: var(--ink); color: var(--paper); }
+.rs-shelfbar a.rs-shelfbar__go:hover, .rs-shelfbar a.rs-shelfbar__go:focus-visible { background: var(--lavender); color: var(--ink); }
+
+/* ---------- site map: the quiet last band on every page on the shelf ---------- */
+.rs-sitemap { background: var(--boot); border-top: 1px solid var(--ink); font-size: 15px; line-height: 1.3; }
+.rs-sitemap__in { max-width: 1180px; margin: 0 auto; padding: 44px 32px 36px; display: grid; grid-template-columns: 1.25fr repeat(4, minmax(0, 1fr)); gap: 32px 28px; }
+.rs-sitemap__name { font: 400 28px/1 var(--f-pixel); color: var(--ink); text-decoration: none; }
+.rs-sitemap__me p { margin: 8px 0 0; }
+.rs-sitemap__h { margin: 0 0 12px; font: 400 12px/1.3 var(--f-mono); letter-spacing: .06em; color: var(--ink-55); }
+.rs-sitemap ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.rs-sitemap a { color: inherit; text-decoration: none; }
+.rs-sitemap ul a:hover, .rs-sitemap ul a:focus-visible, .rs-sitemap__me a:hover { background: var(--ink); color: var(--paper); outline: 0; }
+.rs-sitemap__all { font: 400 21px/1 var(--f-pixel); }
+.rs-sitemap__base { margin: 0 max(32px, calc((100% - 1116px) / 2)); padding: 14px 0 22px; border-top: 1px dashed var(--ink-55); display: flex; flex-wrap: wrap; gap: 6px 20px; font: 400 12px/1.3 var(--f-mono); letter-spacing: .04em; color: var(--ink-55); }
+.rs-sitemap__base a:hover { color: var(--ink); text-decoration: underline; }
+@media (max-width: 900px) {
+  .rs-sitemap__in { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 36px 20px 28px; }
+  .rs-sitemap__me { grid-column: 1 / -1; }
+  .rs-sitemap__base { margin: 0 20px; }
+}
+@media (max-width: 560px) {
+  .rs-shelfbar__in { padding: 0 10px; }
+  .rs-shelfbar__crumb, .rs-shelfbar__more { display: none !important; }
+}
+@media print { .rs-chrome { display: none !important; } }
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .rs-wrap { padding: 56px 20px; }
+  .rs-list, .rs-foot .rs-wrap, .rs-lab .rs-wrap, .rs-pitch .rs-wrap { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .rs-stat__n { font-size: 38px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rs-cursor::after { animation: none; }
+}

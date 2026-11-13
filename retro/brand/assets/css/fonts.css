@@ -1,0 +1,15 @@
+/* ==========================================================================
+   Bundled webfonts (no Google request)
+   The one place the static pages' fonts are declared. Pages link this file,
+   and retro-os.css and cutaways.css import it. URLs are relative to this file,
+   so it also works when a page is opened straight from disk (file://).
+
+     Retro OS:  Inter Tight, JetBrains Mono, VT323
+     Cutaways:  Fraunces (opsz axis, 400 + italic), Inter (400–500), JetBrains Mono
+   ========================================================================== */
+@font-face { font-family: "Inter Tight"; src: url("../fonts/inter-tight.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("../fonts/jetbrains-mono.woff2") format("woff2"); font-weight: 100 800; font-display: swap; }
+@font-face { font-family: "VT323"; src: url("../fonts/vt323.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("../fonts/fraunces.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("../fonts/fraunces-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("../fonts/inter.woff2") format("woff2"); font-weight: 400 500; font-display: swap; }

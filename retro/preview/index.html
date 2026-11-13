@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>retro preview</title>
+<style>
+  :root { --ink: #1E1E1E; --paper: #FEFEFE; --pink: #F386A1; --grey: #858585; --win: #DEDEDE; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #2a2a2a; color: var(--paper); font: 13px/1.35 ui-monospace, Menlo, monospace; display: flex; height: 100vh; overflow: hidden; }
+  #left { flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; }
+  #stage { position: relative; background: #000; overflow: hidden; }
+  #stage video, #stage iframe, #grab, #zone { position: absolute; left: 0; top: 0; }
+  #stage iframe { border: 0; transform-origin: 0 0; pointer-events: none; visibility: hidden; background: transparent; }
+  #zone { border: 2px dashed #ff4d4d; pointer-events: none; display: none; }
+  #grab { inset: 0; width: 100%; height: 100%; cursor: grab; }
+  #grab.off { pointer-events: none; }
+  #bar { display: flex; gap: 8px; align-items: center; width: 100%; }
+  #scrub { flex: 1; accent-color: var(--pink); }
+  button { font: inherit; background: var(--paper); color: var(--ink); border: 0; padding: 3px 9px; cursor: pointer; }
+  button.on { background: var(--pink); }
+  #right { flex: 1; overflow: auto; padding: 12px 16px; border-left: 2px solid #111; }
+  h1 { font-size: 14px; margin: 0 0 4px; color: var(--pink); font-weight: normal; }
+  .hint { color: #aaa; margin: 0 0 10px; }
+  .beat { border-top: 1px solid #444; padding: 7px 0; }
+  .beat.now { background: #3a3036; }
+  .beat.isoff .name { color: var(--grey); text-decoration: line-through; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .name { cursor: pointer; flex: 1; }
+  .time { color: #aaa; }
+  .layers { margin: 4px 0 0 24px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .layer { border: 1px solid #777; padding: 1px 7px; cursor: pointer; }
+  .layer.sel { background: var(--pink); color: var(--ink); border-color: var(--pink); }
+  .layer small { color: #aaa; } .layer.sel small { color: var(--ink); }
+  label { cursor: pointer; user-select: none; }
+  #status { color: #aaa; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<div id="left">
+  <div id="stage"><video id="v" src="/video.mp4" preload="auto" playsinline></video><div id="zone"></div><div id="grab" class="off"></div></div>
+  <div id="bar">
+    <button id="play">▶ Play</button>
+    <input id="scrub" type="range" min="0" step="0.001" value="0">
+    <span id="tc">0.00</span>
+  </div>
+</div>
+<div id="right">
+  <h1>retro preview</h1>
+  <p class="hint">Space play/pause · click a beat to jump · tick to turn it on/off (its sounds go with it) · click a layer, then drag on the video or use the arrow keys (shift = 5u) to move it · <b>r</b> resets the layer. Changes save to retro.json; run <code>retro render</code> to export.</p>
+  <div class="row" style="gap:16px;margin-bottom:8px">
+    <label><input type="checkbox" id="sfxOn" checked> sound effects</label>
+    <label><input type="checkbox" id="zoneOn"> face no-go zone</label>
+  </div>
+  <div id="status"></div>
+  <div id="beats"></div>
+</div>
+<script type="module">
+import { mix, RATE } from '/synth.mjs';
+
+const $ = s => document.querySelector(s);
+const v = $('#v'), stage = $('#stage'), grab = $('#grab'), zone = $('#zone');
+const state = await (await fetch('/api/state')).json();
+const [W, H] = state.size;
+const dispH = Math.min(innerHeight - 70, 1100), k = dispH / H, dispW = Math.round(W * k), U = dispW / 100;
+Object.assign(stage.style, { width: dispW + 'px', height: dispH + 'px' });
+Object.assign(v.style, { width: dispW + 'px', height: dispH + 'px' });
+$('#scrub').max = state.duration;
+
+const beats = state.beats.map(b => ({ ...b, move: b.move || {}, ready: false }));
+let sel = null;                                   // { beat, layer }
+const status = s => { $('#status').textContent = s; };
+
+/* ---------- beats as live iframes ---------- */
+for (const b of beats) {
+  const f = document.createElement('iframe');
+  f.width = W; f.height = H; f.style.transform = `scale(${k})`;
+  f.src = `/work/${b.id}/index.html`;
+  stage.insertBefore(f, zone);
+  b.frame = f;
+  f.onload = async () => {
+    const w = f.contentWindow;
+    for (let i = 0; i < 200 && !w.__timelines?.root; i++) await new Promise(r => setTimeout(r, 25));
+    if (!w.__timelines?.root) { status(`${b.id}: no timeline (see the console)`); return; }
+    await w.document.fonts.ready;
+    Object.assign(b, { ready: true, start: w.R.START, end: w.R.END, cues: w.R.cues, layers: w.R.layers(), win: w });
+    applyMove(b);
+    renderList();
+    if (beats.every(x => x.ready)) { buildSfx(); status(`${beats.length} beats loaded`); }
+  };
+}
+
+function applyMove(b) {
+  if (!b.win) return;
+  const all = b.move['*'] || [0, 0];
+  for (const el of b.win.document.querySelectorAll('.layer')) {
+    const [dx, dy] = b.move[el.dataset.layer] || [0, 0];
+    el.style.transform = `translate(calc(var(--u) * ${dx + all[0]}), calc(var(--u) * ${dy + all[1]}))`;
+  }
+}
+
+let saveT = null;
+function save(b, patch) {
+  clearTimeout(saveT);
+  saveT = setTimeout(async () => {
+    await fetch('/api/beat', { method: 'POST', body: JSON.stringify({ id: b.id, ...patch }) });
+    status(`saved ${b.id}`);
+  }, patch.move ? 250 : 0);
+}
+
+/* ---------- list ---------- */
+function renderList() {
+  const t = v.currentTime;
+  $('#beats').innerHTML = beats.map((b, i) => `
+    <div class="beat ${b.on === false ? 'isoff' : ''} ${b.ready && t >= b.start && t < b.end ? 'now' : ''}" data-i="${i}">
+      <div class="row">
+        <input type="checkbox" class="on" ${b.on === false ? '' : 'checked'} title="on/off">
+        <span class="name">${b.id}</span>
+        <span class="time">${b.ready ? `${b.start.toFixed(2)}–${b.end.toFixed(2)}` : '…'}</span>
+        <label title="this beat's sounds"><input type="checkbox" class="sfx" ${b.sfx === false ? '' : 'checked'}> ♪${b.cues ? b.cues.length : ''}</label>
+      </div>
+      <div class="layers">${(b.layers || []).concat(b.layers?.length > 1 ? ['*'] : []).map(L => {
+        const [dx, dy] = b.move[L] || [0, 0];
+        return `<span class="layer ${sel && sel.beat === b && sel.layer === L ? 'sel' : ''}" data-l="${L}">${L === '*' ? 'all' : L}${dx || dy ? ` <small>${dx},${dy}</small>` : ''}</span>`;
+      }).join('')}</div>
+    </div>`).join('');
+}
+$('#beats').addEventListener('click', e => {
+  const el = e.target.closest('.beat'); if (!el) return;
+  const b = beats[+el.dataset.i];
+  if (e.target.classList.contains('on')) { b.on = e.target.checked; save(b, { on: b.on }); buildSfx(); renderList(); sync(); return; }
+  if (e.target.classList.contains('sfx')) { b.sfx = e.target.checked ? undefined : false; save(b, { sfx: e.target.checked }); buildSfx(); return; }
+  const L = e.target.closest('.layer');
+  if (L) { sel = sel && sel.beat === b && sel.layer === L.dataset.l ? null : { beat: b, layer: L.dataset.l }; grab.classList.toggle('off', !sel); if (sel && !(v.currentTime >= b.start && v.currentTime < b.end)) seek((b.start + b.end) / 2); renderList(); return; }
+  if (e.target.classList.contains('name') && b.ready) seek(b.start);
+});
+
+/* ---------- moving ---------- */
+function nudge(dx, dy) {
+  if (!sel) return;
+  const b = sel.beat, [x, y] = b.move[sel.layer] || [0, 0];
+  b.move[sel.layer] = [Math.round((x + dx) * 10) / 10, Math.round((y + dy) * 10) / 10];
+  applyMove(b); renderList(); save(b, { move: b.move });
+}
+let drag = null;
+grab.addEventListener('pointerdown', e => { if (!sel) return; drag = { x: e.clientX, y: e.clientY, m: [...(sel.beat.move[sel.layer] || [0, 0])] }; grab.setPointerCapture(e.pointerId); });
+grab.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const b = sel.beat;
+  b.move[sel.layer] = [Math.round((drag.m[0] + (e.clientX - drag.x) / U) * 2) / 2, Math.round((drag.m[1] + (e.clientY - drag.y) / U) * 2) / 2];
+  applyMove(b);
+});
+grab.addEventListener('pointerup', () => { if (!drag) return; drag = null; renderList(); save(sel.beat, { move: sel.beat.move }); });
+
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' && e.target.type !== 'checkbox' && e.target.type !== 'range') return;
+  const s = e.shiftKey ? 5 : 0.5;
+  if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+  else if (e.key === 'ArrowLeft' && sel) { e.preventDefault(); nudge(-s, 0); }
+  else if (e.key === 'ArrowRight' && sel) { e.preventDefault(); nudge(s, 0); }
+  else if (e.key === 'ArrowUp' && sel) { e.preventDefault(); nudge(0, -s); }
+  else if (e.key === 'ArrowDown' && sel) { e.preventDefault(); nudge(0, s); }
+  else if (e.key === 'r' && sel) { delete sel.beat.move[sel.layer]; applyMove(sel.beat); renderList(); save(sel.beat, { move: sel.beat.move }); }
+  else if (e.key === 'Escape') { sel = null; grab.classList.add('off'); renderList(); }
+});
+
+/* ---------- time ---------- */
+function sync() {
+  const t = v.currentTime;
+  for (const b of beats) {
+    if (!b.ready) continue;
+    const show = b.on !== false && t >= b.start && t < b.end;
+    b.frame.style.visibility = show ? 'visible' : 'hidden';
+    if (show) b.win.__timelines.root.seek(Math.max(0, t - b.start), false);
+  }
+  $('#tc').textContent = t.toFixed(2);
+  $('#scrub').value = t;
+  const z = $('#zoneOn').checked && faceZone(t);
+  zone.style.display = z ? 'block' : 'none';
+  if (z) Object.assign(zone.style, { left: z[0] * U + 'px', top: z[1] * U + 'px', width: z[2] * U + 'px', height: z[3] * U + 'px' });
+}
+function faceZone(t) {               // same rule as lib/faces.mjs noGo()
+  const f = state.faces; if (!f) return null;
+  const s = f.samples[Math.max(0, Math.min(f.samples.length - 1, Math.round(t * f.fps)))];
+  const b = s?.faces[0]; if (!b) return null;
+  const [x, y, w, h] = b;
+  return [x - w * 0.12, y - h * 0.2, w * 1.24, h * (1 + 0.2 + 0.45)];
+}
+let lastNow = '';
+(function loop() {
+  sync();
+  const now = beats.filter(b => b.ready && v.currentTime >= b.start && v.currentTime < b.end).map(b => b.id).join();
+  if (now !== lastNow) { lastNow = now; renderList(); }
+  requestAnimationFrame(loop);
+})();
+function seek(t) { v.currentTime = t; restartSfx(); }
+$('#scrub').addEventListener('input', e => seek(+e.target.value));
+$('#zoneOn').addEventListener('change', sync);
+
+/* ---------- sound effects: the export's synth, in the browser ---------- */
+const ac = new AudioContext({ sampleRate: RATE });
+let sfxBuf = null, src = null;
+function buildSfx() {
+  const cues = beats.filter(b => b.ready && b.on !== false && b.sfx !== false).flatMap(b => b.cues.map(c => ({ ...c, vol: (c.vol || 0) + (b.sfxGain || 0) })));
+  const m = mix(cues, state.duration, state.sfxGain);
+  sfxBuf = ac.createBuffer(1, m.length, RATE); sfxBuf.copyToChannel(m, 0);
+  restartSfx();
+}
+function restartSfx() {
+  if (src) { src.stop(); src = null; }
+  if (v.paused || !sfxBuf || !$('#sfxOn').checked) return;
+  src = ac.createBufferSource(); src.buffer = sfxBuf; src.connect(ac.destination);
+  src.start(0, v.currentTime);
+}
+$('#sfxOn').addEventListener('change', restartSfx);
+function togglePlay() { if (v.paused) { ac.resume(); v.play(); } else v.pause(); }
+$('#play').onclick = togglePlay;
+v.addEventListener('play', () => { $('#play').textContent = '❚❚ Pause'; restartSfx(); });
+v.addEventListener('pause', () => { $('#play').textContent = '▶ Play'; restartSfx(); });
+v.addEventListener('seeked', restartSfx);
+v.addEventListener('ended', restartSfx);
+renderList();
+</script>
+</body>
+</html>
