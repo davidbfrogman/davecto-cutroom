@@ -1,0 +1,71 @@
+<!doctype html>
+<!-- 27.53–30.40 "Two, show it some examples. Both good ones and bad ones."
+     Few-Shot.Dir desktop under the pink title. On "good" a paper window streams a clean example
+     fast (gutter squares fill per line) and stamps ✓ Do This; on "bad" a grey window streams a
+     messy one slowly and stamps ✕ Not This. The terminal-race pattern from the style guide. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08 Examples</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #desk { border: var(--hair) solid var(--ink); }
+    #desk .dots { position: absolute; inset: 0; opacity: .55; }
+    #desk .lbl { position: absolute; left: 0; top: 0; }
+    #desk .cnt { position: absolute; right: calc(var(--u) * 1.4); top: calc(var(--u) * 1.2); color: var(--paper); font: calc(var(--u) * 3.6)/1 var(--f-pixel); text-shadow: 0 0 calc(var(--u) * .5) var(--ink); }
+    .ex .win__body { padding: calc(var(--u) * 1.4) calc(var(--u) * 1.4); }
+    .ex .ln { display: flex; gap: calc(var(--u) * 1.2); align-items: center; height: calc(var(--u) * 4.4); font: calc(var(--u) * 3.7)/1 var(--f-pixel); white-space: nowrap; visibility: hidden; }
+    .ex .ln i { flex: none; width: calc(var(--u) * 2); height: calc(var(--u) * 2); border: var(--hair) solid var(--ink); }
+    .ex .ln.on i { background: var(--ink); }
+    .ex .cmd { padding-left: calc(var(--u) * 3.2); }
+    .ex .stamp { position: absolute; right: calc(var(--u) * 1.4); bottom: calc(var(--u) * 1.4); font-size: calc(var(--u) * 4.2); }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="3"></div>
+  </div>
+  <script>
+    R.START = 27.53;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    const D = R.box('h', { id: 'desk', x: 4, y: 84, w: 82, h: 53, html: `<div class="dots"></div><span class="chip-inv lbl">Few-Shot.Dir</span><span class="cnt" id="cnt">0 Files</span>` });
+    D._g = { x: 4, y: 84, w: 82, h: 53 };
+    R.show(D, 27.94);
+
+    const ex = (id, title, variant, x, y, lines, stamp) => {
+      const w = R.win({ title, right: '', variant, x, y, w: 39, h: 39,
+        body: `<div class="ln cmd">$ ${id === 'good' ? 'example.01' : 'example.02'}</div>` +
+              lines.map(s => `<div class="ln"><i></i><span>${s}</span></div>`).join('') + `<span class="h stamp ${stamp[1]}">${stamp[0]}</span>` });
+      w.classList.add('ex'); w.id = id; return w;
+    };
+    const good = ex('good', 'Good.Example', 'paper', 6.5, 92, ['"tone": "warm",', '"length": 80,', '"cta": true,', '"emoji": 0'], ['✓ Do This', 'chip chip--green']);
+    const bad = ex('bad', 'Bad.Example', 'grey', 45, 96, ['"tone": "???",', '"length": 900,', '"cta": maybe,', '"emoji": 11'], ['✕ Not This', 'chip chip--warm']);
+
+    R.text(R.$('#cnt'), 28.38, '2 Files');
+    R.open(good, 29.02, { from: { x: 30, y: 88 } });
+    good.querySelectorAll('.ln').forEach((el, i) => {
+      const t = 29.02 + i * 0.05;
+      R.show(el, t);
+      R.tl.set(el.querySelector('i'), { backgroundColor: '#1E1E1E' }, R.T(t + 0.033));
+    });
+    R.show(good.querySelector('.stamp'), 29.26);
+
+    R.open(bad, 29.78, { from: { x: 65, y: 88 } });
+    bad.querySelectorAll('.ln').forEach((el, i) => {
+      const t = 29.8 + i * 0.05;
+      R.show(el, t);
+      R.tl.set(el.querySelector('i'), { backgroundColor: '#1E1E1E' }, R.T(t + 0.1));
+    });
+    R.show(bad.querySelector('.stamp'), 30.0);
+    R.flash(bad.querySelector('.stamp'), 30.0, 1);
+    // Sound.
+    R.sfx('pop', 27.94); R.sfx('tick', 28.38);
+    R.sfx('open', 28.92); for (let i = 0; i < 5; i++) R.sfx('type', 29.02 + i * .05); R.sfx('success', 29.26);
+    R.sfx('open', 29.68); for (let i = 0; i < 5; i++) R.sfx('type', 29.8 + i * .05); R.sfx('error', 30.0);
+    R.done(30.4);
+  </script>
+</body>
+</html>

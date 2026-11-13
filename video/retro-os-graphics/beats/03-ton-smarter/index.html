@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- 8.20–11.50 "Most people don't realize these AI have gotten a ton smarter."
+     Model.Bench: bars step up year by year; on "ton" the last bar smashes up through the
+     window's title bar; "A Ton Smarter" lands on "smarter". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03 A ton smarter</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #W .win__body { overflow: visible; }
+    .chart { position: absolute; left: calc(var(--u) * 2); right: calc(var(--u) * 2); top: calc(var(--u) * 5.4); bottom: calc(var(--u) * 6); border-left: var(--hair) solid var(--ink); border-bottom: var(--hair) solid var(--ink); }
+    .chart .dots { position: absolute; inset: 0; opacity: .28; }
+    .bar { position: absolute; bottom: 0; width: calc(var(--u) * 6.4); height: 0; background: var(--ink); }
+    .bar.hot { background: var(--pink); border: var(--hair) solid var(--ink); border-bottom: 0; z-index: 5; }
+    .yr { position: absolute; bottom: calc(var(--u) * 1.6); width: calc(var(--u) * 6.4); text-align: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .ttl { position: absolute; left: calc(var(--u) * 2); top: calc(var(--u) * 1.4); }
+    #wait { position: absolute; left: calc(var(--u) * 4); top: calc(var(--u) * 8); background: var(--win); padding: calc(var(--u) * .4); font: calc(var(--u) * 4.4)/1 var(--f-pixel); }
+    #tag { z-index: 9; font-size: calc(var(--u) * 5.2); }
+    #foot { position: absolute; left: calc(var(--u) * 24); top: calc(var(--u) * 1.4); }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="4"></div>
+  </div>
+  <script>
+    R.START = 8.2;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    const yrs = ["'22", "'23", "'24", "'25", "'26"];
+    const W = R.win({ title: 'Model.Bench', right: 'v2026', x: 6, y: 24, w: 60, h: 33,
+      body: `<div class="micro rule ttl">Capability [Rel.]</div>
+             <div class="chart"><div class="dots"></div>${yrs.map((_, i) => `<div class="bar ${i === 4 ? 'hot' : ''}" id="b${i}" style="left:calc(var(--u) * ${3 + i * 10.4})"></div>`).join('')}</div>
+             ${yrs.map((y, i) => `<div class="yr" style="left:calc(var(--u) * ${5 + i * 10.4})">${y}</div>`).join('')}
+             <div class="h" id="wait">Loading benchmarks<span id="cur">█</span></div>` });
+    W.id = 'W';
+    R.open(W, 8.52, { from: { x: 50, y: 60 } });
+    R.show(R.$('#wait'), 8.52);
+    R.blink(R.$('#cur'), 8.52, 9.28, 0.4);
+    R.hide(R.$('#wait'), 9.28);
+
+    const hs = [2.6, 4.8, 7.6, 11.4];               // u
+    [9.28, 9.5, 9.9, 10.1].forEach((t, i) => R.tl.to(`#b${i}`, { height: `${hs[i]}vw`, duration: 0.2, ease: 'steps(3)' }, R.T(t)));
+    // The 2026 bar blows through the top of the window.
+    R.tl.to('#b4', { height: '31vw', duration: 0.3, ease: 'steps(6)' }, R.T(10.4));
+    R.flash(W.querySelector('.win__bar'), 10.7, 1);
+
+    const tag = R.box('chip-inv h', { id: 'tag', x: 12, y: 17.6, html: 'A Ton Smarter ▲' });
+    R.show(tag, 10.78);
+    R.flash(tag, 10.78, 1);
+    R.text(W.querySelector('.ttl'), 10.98, '*Not To Scale (Proof)');
+    // Sound.
+    R.sfx('open', 8.42); [9.28, 9.5, 9.9, 10.1].forEach(t => R.sfx('tick', t));
+    R.sfx('sweep', 10.4); R.sfx('crash', 10.7); R.sfx('pop', 10.78);
+    R.done(11.5);
+  </script>
+</body>
+</html>

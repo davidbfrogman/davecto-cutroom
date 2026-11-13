@@ -1,0 +1,55 @@
+<!doctype html>
+<!-- 17.74–19.40 "You just want to let them cook."
+     A pink-world panel cuts in with an inverted Chef.exe label; the line types on in pixel; the
+     headline "Let Them Cook." lands whole inside crop marks on "let"; an Autonomy slider races to max on "cook". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05 Let them cook</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #P { background: var(--pink); border: var(--hair) solid var(--ink); box-shadow: calc(var(--u) * .55) calc(var(--u) * .55) 0 var(--ink-55); }
+    #P .dots { position: absolute; inset: 0; opacity: .22; }
+    #P .lbl { position: absolute; left: 0; top: 0; }
+    #P .lbl2 { position: absolute; right: calc(var(--u) * 2); top: calc(var(--u) * 1.6); }
+    #typed { position: absolute; left: calc(var(--u) * 4); top: calc(var(--u) * 8.4); font: calc(var(--u) * 4.6)/1 var(--f-pixel); color: var(--ink); }
+    .crop { left: calc(var(--u) * 4); right: calc(var(--u) * 4); top: calc(var(--u) * 14.6); height: calc(var(--u) * 24); color: var(--ink); visibility: hidden; }
+    .hd { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-size: calc(var(--u) * 13.6); color: var(--ink-86); padding-top: calc(var(--u) * 1.6); }
+    .sl { position: absolute; left: calc(var(--u) * 4); right: calc(var(--u) * 4); bottom: calc(var(--u) * 3); display: flex; align-items: center; gap: calc(var(--u) * 2); font: calc(var(--u) * 4)/1 var(--f-pixel); visibility: hidden; }
+    .trk { position: relative; flex: 1; height: var(--hair); background: var(--ink); }
+    .trk i { position: absolute; top: 50%; left: 0; width: calc(var(--u) * 2.4); height: calc(var(--u) * 2.4); background: var(--ink); transform: translate(-50%, -50%); }
+    #pv { min-width: calc(var(--u) * 8); text-align: right; }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="2"></div>
+  </div>
+  <script>
+    R.START = 17.74;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    const P = R.box('h', { id: 'P', x: 6, y: 84, w: 80, h: 50, html: `
+      <div class="dots"></div>
+      <span class="chip-inv lbl">Chef.exe ▶ Running</span>
+      <span class="micro lbl2">∵ ⩆</span>
+      <span class="type" id="typed">&gt; you just want to…</span>
+      <div class="crop" id="cr"><b></b><b></b><b></b><b></b><div class="disp hd h" id="hd">Let Them<br>Cook.</div></div>
+      <div class="sl" id="sl"><span>Autonomy</span><div class="trk"><i id="th"></i></div><span id="pv">0%</span></div>` });
+    P._g = { x: 6, y: 84, w: 80, h: 50 };
+    R.open(P, 17.78, { from: { x: 46, y: 110 } });
+    R.type(R.$('#typed'), 17.84, 30);
+    R.show(R.$('#cr'), 18.5);
+    R.show(R.$('#hd'), 18.5);
+    R.show(R.$('#sl'), 18.64);
+    R.tl.fromTo('#th', { left: '0%' }, { left: '100%', duration: 0.5, ease: 'steps(8)' }, R.T(18.78));
+    R.count(R.$('#pv'), 18.78, 0.5, 0, 100, v => `${Math.round(v)}%`);
+    // Sound.
+    R.sfx('open', 17.68); for (let i = 0; i < 20; i++) R.sfx('type', 17.84 + i / 30); R.sfx('thunk', 18.5);
+    for (let i = 0; i < 8; i++) R.sfx('tick', 18.78 + i * .0625); R.sfx('success', 19.28);
+    R.done(19.4);
+  </script>
+</body>
+</html>

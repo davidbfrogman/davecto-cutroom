@@ -1,0 +1,93 @@
+<!doctype html>
+<!-- 0.00–4.62 "A lot of people think that writing a big, long prompt will get them better AI results"
+     A Prompt.txt window fills with an ever-longer, self-contradicting prompt. The scrollbar thumb
+     shrinks, the word count races and the size meter fills; "Better Results?" pops on "better". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01 Prompt bloat</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .lines { position: absolute; left: calc(var(--u) * 1.6); right: calc(var(--u) * 5.6); top: calc(var(--u) * 1.4); bottom: calc(var(--u) * 8.4); overflow: hidden; }
+    .ln { height: calc(var(--u) * 4.6); font: calc(var(--u) * 4.3)/1 var(--f-pixel); white-space: nowrap; overflow: hidden; visibility: hidden; display: flex; gap: calc(var(--u) * 1.4); }
+    .ln b { font-weight: 400; color: var(--grey); flex: none; }
+    .ln .x { background: var(--pink); }
+    .sb { position: absolute; right: calc(var(--u) * 1.4); top: calc(var(--u) * 1.4); bottom: calc(var(--u) * 8.4); width: calc(var(--u) * 2.6); border: var(--hair) solid var(--ink); }
+    .sb i { position: absolute; left: 0; right: 0; top: 0; height: 100%; background: var(--ink); }
+    .status { position: absolute; left: calc(var(--u) * 1.6); right: calc(var(--u) * 1.4); bottom: calc(var(--u) * 1.4); height: calc(var(--u) * 5.2);
+              border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * 1.4); display: flex; align-items: center; gap: calc(var(--u) * 2); font: calc(var(--u) * 3.9)/1 var(--f-pixel); }
+    .status .seg { width: calc(var(--u) * 20); }
+    #words { font-variant-numeric: tabular-nums; min-width: calc(var(--u) * 10); }
+    #ask { left: calc(var(--u) * 46); top: calc(var(--u) * 86.5); font-size: calc(var(--u) * 5.4); padding: calc(var(--u) * .6) calc(var(--u) * 1.6) calc(var(--u) * 1); }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 0.0;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    const W = R.win({ title: 'Prompt.txt', right: 'L:000', variant: 'paper', x: 6, y: 92, w: 74, h: 46,
+      body: `<div class="lines"><div id="scroll"></div></div><div class="sb"><i id="thumb"></i></div>
+             <div class="status"><span>Words</span><span id="words">0</span><span style="margin-left:auto">Size</span>${R.seg(4)}</div>` });
+
+    const head = [
+      'You are a world-class expert.',
+      'Be concise. But very thorough.',
+      'Use bullets. Never use bullets.',
+      'Think step by step by step.',
+      'Rule 7: re-read rule 4.',
+      'Do not hallucinate. Please.',
+      'Tone: formal, fun, serious, chill.',
+      'If unsure, be sure.',
+      'Reply in JSON, Markdown + a poem.',
+      'Rule 12: ignore rule 9.',
+      'Max 100 words. Explain all.',
+      'Rule 18: see appendix C.',
+      'Appendix C: see rule 18.',
+      'IMPORTANT!!! (see above)',
+    ];
+    const verbs = ['Always', 'Never', 'Also', 'Remember to', 'Do not', 'Try to', 'Make sure to', 'Ideally'];
+    const objs = ['double check', 'use the template', 'be creative', 'mention rule 3', 'stay on brand', 'add caveats', 'cite page 31', 'skip the intro'];
+    R.seed(5);
+    const lines = head.slice();
+    for (let i = lines.length; i < 46; i++) lines.push(`Rule ${i + 5}: ${verbs[Math.floor(R.rnd() * verbs.length)]} ${objs[Math.floor(R.rnd() * objs.length)]}.`);
+
+    const scroll = R.$('#scroll');
+    lines.forEach((s, i) => scroll.insertAdjacentHTML('beforeend', `<div class="ln" id="l${i}"><b>${String(i + 1).padStart(3, '0')}</b><span>${s}</span></div>`));
+
+    R.open(W, 0.24, { from: { x: 43, y: 60 } });
+    const VIS = 6, N = lines.length, a = 0.42, b = 4.3;
+    const lineAt = i => a + (b - a) * Math.pow(i / (N - 1), 0.55);
+    const bar = W.querySelector('.win__bar .r');
+    lines.forEach((_, i) => {
+      const t = lineAt(i);
+      R.show(R.$(`#l${i}`), t);
+      const off = Math.max(0, i + 1 - VIS);
+      R.tl.set(scroll, { y: `${-off * 4.6}vw` }, R.T(t));
+      R.tl.set('#thumb', { height: `${Math.min(100, (VIS / (i + 1)) * 100)}%`, top: `${(off / (i + 1)) * 100}%` }, R.T(t));
+      R.text(bar, t, `L:${String(i + 1).padStart(3, '0')}`);
+    });
+    // Contradictions get the highlighter as they land.
+    [2, 9, 12].forEach(i => R.tl.set(`#l${i} span`, { backgroundColor: '#F386A1' }, R.T(lineAt(i) + 0.27)));
+
+    R.count(R.$('#words'), 0.42, 3.9, 0, 4096);
+    R.$$('.seg i').forEach((el, i) => R.tl.set(el, { backgroundColor: '#1E1E1E' }, R.T([1.0, 2.04, 2.52, 3.12][i])));
+
+    const ask = R.box('chip-inv h', { id: 'ask', html: 'Better Results?<span id="cur">█</span>' });
+    R.show(ask, 3.48);
+    R.flash(ask, 3.48, 1);
+    R.blink(R.$('#cur'), 3.6, 4.62, 0.5);
+    // Sound.
+    R.sfx('open', 0.15);
+    { const N = 46, a = .42, b = 4.3; for (let i = 0; i < N; i++) if (i < 14 || i % 2 === 0) R.sfx('type', a + (b - a) * Math.pow(i / (N - 1), .55)); }
+    [1.0, 2.04, 2.52, 3.12].forEach(t => R.sfx('tick', t));
+    R.sfx('pop', 3.48);
+    R.done(4.62);
+  </script>
+</body>
+</html>

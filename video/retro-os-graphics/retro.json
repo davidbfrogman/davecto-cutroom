@@ -1,0 +1,52 @@
+{
+  "video": "../PromptGuideNoText.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-prompt-bloat": {
+      "on": true,
+      "move": {
+        "main": [
+          6.5,
+          14.5
+        ]
+      }
+    },
+    "02-exact-opposite": {
+      "on": true,
+      "move": {
+        "main": [
+          5.5,
+          10.5
+        ]
+      }
+    },
+    "03-ton-smarter": {
+      "on": true
+    },
+    "04-rule-book": {
+      "on": true
+    },
+    "05-let-them-cook": {
+      "on": true
+    },
+    "06-framework": {
+      "on": true
+    },
+    "07-goal": {
+      "on": true
+    },
+    "08-examples": {
+      "on": true
+    },
+    "09-hard-rules": {
+      "on": true
+    },
+    "10-self-check": {
+      "on": true
+    },
+    "11-cta": {
+      "on": true
+    }
+  }
+}

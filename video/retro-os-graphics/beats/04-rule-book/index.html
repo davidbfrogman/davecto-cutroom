@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- 11.50–17.74 "It's like hiring a world-class chef and then handing them a 40-page rule book on how to cook your dinner."
+     Chef.exe opens with a pixel chef hat on "world-class"; from "handing" forty RuleBook.pdf windows
+     cascade on top of it (p.01 → p.40); on "your dinner" Chef.exe stops responding; then everything closes. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>04 Rule book</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #chef .win__body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 1.6); }
+    .spark { position: absolute; font: calc(var(--u) * 4.6)/1 var(--f-pixel); color: var(--ink); visibility: hidden; }
+    .rb .win__bar { font-size: calc(var(--u) * 3.6); }
+    .rb .win__body { padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .rb h4 { margin: 0 0 calc(var(--u) * 1.2); font: 400 calc(var(--u) * 3.8)/1 var(--f-pixel); }
+    .rb p { margin: 0 0 calc(var(--u) * .9); height: calc(var(--u) * 1.1); background: var(--win-2); }
+    #nr .win__body { display: flex; gap: calc(var(--u) * 2); align-items: center; font: calc(var(--u) * 4)/1.05 var(--f-pixel); }
+    #nr .ico { flex: none; }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="7"></div>
+  </div>
+  <script>
+    R.START = 11.5;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    const hat = [
+      '....kkkk....',
+      '..kkppppkk..',
+      '.kppppppppk.',
+      'kppppppppppk',
+      'kppppppppppk',
+      '.kppppppppk.',
+      '..kppppppk..',
+      '..kppppppk..',
+      '..kkkkkkkk..',
+      '..kpkpkpkk..',
+      '..kkkkkkkk..',
+    ];
+    const C = R.win({ title: 'Chef.exe', right: '★★★', x: 5, y: 90, w: 32, h: 36, variant: 'paper',
+      body: `${R.pix(hat, 1.35)}<span class="chip-inv">World-Class</span>` });
+    C.id = 'chef';
+    R.open(C, 12.64, { from: { x: 50, y: 110 } });
+    // Sparkles on "chef".
+    [[3, 4], [24, 2], [26, 15], [1, 18]].forEach(([x, y], i) => {
+      const s = R.box('spark', { x: x, y: y, parent: C.querySelector('.win__body'), html: '✣' });
+      R.blink(s, 13.4 + i * 0.07, 14.3, 0.27);
+    });
+
+    // Forty pages of rules, cascading.
+    const N = 40, t0 = 14.36, t1 = 16.55;
+    const rules = ['Salt: 2.4g. Exactly.', 'Stir clockwise only.', 'No improvising.', 'Ask before tasting.', 'Plate at 37° angle.', 'See page 12.'];
+    for (let i = 0; i < N; i++) {
+      const k = i % 14, col = Math.floor(i / 14);
+      const w = R.win({ title: 'RuleBook.pdf', right: `p.${String(i + 1).padStart(2, '0')}/40`, variant: 'paper',
+        x: 22 + k * 1.25 + col * 5, y: 88 + k * 1.15, w: 38, h: 23,
+        body: `<h4>Rule ${String(i * 3 + 1).padStart(3, '0')}: ${rules[i % rules.length]}</h4><p style="width:92%"></p><p style="width:78%"></p><p style="width:86%"></p>` });
+      w.classList.add('rb');
+      const t = t0 + (t1 - t0) * (i / (N - 1));
+      if (i === 0) R.open(w, t, { from: { x: 21, y: 100 } }); else R.show(w, t);
+      R.hide(w, 17.42 + (N - 1 - i) * 0.008);   // all close in a 1/3s sweep, newest first
+    }
+
+    // Chef stops responding.
+    const NR = R.win({ title: 'Chef.exe', right: '', variant: 'grey', x: 8, y: 116, w: 62, h: 15,
+      body: `<span class="ico">${R.pix(['.kkkk.', 'kppppk', 'kpkkpk', 'kppppk', 'kpkkpk', '.kkkk.'], 1.1)}</span><span>Chef.exe is not responding.</span>` });
+    NR.id = 'nr';
+    R.open(NR, 16.94, { from: { x: 21, y: 108 } });
+    R.flash(NR, 16.94, 2);
+    R.hide(NR, 17.62);
+    R.hide(C, 17.66);
+    // Sound.
+    R.sfx('open', 12.54); R.sfx('sparkle', 13.4); R.sfx('sparkle', 13.67);
+    for (let i = 0; i < 40; i++) R.sfx('blip', 14.36 + 2.19 * i / 39, { freq: 500 * Math.pow(2, i / 16) });   // rising, one per page
+    R.sfx('alert', 16.94); R.sfx('close', 17.42);
+    R.done(17.74);
+  </script>
+</body>
+</html>

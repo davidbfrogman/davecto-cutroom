@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- 24.30–27.53 "One, give it a goal, not the exact steps on how to get there."
+     Part.01 window in the clear left column (the pink title holds the centre). A crosshair hunts in
+     steps across a 1-bit target and LOCKS on "goal"; the step list under it gets struck out on
+     "not the exact steps" and deleted line by line on "how to get there"; Route: Auto. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07 Goal</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #G .win__body { padding: calc(var(--u) * 1.6); }
+    .tgt { position: relative; width: 100%; aspect-ratio: 1; border: var(--hair) solid var(--ink); background: var(--paper); }
+    .tgt .dots { position: absolute; inset: 0; opacity: .25; }
+    .ring { position: absolute; border: var(--hair) solid var(--ink); }
+    .ring.r1 { inset: 12%; } .ring.r2 { inset: 27%; } .ring.r3 { inset: 41%; background: var(--pink); }
+    .xh { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+    .xh i { position: absolute; background: var(--ink); }
+    .xh .a { left: calc(var(--u) * -6); width: calc(var(--u) * 4); top: calc(var(--u) * -.3); height: calc(var(--u) * .6); }
+    .xh .b { left: calc(var(--u) * 2); width: calc(var(--u) * 4); top: calc(var(--u) * -.3); height: calc(var(--u) * .6); }
+    .xh .c { top: calc(var(--u) * -6); height: calc(var(--u) * 4); left: calc(var(--u) * -.3); width: calc(var(--u) * .6); }
+    .xh .d { top: calc(var(--u) * 2); height: calc(var(--u) * 4); left: calc(var(--u) * -.3); width: calc(var(--u) * .6); }
+    .xh .e { left: calc(var(--u) * -.9); top: calc(var(--u) * -.9); width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8); background: transparent; border: var(--hair) solid var(--ink); }
+    #lock { position: absolute; left: 50%; bottom: calc(var(--u) * 1); transform: translateX(-50%); }
+    .lbl { display: flex; justify-content: space-between; margin: calc(var(--u) * 2) 0 calc(var(--u) * 1.2); font: calc(var(--u) * 3.8)/1 var(--f-pixel); }
+    .st { position: relative; font: calc(var(--u) * 3.7)/1 var(--f-pixel); height: calc(var(--u) * 4.4); white-space: nowrap; }
+    .st::after { content: ""; position: absolute; left: 0; right: 4%; top: 42%; height: var(--hair); background: var(--ink); transform-origin: 0 50%; transform: scaleX(var(--k, 0)); }
+    #route { margin-top: calc(var(--u) * 1.2); }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="4"></div>
+  </div>
+  <script>
+    R.START = 24.3;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    const G = R.win({ title: 'Part.01', right: '/04', x: 8, y: 45, w: 33, h: 64, variant: 'paper',
+      body: `<div class="tgt"><div class="dots"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+               <div class="xh" id="xh"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i><i class="e"></i></div>
+               <span class="chip-inv h" id="lock">Locked</span></div>
+             <div class="lbl"><span>Goal: 1</span><span id="nst">Steps: 3</span></div>
+             <div class="st" id="s0">1. click here</div><div class="st" id="s1">2. then type</div><div class="st" id="s2">3. then wait</div>
+             <div class="h" id="route"><span class="chip chip--pink">Route: Auto ▶</span></div>` });
+    G.id = 'G';
+    R.open(G, 24.36, { from: { x: 9, y: 76 } });
+    // Crosshair hunts in hard jumps, then locks on "goal".
+    [[24.36, -38, 30], [24.6, 30, -34], [24.82, -18, 14], [24.96, 9, -6], [25.14, 0, 0]].forEach(([t, x, y]) =>
+      R.tl.set('#xh', { left: `${50 + x}%`, top: `${50 + y}%` }, R.T(t)));
+    R.show(R.$('#lock'), 25.14);
+    R.flash(G.querySelector('.tgt'), 25.14, 2);
+    // "not the exact steps": strike; "how to get there": delete.
+    [25.84, 26.06, 26.34].forEach((t, i) => R.tl.fromTo(`#s${i}`, { '--k': 0 }, { '--k': 1, duration: 0.2, ease: 'steps(4)' }, R.T(t)));
+    [26.66, 26.88, 27.06].forEach((t, i) => { R.hide(R.$(`#s${i}`), t); R.text(R.$('#nst'), t, `Steps: ${2 - i}`); });
+    R.show(R.$('#route'), 27.16);
+    // Sound.
+    R.sfx('open', 24.26); [24.6, 24.82, 24.96].forEach(t => R.sfx('tick', t)); R.sfx('lock', 25.14); R.sfx('success', 25.2);
+    [25.84, 26.06, 26.34].forEach(t => R.sfx('strike', t)); [26.66, 26.88, 27.06].forEach(t => R.sfx('type', t)); R.sfx('pop', 27.16);
+    R.done(27.53);
+  </script>
+</body>
+</html>
