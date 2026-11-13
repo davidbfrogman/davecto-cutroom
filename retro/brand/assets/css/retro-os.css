@@ -1,0 +1,374 @@
+/* ==========================================================================
+   RETRO OS — design tokens + components
+   Modeled on the design language of typesafe.ai (Sept 2026).
+   Drop this file into any guide / card HTML and use the classes below.
+   ========================================================================== */
+
+@import url("fonts.css");   /* bundled Inter Tight, JetBrains Mono, VT323 in ../fonts */
+
+/* --------------------------------------------------------------------------
+   1. TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+  /* Worlds (full-bleed section backgrounds). Hex values taken from the site's own tokens. */
+  --pink:     #F386A1;   /* primary world: hero desktop, charts, stats */
+  --teal:     #09AEA1;   /* manifesto / long-read world */
+  --magenta:  #D45BB6;   /* people / team world + "news" tags */
+  --sage:     #ABBAB9;   /* blog / archive world */
+  --green:    #03AA5C;   /* "us" / winner tag in data */
+  --sky:      #CFE3F5;   /* grainy cloud photography (approximate) */
+
+  /* Neutrals */
+  --ink:      #1E1E1E;   /* never pure black */
+  --ink-86:   rgba(30, 30, 30, .86);  /* default body text (#1e1e1edb) */
+  --ink-55:   rgba(30, 30, 30, .55);
+  --paper:    #FEFEFE;   /* never pure white for surfaces */
+  --white:    #FFFFFF;
+  --win:      #DEDEDE;   /* window body */
+  --win-2:    #C4C4C4;   /* inactive pane, chips */
+  --boot:     #E2E2E2;   /* boot screen, bright */
+  --boot-dim: #999999;   /* boot screen, dimmed */
+  --grey:     #858585;
+
+  /* Data-label accents (approximate, sampled from the pricing chart) */
+  --data-cool: #3D6CB9;
+  --data-warm: #8C4A33;
+
+  /* Contextual (overridden by .world-*) */
+  --bg: var(--pink);
+  --fg: var(--ink-86);
+  --knock: var(--pink);  /* text color inside ink chips = the world color */
+
+  /* Type families. Originals first (commercial), free substitutes after. */
+  --f-display: "Die Grotesk C Medium", "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --f-body:    "Die Grotesk C Regular", "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --f-pixel:   "LisaTerminal Paper 2X3Y Medium", "VT323", "Courier New", monospace;
+  --f-mono:    "JetBrains Mono", "Fragment Mono", ui-monospace, Menlo, monospace;
+
+  /* Geometry */
+  --hair: 1px;           /* every line in the system is 1px */
+  --crop-arm: 10px;      /* length of crop-mark arms */
+  --dot-pitch: 4px;      /* dot-grid spacing */
+  --gutter: 8px;         /* rule-left column inner padding */
+  --radius: 0;           /* there are no rounded corners. ever. */
+
+  /* Motion */
+  --t-blink: 2s;
+  --t-race: 18.248s;     /* the site's slider-race loop length, kept on purpose */
+  --ease: linear;        /* motion is linear or stepped; never springy */
+}
+
+/* --------------------------------------------------------------------------
+   2. WORLDS — hard-cut color zones. One per section, never blended.
+   -------------------------------------------------------------------------- */
+.world-pink    { --bg: var(--pink);    --fg: var(--ink-86); --knock: var(--pink); }
+.world-teal    { --bg: var(--teal);    --fg: var(--ink-86); --knock: var(--teal); }
+.world-magenta { --bg: var(--magenta); --fg: var(--ink-86); --knock: var(--magenta); }
+.world-sage    { --bg: var(--sage);    --fg: var(--ink-86); --knock: var(--sage); }
+.world-ink     { --bg: var(--ink);     --fg: var(--paper);  --knock: var(--ink); }
+.world-paper   { --bg: var(--paper);   --fg: var(--ink-86); --knock: var(--paper); }
+.world-boot    { --bg: var(--boot);    --fg: var(--ink);    --knock: var(--boot); }
+[class*="world-"] { background: var(--bg); color: var(--fg); }
+
+/* --------------------------------------------------------------------------
+   3. TYPE ROLES
+   -------------------------------------------------------------------------- */
+.t-display {                         /* 150px / 0.8 on the site */
+  font-family: var(--f-display);
+  font-weight: 600;                  /* Inter Tight 600 ≈ Die Grotesk Medium */
+  font-size: clamp(56px, 10vw, 150px);
+  line-height: .8;
+  letter-spacing: -0.045em;          /* Die Grotesk is naturally tight; Inter Tight needs help */
+  text-transform: capitalize;        /* Title Case Every Word, done in CSS */
+  color: var(--ink-86);
+}
+.world-ink .t-display { color: var(--paper); }
+.t-h2 { font-family: var(--f-display); font-weight: 600; font-size: clamp(40px, 5vw, 64px); line-height: .9; letter-spacing: -0.04em; text-transform: capitalize; }
+.t-h3 { font-family: var(--f-display); font-weight: 600; font-size: 48px; line-height: .9; letter-spacing: -0.035em; text-transform: capitalize; }
+.t-h4 { font-family: var(--f-display); font-weight: 500; font-size: 30px; line-height: .9; letter-spacing: -0.02em; text-transform: capitalize; }
+.t-lead { font-family: var(--f-body); font-weight: 400; font-size: 22px; line-height: 1.2; letter-spacing: 0.01em; }
+.t-body { font-family: var(--f-body); font-weight: 400; font-size: 17px; line-height: 1.2; letter-spacing: 0.01em; }
+.t-small { font-family: var(--f-body); font-weight: 400; font-size: 15px; line-height: 1; letter-spacing: 0.02em; }
+.t-pixel { font-family: var(--f-pixel); font-size: 21px; line-height: 1; letter-spacing: 0.01em; }
+.t-pixel-xl { font-family: var(--f-pixel); font-size: 42px; line-height: 1; }
+.t-micro {                           /* JetBrains Mono 300, 10–13px, Title Case */
+  font-family: var(--f-mono); font-weight: 300; font-size: 10px; line-height: 1.2;
+  letter-spacing: 0.05em; text-transform: capitalize;
+}
+.t-micro-13 { font-family: var(--f-mono); font-weight: 300; font-size: 13px; line-height: 1.2; letter-spacing: 0.05em; text-transform: capitalize; }
+.t-muted { opacity: .62; }
+.no-case { text-transform: none !important; }   /* handles, URLs, code */
+
+/* --------------------------------------------------------------------------
+   4. MICROGRAPHICS
+   -------------------------------------------------------------------------- */
+
+/* 4a. Crop marks — four L-shaped corners around a headline frame */
+.crop {
+  --c: currentColor;
+  position: relative;
+  background:
+    linear-gradient(var(--c), var(--c)) top left     / var(--crop-arm) var(--hair),
+    linear-gradient(var(--c), var(--c)) top left     / var(--hair) var(--crop-arm),
+    linear-gradient(var(--c), var(--c)) top right    / var(--crop-arm) var(--hair),
+    linear-gradient(var(--c), var(--c)) top right    / var(--hair) var(--crop-arm),
+    linear-gradient(var(--c), var(--c)) bottom left  / var(--crop-arm) var(--hair),
+    linear-gradient(var(--c), var(--c)) bottom left  / var(--hair) var(--crop-arm),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--crop-arm) var(--hair),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--hair) var(--crop-arm);
+  background-repeat: no-repeat;
+}
+/* T-marks variant (├ ┤) used between stacked frames */
+.crop-t {
+  --c: currentColor;
+  background:
+    linear-gradient(var(--c), var(--c)) 0 50%    / var(--hair) var(--crop-arm),
+    linear-gradient(var(--c), var(--c)) 0 50%    / 6px var(--hair),
+    linear-gradient(var(--c), var(--c)) 100% 50% / var(--hair) var(--crop-arm),
+    linear-gradient(var(--c), var(--c)) 100% 50% / 6px var(--hair);
+  background-repeat: no-repeat;
+}
+
+/* 4b. Rule-left column: 1px vertical line, micro label on top, text below */
+.rule-col {
+  border-left: var(--hair) solid currentColor;
+  padding: 0 0 2px var(--gutter);
+  display: flex; flex-direction: column; gap: 40px;
+}
+.rule-col--dashed { border-left-style: dashed; }
+.rule-col--tight { gap: 10px; }
+
+/* 4c. Glyph corners: ∵ ⩆ at section boundaries */
+.glyph-corners {
+  display: flex; justify-content: space-between;
+  font-family: var(--f-mono); font-weight: 300; font-size: 12px; letter-spacing: .05em;
+  padding: 0 6px; line-height: 1; pointer-events: none;
+}
+.glyph-corners::before { content: "\2235\00a0\2A46"; }   /* ∵ ⩆ */
+.glyph-corners::after  { content: "\2A46\00a0\2235"; }   /* ⩆ ∵ */
+
+/* 4d. Base-64 block: decorative "machine text" with a bracketed header */
+.b64 {
+  font-family: var(--f-mono); font-weight: 400; font-size: 9px; line-height: 1.12;
+  letter-spacing: .02em; word-break: break-all; max-width: 170px;
+}
+.b64::before { content: "[B.64]"; display: block; margin-bottom: 10px; }
+
+/* 4e. Inverted label chip: ink block, text in the world color ("knockout") */
+.chip-inv {
+  display: inline-block; background: var(--ink); color: var(--knock);
+  font-family: var(--f-pixel); font-size: 20px; line-height: 1;
+  padding: 2px 3px 4px; white-space: nowrap;
+}
+.chip-inv--paper { color: var(--paper); }
+.chip-inv--magenta { background: var(--magenta); color: var(--ink); }
+.chip-inv--green { background: var(--green); color: var(--paper); }
+.chip-inv--cool { background: var(--data-cool); color: var(--paper); }
+.chip-inv--warm { background: var(--data-warm); color: var(--paper); }
+
+/* 4f. Plus chip: ✣ + label on light grey */
+.chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: var(--win-2); color: var(--ink);
+  font-family: var(--f-pixel); font-size: 18px; line-height: 1; padding: 2px 5px 3px 3px;
+}
+.chip::before { content: "\2723"; font-size: .8em; }  /* ✣ */
+
+/* 4g. Segmented bar (4 segments, 2px gaps) — data bars, progress */
+.seg-bar {
+  --v: .5;                           /* 0–1 fill */
+  position: relative; height: 12px;
+  background:
+    linear-gradient(90deg, var(--ink) calc(var(--v) * 100%), transparent 0) ,
+    var(--win);
+}
+.seg-bar::after {                    /* the gaps */
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(25% - 2px), var(--paper) calc(25% - 2px) 25%);
+}
+
+/* 4h. Slider: 1px track + square thumb */
+.slider { position: relative; height: 10px; border-bottom: var(--hair) solid var(--ink); }
+.slider > i {
+  position: absolute; bottom: 0; left: calc(var(--p, .5) * (100% - 10px));
+  width: 10px; height: 10px; background: var(--ink);
+}
+
+/* 4i. Toggle box (FAQ) */
+.toggle {
+  width: 18px; height: 18px; border: var(--hair) solid currentColor;
+  display: inline-grid; place-items: center; flex: none;
+}
+.toggle::before {
+  content: ""; width: 6px; height: 6px; border: solid currentColor;
+  border-width: 0 1px 1px 0; transform: translateY(-2px) rotate(45deg);
+}
+.toggle.is-closed::before { transform: translateY(2px) rotate(-135deg); }
+
+/* 4j. Highlighter (on teal: pink block, paper text) */
+.hl {
+  background: var(--pink); color: var(--paper);
+  box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: 0 2px;
+}
+.world-pink .hl { background: var(--ink); color: var(--pink); }
+
+/* 4k. Footnote w/ underlined bracket link */
+.footnote { font-family: var(--f-mono); font-weight: 300; font-size: 10px; letter-spacing: .05em; text-transform: capitalize; }
+.footnote u { text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+
+/* --------------------------------------------------------------------------
+   5. TEXTURES
+   -------------------------------------------------------------------------- */
+
+/* 5a. Dot grid (1px dots on a 4px pitch). Scales crisply via pixelated rendering. */
+.dots {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%231e1e1e' fill-opacity='.6'/%3E%3C/svg%3E");
+  background-size: var(--dot-pitch) var(--dot-pitch);
+  image-rendering: pixelated;
+}
+.dots--fine {       /* the denser "String Tax" field */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='3' height='3' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%231e1e1e' fill-opacity='.45'/%3E%3C/svg%3E");
+  background-size: calc(var(--dot-pitch) * .75) calc(var(--dot-pitch) * .75);
+}
+.dots--paper {      /* light dots for dark worlds */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23fefefe' fill-opacity='.35'/%3E%3C/svg%3E");
+}
+
+/* 5b. Dither canvas (filled by retro-os.js). Always pixelated, always multiplied. */
+canvas.dither, canvas.life { image-rendering: pixelated; mix-blend-mode: multiply; display: block; }
+.world-ink canvas.dither, .world-ink canvas.life { mix-blend-mode: screen; }
+
+/* 5c. Film grain overlay — add .grain to any positioned element */
+.grain { position: relative; isolation: isolate; }
+.grain::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: .26; mix-blend-mode: multiply;
+}
+.grain--animated::after { animation: ros-grain .4s steps(4) infinite; }
+@keyframes ros-grain {
+  0% { transform: translate(0, 0); } 25% { transform: translate(-3%, 2%); }
+  50% { transform: translate(2%, -3%); } 75% { transform: translate(-2%, -1%); }
+}
+
+/* 5d. Duotone image: grayscale photo/line-art multiplied into a world color */
+.duotone { background: var(--bg); overflow: hidden; }
+.duotone > img, .duotone > svg { filter: grayscale(1) contrast(1.35); mix-blend-mode: multiply; display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* --------------------------------------------------------------------------
+   6. COMPONENTS
+   -------------------------------------------------------------------------- */
+
+/* 6a. Window — the core container. Title bar + double-rule body + hard shadow. */
+.win {
+  background: var(--paper); border: var(--hair) solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink-55);
+  color: var(--ink); display: flex; flex-direction: column; min-width: 0;
+}
+.win__bar {
+  background: var(--ink); color: var(--paper);
+  font-family: var(--f-pixel); font-size: 20px; line-height: 1;
+  padding: 1px 5px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.win__body {
+  margin: 2px; border: var(--hair) solid var(--ink); background: var(--win);
+  padding: 6px; font-family: var(--f-pixel); font-size: 20px; line-height: 1.1; flex: 1 0 auto;
+}
+.win--paper  .win__body { background: var(--paper); }
+.win--grey   .win__body { background: var(--win-2); }
+.win--clear  { background: transparent; }
+.win--clear  .win__body { background: transparent; }
+.win--flat   { box-shadow: none; }
+.win--single .win__body { margin: 0; border: 0; }
+.win__badge {                         /* big inverted pixel acronym: "LM", "RLHF" */
+  display: inline-block; background: var(--ink); color: var(--paper);
+  font-family: var(--f-pixel); font-size: 44px; line-height: .9; padding: 2px 4px 4px;
+}
+.win__row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* 6b. Boot dialog */
+.boot { width: 216px; }
+.boot .win__body { font-size: 17px; line-height: 1.05; padding: 6px 6px 8px; }
+.boot__bar { margin-top: 8px; height: 16px; border: 1px solid var(--grey); background: var(--win); position: relative; }
+.boot__bar > i { position: absolute; inset: 0 auto 0 0; width: calc(var(--p, 0) * 100%); background: var(--ink); }
+.boot__bar > b { position: relative; font-weight: 400; font-size: 14px; color: var(--win); padding-left: 4px; mix-blend-mode: difference; }
+.spinner {
+  width: 100px; height: 100px; border-radius: 50%;
+  border: 4px solid rgba(254, 254, 254, .35); border-top-color: var(--paper); border-right-color: var(--paper);
+  animation: ros-spin 1s linear infinite;
+}
+@keyframes ros-spin { to { transform: rotate(1turn); } }
+
+/* 6c. Tab nav — flat paper rectangles flush to the top edge */
+.tabs { display: flex; gap: 4px; }
+.tabs a {
+  background: var(--paper); color: var(--ink-86); text-decoration: none;
+  font-family: var(--f-display); font-weight: 500; font-size: 17px; letter-spacing: .02em;
+  padding: 7px 6px 8px; line-height: 1;
+}
+.tabs a.is-cta { background: var(--ink); color: var(--paper); }
+.tabs a:hover { background: var(--ink); color: var(--paper); }
+
+/* 6d. FAQ item */
+.faq { display: flex; flex-direction: column; gap: 30px; }
+.faq__q { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.faq__a { font-family: var(--f-body); font-size: 22px; line-height: 1.1; }
+
+/* 6e. Stat */
+.stat__n { font-family: var(--f-display); font-weight: 600; font-size: 64px; line-height: .9; letter-spacing: -0.04em; }
+.stat__l { font-family: var(--f-body); font-size: 17px; opacity: .8; }
+
+/* 6f. Terminal text inside windows */
+.term { font-family: var(--f-mono); font-size: var(--term-fs, 11px); line-height: 1.3; font-weight: 500; white-space: pre; overflow: hidden; }
+/* one gutter square per output line; row height = term line-height, first row skipped for the $ command */
+.term__gutter { font-size: var(--term-fs, 11px); display: grid; grid-auto-rows: 1.3em; padding-top: 1.3em; align-items: center; align-content: start; }
+.term__gutter > i { width: .8em; height: .8em; border: 1px solid var(--ink); background: transparent; }
+.term__gutter > i.on { background: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   7. MOTION PRIMITIVES
+   -------------------------------------------------------------------------- */
+.blink { animation: ros-blink var(--t-blink) linear infinite; }
+@keyframes ros-blink { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+.race > i, .race .slider > i { animation: ros-race var(--t-race) linear infinite; animation-delay: calc(var(--d, 0) * -1s); }
+@keyframes ros-race {
+  0% { left: 0; } 50% { left: calc(100% - 10px); } 100% { left: 0; }
+}
+.cursor::after { content: "\2588"; animation: ros-blink 1s steps(1) infinite; margin-left: 1px; }
+
+/* --------------------------------------------------------------------------
+   8. INSTAGRAM CANVAS — build cards at native 1080px size.
+   <div class="ig world-pink" data-fmt="post|reel" style="--h:1350px|1920px">
+   Add .ig-safe to <body> to overlay reel UI safe zones.
+   -------------------------------------------------------------------------- */
+.ig *, .ig *::before, .ig *::after { box-sizing: border-box; }
+.ig { width: 1080px; height: var(--h, 1350px); transform: scale(var(--s, 1)); transform-origin: 0 0; box-sizing: border-box; position: relative; overflow: hidden;
+      --hair: 2px; --crop-arm: 24px; --dot-pitch: 8px; --gutter: 18px; }
+.ig .win { box-shadow: 5px 5px 0 var(--ink-55); }
+.ig .win__bar { font-size: 40px; padding: 3px 10px 6px; }
+.ig .win__body { margin: 4px; padding: 14px; font-size: 40px; }
+.ig .win__badge { font-size: 96px; padding: 4px 10px 8px; }
+.ig .chip-inv { font-size: 40px; padding: 4px 8px 8px; }
+.ig .chip { font-size: 36px; padding: 4px 10px 6px 6px; gap: 6px; }
+.ig .t-micro, .ig .footnote { font-size: 23px; font-weight: 400; }
+.ig .glyph-corners { font-size: 24px; padding: 0 14px; }
+.ig .b64 { font-size: 18px; max-width: 330px; }
+.ig .b64::before { margin-bottom: 16px; }
+.ig .slider { height: 20px; } .ig .slider > i { width: 20px; height: 20px; left: calc(var(--p, .5) * (100% - 20px)); }
+.ig .toggle { width: 40px; height: 40px; } .ig .toggle::before { width: 13px; height: 13px; border-width: 0 2px 2px 0; }
+.ig .seg-bar { height: 26px; }
+.ig .term__gutter > i { border-width: 2px; }
+.ig .hl { padding: 0 6px; }
+.ig canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ig-safe .ig::after { content: ""; position: absolute; inset: 0; z-index: 50; pointer-events: none;
+  background:
+    linear-gradient(rgba(255,0,80,.28), rgba(255,0,80,.28)) top / 100% var(--safe-top, 0) no-repeat,
+    linear-gradient(rgba(255,0,80,.28), rgba(255,0,80,.28)) bottom / 100% var(--safe-bottom, 0) no-repeat,
+    linear-gradient(rgba(255,0,80,.28), rgba(255,0,80,.28)) right / var(--safe-right, 0) 100% no-repeat; }
+.ig[data-fmt="reel"] { --safe-top: 220px; --safe-bottom: 400px; --safe-right: 150px; }
+.ig[data-fmt="post"] { --safe-top: 0px; --safe-bottom: 0px; --safe-right: 0px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .blink, .race > i, .spinner, .grain--animated::after, .cursor::after { animation: none !important; }
+}

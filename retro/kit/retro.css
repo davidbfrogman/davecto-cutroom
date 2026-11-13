@@ -1,0 +1,117 @@
+/* Retro OS kit for video overlays (HyperFrames). Tokens from ../brand/DESIGN.md (§2 colour) and
+   ../brand/assets/css/retro-os.css. Everything is sized in --u (1% of frame width) so it renders at
+   any 9:16 size; the build sets --cr-w/--cr-h to the render size.
+   Accent: --accent is the "world" colour (pink by default). Put data-world="teal" (or any world
+   below) on <body>, a window or any element to switch it for that subtree. */
+@font-face { font-family: "VT323"; src: url("assets/fonts/vt323.woff2"); font-display: block; }
+@font-face { font-family: "Inter Tight"; src: url("assets/fonts/inter-tight.woff2"); font-weight: 100 900; font-display: block; }
+@font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/jetbrains-mono.woff2"); font-weight: 100 900; font-display: block; }
+
+:root {
+  /* Worlds: the four site worlds (DESIGN.md §2.1) + the extra card worlds from
+     brand/examples/top-10-trending-repos.html. */
+  --pink: #F386A1; --teal: #09AEA1; --magenta: #D45BB6; --sage: #ABBAB9;
+  --yellow: #E8B53E; --blue: #6FA3E0; --lavender: #AE98E6; --orange: #F4894B; --coral: #EF6B5B; --lime: #A6C94B;
+  --sky: #CFE3F5; --green: #03AA5C; --cool: #3D6CB9;
+  --accent: var(--pink);
+  --ink: #1E1E1E; --ink-86: rgba(30, 30, 30, .86); --ink-55: rgba(30, 30, 30, .55);
+  --paper: #FEFEFE; --win: #DEDEDE; --win-2: #C4C4C4; --grey: #858585; --warm: #8C4A33;
+  --cr-w: 1080px; --cr-h: 1920px;
+  --u: calc(var(--cr-w) / 100);
+  --hair: max(2px, calc(var(--u) * .2));
+  --f-display: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --f-pixel: "VT323", "Courier New", monospace;
+  --f-mono: "JetBrains Mono", Menlo, monospace;
+}
+html, body { margin: 0; overflow: hidden; background: transparent; }
+#root { position: relative; width: var(--cr-w); height: var(--cr-h); overflow: hidden; }
+.clip { position: absolute; inset: 0; }
+* { box-sizing: border-box; }
+
+/* Anything the timeline reveals starts hidden. */
+.win, .zoom, .h { visibility: hidden; }
+
+/* Window: 2px ink frame, ink title bar, double-rule body, hard 5px shadow. */
+.win { position: absolute; display: flex; flex-direction: column; background: var(--win); border: var(--hair) solid var(--ink);
+       box-shadow: calc(var(--u) * .55) calc(var(--u) * .55) 0 var(--ink-55); color: var(--ink); }
+.win__bar { flex: none; display: flex; justify-content: space-between; align-items: center; gap: calc(var(--u) * 1);
+            background: var(--ink); color: var(--paper); font: calc(var(--u) * 4.2)/1 var(--f-pixel);
+            padding: calc(var(--u) * .5) calc(var(--u) * 1.4) calc(var(--u) * .7); white-space: nowrap; }
+.win__bar .r { color: var(--accent); }
+.win__body { position: relative; flex: 1; margin: calc(var(--u) * .45); border: var(--hair) solid var(--ink);
+             padding: calc(var(--u) * 1.6); overflow: hidden; min-height: 0; }
+.win--paper .win__body { background: var(--paper); }
+.win--grey .win__body { background: var(--win-2); }
+.win--pink, .win--world { background: var(--accent); }
+.win--pink .win__body, .win--world .win__body { background: var(--accent); }
+.win--clear { background: transparent; box-shadow: none; }
+.win--clear .win__body { background: transparent; }
+
+/* Zoom rectangles: the System-1 window-open trail. Ink line with a paper keyline so it reads on any frame. */
+.zoom { position: absolute; border: var(--hair) solid var(--ink); outline: var(--hair) solid var(--paper); outline-offset: 0; }
+
+/* Type */
+.px { font-family: var(--f-pixel); line-height: 1; letter-spacing: 0; }
+.mono { font-family: var(--f-mono); font-weight: 400; letter-spacing: .04em; }
+.disp { font-family: var(--f-display); font-weight: 600; letter-spacing: -0.045em; line-height: .8; }
+.type { display: inline-block; overflow: hidden; white-space: pre; vertical-align: bottom; width: 0; }
+
+/* Chips */
+.chip-inv { display: inline-block; background: var(--ink); color: var(--accent); font: calc(var(--u) * 4)/1 var(--f-pixel);
+            padding: calc(var(--u) * .3) calc(var(--u) * 1) calc(var(--u) * .6); white-space: nowrap; }
+.chip { display: inline-block; background: var(--win-2); color: var(--ink); font: calc(var(--u) * 3.6)/1 var(--f-pixel);
+        padding: calc(var(--u) * .3) calc(var(--u) * .9) calc(var(--u) * .5); white-space: nowrap; }
+.chip--green { background: var(--green); color: var(--paper); }
+.chip--warm { background: var(--warm); color: var(--paper); }
+.chip--pink, .chip--world { background: var(--accent); color: var(--ink); }
+.chip--cool { background: var(--cool); color: var(--paper); }
+
+/* Segmented bar: 4 cells, paper gaps */
+.seg { display: flex; gap: calc(var(--u) * .4); }
+.seg i { display: block; flex: 1; height: calc(var(--u) * 2.6); border: var(--hair) solid var(--ink); background: transparent; }
+.seg i.on { background: var(--ink); }
+
+/* Crop marks around a frame */
+.crop { position: absolute; }
+.crop b { position: absolute; width: calc(var(--u) * 2.4); height: calc(var(--u) * 2.4); border: 0 solid currentColor; }
+.crop b:nth-child(1) { left: 0; top: 0; border-left-width: var(--hair); border-top-width: var(--hair); }
+.crop b:nth-child(2) { right: 0; top: 0; border-right-width: var(--hair); border-top-width: var(--hair); }
+.crop b:nth-child(3) { left: 0; bottom: 0; border-left-width: var(--hair); border-bottom-width: var(--hair); }
+.crop b:nth-child(4) { right: 0; bottom: 0; border-right-width: var(--hair); border-bottom-width: var(--hair); }
+
+/* Dot grid texture */
+.dots { background-image: radial-gradient(var(--ink) 34%, transparent 36%); background-size: calc(var(--u) * .75) calc(var(--u) * .75); opacity: .5; }
+
+/* Rule-left column with a micro label */
+.rule { border-left: var(--hair) solid currentColor; padding-left: calc(var(--u) * 1.2); }
+.micro { font: 400 calc(var(--u) * 2.3)/1.2 var(--f-mono); letter-spacing: .05em; text-transform: capitalize; }
+
+/* Pixel art grid */
+.pix { display: grid; }
+.pix i { display: block; }
+.pix i.k { background: var(--ink); }
+.pix i.p { background: var(--paper); }
+.pix i.n { background: var(--accent); }
+.pix i.g { background: var(--green); }
+.pix i.w { background: var(--win-2); }
+
+/* Worlds: switch the accent for a subtree. */
+[data-world="pink"] { --accent: var(--pink); }
+[data-world="teal"] { --accent: var(--teal); }
+[data-world="magenta"] { --accent: var(--magenta); }
+[data-world="sage"] { --accent: var(--sage); }
+[data-world="yellow"] { --accent: var(--yellow); }
+[data-world="blue"] { --accent: var(--blue); }
+[data-world="lavender"] { --accent: var(--lavender); }
+[data-world="orange"] { --accent: var(--orange); }
+[data-world="coral"] { --accent: var(--coral); }
+[data-world="lime"] { --accent: var(--lime); }
+[data-world="sky"] { --accent: var(--sky); }
+[data-world="green"] { --accent: var(--green); }
+
+/* Layers: every element R.box/R.win makes lives in a layer (default "main"), so a layer can be
+   moved as one piece from retro.json without breaking zoom trails or cursors that target it. */
+.layer { position: absolute; inset: 0; pointer-events: none; }
+
+/* Starships / critters canvas (kit/ships.js): one ink colour, chunky square pixels. */
+canvas.ros { position: absolute; image-rendering: pixelated; }

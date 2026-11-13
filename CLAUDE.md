@@ -44,3 +44,7 @@ look at frames: `ffmpeg -ss 5 -i export.mp4 -frames:v 1 frame.png`. Say what you
 <this folder>`, then `/plugin install cutroom@cutroom`). Set `CUTROOM_DEV=1` in your environment
 so the app server restarts when the code changes (`npm run dev` does the same by hand). Close an
 editor tab before editing a project.json by hand: the UI autosaves and would overwrite your change.
+
+**Retro OS overlays (`retro/`)** are a separate tool, not part of Cutroom: motion graphics + sound
+effects over a finished video. To add them to a video, read `retro/GUIDE.md` and use the `retro`
+commands; the brand and the starships are in `retro/brand/`. Don't hunt elsewhere for them.

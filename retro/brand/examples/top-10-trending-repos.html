@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10 Trending Repos For Solo Founders, Vol. 02 · Reel Cards</title>
+<link rel="stylesheet" href="../assets/css/retro-os.css">
+<style>
+  /* ---------- gallery page (not part of the cards) ---------- */
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--boot); color: var(--ink-86); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  .head { padding: 48px 40px 34px; display: flex; justify-content: space-between; align-items: flex-end; gap: 30px; flex-wrap: wrap; }
+  .head .t-display { font-size: clamp(48px, 7vw, 104px); margin: 0; }
+  .head .rule-col { max-width: 560px; }
+  .head .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { font-family: var(--f-pixel); font-size: 22px; background: var(--ink); color: var(--paper); border: 0; padding: 4px 10px 6px; cursor: pointer; text-decoration: none; line-height: 1; }
+  .btn:hover { background: var(--paper); color: var(--ink); outline: 1px solid var(--ink); }
+  .gallery { display: flex; flex-wrap: wrap; gap: 44px 34px; padding: 10px 40px 90px; --s: .3; }
+  .item { display: flex; flex-direction: column; gap: 10px; }
+  .item-meta { display: flex; gap: 6px; align-items: center; }
+  .cell { width: calc(1080px * var(--s)); height: calc(1920px * var(--s)); overflow: hidden; outline: 1px solid var(--ink); cursor: pointer; flex: none; }
+
+  /* present mode: one card at a time, scaled to fit, for screen recording */
+  body.present { background: #0d0d0d; overflow: hidden; }
+  body.present .head, body.present .item-meta { display: none; }
+  body.present .gallery { --s: var(--ps, 1); padding: 0; }
+  body.present .item { position: fixed; inset: 0; display: grid; place-items: center; visibility: hidden; }
+  body.present .item.active { visibility: visible; }
+  body.present .cell { outline: 0; cursor: none; }
+
+  /* ---------- the card (1080 × 1920 reel) ---------- */
+  .card { background: var(--bg); color: var(--fg); }
+  .card [data-at]:not(.in), .card .hid { visibility: hidden; }
+  .card .top-meta { position: absolute; top: 118px; left: 40px; right: 40px; display: flex; justify-content: space-between; font-size: 25px !important; }
+  .card .frame { position: absolute; left: 40px; right: 40px; top: 200px; height: 1360px; border: 2px solid currentColor; }
+  .card .frame > canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .card .layer { position: absolute; inset: 0; z-index: 2; }
+  .card canvas.critters { image-rendering: pixelated; mix-blend-mode: multiply; }
+  .world-ink.card canvas.critters { mix-blend-mode: screen; }
+  .card .pan { background: var(--bg); }
+
+  .card .rank { position: absolute; top: 0; left: 0; font-size: 46px; }
+  .card .prog { position: absolute; top: 20px; right: 22px; display: flex; gap: 8px; }
+  .card .prog i { width: 24px; height: 24px; border: 2px solid currentColor; background: var(--bg); }
+  .card .prog i.on { background: currentColor; }
+
+  .card .name { position: absolute; left: 40px; top: 90px; width: 880px; height: 300px; }
+  .card .name-in { position: absolute; inset: 14px; background: var(--bg); display: flex; align-items: flex-end; padding: 18px 22px 30px; }
+  .card .nm { margin: 0; line-height: .82; }
+
+  .card .handle { position: absolute; left: 40px; top: 408px; }
+  .card .hd { font-size: 46px; min-width: 40px; min-height: 58px; }
+
+  /* the founder use: words step in, sized to fit the box */
+  .card .quote { position: absolute; left: 40px; top: 496px; width: 880px; }
+  .card .q-top { font-size: 26px !important; padding: 2px 8px 4px 0; display: inline-block; }
+  .card .q-box { height: 270px; margin-top: 8px; overflow: hidden; }
+  .card .q-txt { margin: 0; font-family: var(--f-display); font-weight: 600; line-height: 1.04; letter-spacing: -.04em; }
+  .card .q-txt span { background: var(--bg); }
+  .card .q-foot { display: flex; justify-content: space-between; margin-top: 12px; font-size: 24px !important; }
+  .card .q-foot span { padding: 2px 6px 4px 0; }
+
+  .card .pitch { position: absolute; left: 40px; top: 862px; width: 880px; gap: 16px; background: var(--bg); padding: 8px 20px 12px 18px; }
+  .card .pitch .t-micro { font-size: 25px; }
+  .card .pitch p { margin: 0; font-family: var(--f-body); font-size: 48px; line-height: 1.1; letter-spacing: -.01em; }
+
+  .card .helps { position: absolute; left: 40px; top: 1060px; width: 370px; }
+  .card .motif { position: absolute; left: 440px; top: 1060px; width: 460px; }
+  .card .helps .win__body { height: 196px; display: grid; gap: 12px; justify-items: start; align-content: center; }
+  .card .m-body { height: 196px; padding: 10px 12px !important; position: relative; overflow: hidden; font-size: 30px !important; line-height: 1.1 !important; }
+
+  .card .foot { position: absolute; left: 40px; right: 40px; top: 1596px; }
+  .card .foot .b64 { max-width: none; font-size: 18px; }
+
+  /* dark (ink) world overrides */
+  .world-ink.card .kn { background: var(--paper); color: var(--ink); }
+  .world-ink.card .win { border-color: var(--paper); box-shadow: 5px 5px 0 rgba(254, 254, 254, .3); }
+
+  /* ---------- motifs: one small process per card ---------- */
+  .m-term { margin: 0; font-family: var(--f-pixel); font-size: 30px; line-height: 1.1; white-space: pre; }
+
+  .d-row { font-family: var(--f-pixel); font-size: 29px; line-height: 38px; white-space: pre; padding-left: 4px; }
+  .d-row.x { text-decoration: line-through; text-decoration-thickness: 2px; opacity: .38; }
+  .d-row.hit { background: var(--ink); color: var(--paper); }
+  .d-add { background: var(--green); color: var(--paper); }
+
+  .m-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .m-svg line { stroke: var(--ink); stroke-width: 2.5; }
+  .m-svg rect { fill: var(--ink); stroke: var(--ink); stroke-width: 2; }
+  .m-svg rect.o { fill: var(--paper); }
+  .m-svg text { font-family: var(--f-pixel); font-size: 24px; fill: var(--ink); }
+  .m-svg polygon { fill: var(--ink); }
+  .m-svg g.on rect.o { fill: var(--ink); }
+  .m-svg g.on text { fill: var(--paper); }
+
+  .fs-row { display: grid; grid-template-columns: 110px 1fr 76px; gap: 10px; align-items: center; font-family: var(--f-pixel); font-size: 28px; margin: 0 0 6px; }
+  .fs-row .seg-bar { height: 18px; }
+  .fs-row b { font-weight: 400; text-align: right; }
+  .fs-row .lb { padding: 0 4px 2px; justify-self: start; }
+  .fs-row .lb.hl2 { background: var(--ink); color: var(--paper); }
+
+  .vs-top { font-family: var(--f-pixel); font-size: 34px; line-height: 1; margin: 2px 0 0 2px; }
+  .eq { display: flex; gap: 6px; align-items: flex-end; height: 118px; margin-top: 14px; border-bottom: 2px solid var(--ink); }
+  .eq i { flex: 1; background: var(--ink); height: calc(var(--h, .1) * 100%); }
+
+  .hf-f { font-family: var(--f-pixel); font-size: 32px; margin: 12px 0 8px 2px; }
+  .hf-bar { height: 22px !important; }
+
+  .pl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .pl { border: 2px solid var(--ink); background: var(--paper); font-family: var(--f-pixel); font-size: 36px; text-align: center; padding: 10px 0 13px; }
+  .pl.on { background: var(--ink); color: var(--paper); }
+  .oc-k { font-family: var(--f-pixel); font-size: 28px; margin: 12px 0 0 2px; }
+  .oc-d { font-family: var(--f-pixel); font-size: 29px; margin: 6px 0 0 2px; }
+  .m-svg ellipse { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+  .fs-row .mm { font-family: var(--f-pixel); font-size: 28px; }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div>
+    <span class="t-micro" style="font-size:13px">Reel Cards · 1080 × 1920 · Retro OS</span>
+    <h1 class="t-display" style="margin-top:14px">10 Trending Repos</h1>
+  </div>
+  <div class="rule-col rule-col--tight">
+    <span class="t-micro" style="font-size:12px">How To Use</span>
+    <p class="t-body" style="margin:0">Click a card to replay it. <b>Present</b> shows one card at a time scaled to your screen:
+      <code>→</code> / space next, <code>←</code> back, <code>R</code> replay, <code>A</code> auto-advance every 2s, <code>Esc</code> exit.
+      <b>1:1</b> opens a single card. <b>Repo</b> opens it on GitHub. Add <code>&amp;still</code> to the URL to skip straight to the finished frame.</p>
+    <div class="btns">
+      <button class="btn" id="replay-all">Replay All</button>
+      <a class="btn" href="?present">Present ▶▶▶</a>
+      <a class="btn" href="?present&amp;auto">Present + Auto</a>
+      <button class="btn" onclick="document.body.classList.toggle('ig-safe')">Safe Zones</button>
+    </div>
+  </div>
+</header>
+
+<main class="gallery" id="gallery"></main>
+
+<script src="../assets/js/retro-os.js"></script>
+<script src="../assets/js/retro-os-critters.js"></script>   <!-- optional: the starships below need it -->
+<script src="../assets/js/retro-os-starships.js"></script>  <!-- optional: a space battle behind cards with a `ship` -->
+<script>
+/* ==========================================================================
+   DATA: one entry per repo, picked from GitHub Trending (weekly, daily and
+   monthly) and Trendshift on Nov 3, 2026 for what a solo founder can use, not
+   raw momentum. Nothing here was on Vol. 01 or the Top 11 skill repos.
+   nc keeps a name's own casing. "use" is the founder angle. Pitch and chips come from the repo's own
+   description or README. Stars are totals from the GitHub API on the same day
+   (ReelMimic's were reset to zero on Oct 20, so it reads low).
+   ship (optional): background starship, see /assets/js/retro-os-starships.js.
+     t0 is where it starts each time the card plays, picked so its big moment
+     lands in the first two seconds. ts is the moment the &still export holds.
+   ========================================================================== */
+const ASOF = "Nov 3, 2026";
+const CARDS = [
+  { name: "Claude SEO", gh: "AgriciDaniel/claude-seo", stars: 26317, lang: "Python · MIT", bg: "#E8B53E",
+    use: "Find out why Google and ChatGPT skip your site.",
+    pitch: "Free SEO audits inside Claude Code: 26 sub-skills and 19 specialist agents.",
+    helps: ["Technical SEO", "AI Search (GEO)", "Schema + llms.txt"], win: "Seo.Audit", m: "seo", msg: "rank higher get cited by ai search",
+    ship: { kind: "falcon", y: .33, x1: .8, t0: 8.0, ts: 8.9 } },                  // jump to lightspeed at ~1.3s
+  { name: "e2e", nc: true, gh: "tester-army/e2e", stars: 12898, lang: "TypeScript · Apache-2.0", bg: "#09AEA1",
+    use: "Catch the broken checkout before a customer does.",
+    pitch: "Describe a goal in plain English and an agent drives your web or mobile app.",
+    helps: ["Plain-English Tests", "Web + Mobile", "Free Replays"], win: "Test.Run", m: "e2e", msg: "describe a goal in natural language",
+    ship: { kind: "dogfight", lanes: [.33], t0: 4.6, ts: 5.0 } },                 // the chase, clear of the handle
+  { name: "Claude-Mem", gh: "thedotmack/claude-mem", stars: 111874, lang: "TypeScript · Apache-2.0", bg: "#AE98E6",
+    use: "Stop re-explaining your codebase every morning.",
+    pitch: "Captures what your agent does and feeds it back next session.",
+    helps: ["Session Memory", "Search Past Work", "Works In Codex Too"], win: "Mem.Store", m: "mem", msg: "persistent context across sessions",
+    ship: { kind: "deathstar", x: .82, y: .335, r: 15, t0: 3.9, ts: 4.9 } },     // superlaser fires at ~0.7s
+  { name: "T3 Code", gh: "pingdotgg/t3code", stars: 44343, lang: "TypeScript · MIT", bg: "#F386A1",
+    use: "Unblock your agents from your phone, wherever you are.",
+    pitch: "A free, open control surface for Claude Code, Codex, Cursor and more.",
+    helps: ["Phone App", "Your Own Subs", "Many Agents"], win: "Remote.Ctl", m: "t3", msg: "nothing we built it for us",
+    ship: { kind: "ywing", lanes: [.32], t0: 6.0, ts: 6.6 } },                    // both Y-wings firing, in the clear
+  { name: "Hex", gh: "anomalyco/hex", stars: 4566, lang: "Rust · MIT", bg: "#6FA3E0",
+    use: "Talk to your agents. Faster than typing, and free.",
+    pitch: "Hold a key, speak, and it pastes. Transcribed on your own machine.",
+    helps: ["Mac, Windows, Linux", "Runs Locally", "Any App"], win: "Hex.Dictate", m: "hex", msg: "hold the shortcut speak let go",
+    ship: { kind: "advanced", x: .74, y: .335, t0: 0, ts: 1.6 } },                 // roars up to the glass by 0.9s
+  { name: "Scrapling", gh: "D4Vinci/Scrapling", stars: 94789, lang: "Python · BSD-3-Clause", bg: "#F4894B",
+    use: "Pull rival prices and lead lists off any website.",
+    pitch: "A Python scraping framework, from a single request to a full-scale crawl.",
+    helps: ["Price Tracking", "Lead Lists", "MCP Server"], win: "Crawl.Log", m: "scrape", msg: "from a single request to a full crawl",
+    ship: { kind: "crawler", y: .39, speed: 12, droid: .6, t0: 4.6, ts: 5.6 } },  // the droid is beamed aboard at 0.7–1.8s
+  { name: "ReelMimic", gh: "edenfunf/reelmimic", stars: 1769, lang: "JavaScript · MIT", bg: "#EF6B5B",
+    use: "Make launch reels in the style of ones that already work.",
+    pitch: "Show it a video you love. Get a new video in the same style.",
+    helps: ["Style Breakdown", "Claude Code + Codex", "YouTube Links"], win: "Reel.Mimic", m: "reel", msg: "show it a video you love",
+    ship: { kind: "asteroids", x: .7, y: .335, t0: 2.0, ts: 3.45 } },             // the TIE meets the rock at 1.2s
+  { name: "Knowledge Work Plugins", gh: "anthropics/knowledge-work-plugins", stars: 34613, lang: "Python · Apache-2.0", bg: "#ABBAB9",
+    use: "Hand Claude the sales, marketing and finance work.",
+    pitch: "Anthropic’s plugins that turn Claude into a specialist for your role.",
+    helps: ["Sales Calls", "Marketing", "Small Business"], win: "Plugin.Mgr", m: "plugins", msg: "a specialist for your role",
+    ship: { kind: "destroyer", lanes: [.05], t0: 3.5, ts: 4.6 } },                // top band: the handle fills the usual lane
+  { name: "Hallmark", gh: "Nutlope/hallmark", stars: 46956, lang: "CSS · MIT", bg: "#A6C94B",
+    use: "Ship a landing page that doesn’t look AI-made.",
+    pitch: "A design skill for your coding agent that refuses to look AI-generated.",
+    helps: ["Fifty Themes", "Redesign + Audit", "Any Agent"], win: "Theme.Deal", m: "hallmark", msg: "refuses to look ai generated",
+    ship: { kind: "arrival", x: .74, y: .335, t0: .1, ts: 1.6 } },                // drops out of lightspeed at 0.9s
+  { name: "Text-to-CAD", nc: true, gh: "earthtojake/text-to-cad", stars: 25232, lang: "Python · MIT", bg: "#1E1E1E", dark: true,
+    use: "Prototype a physical product before you pay an engineer.",
+    pitch: "Your agent designs 3D models and exports STL, STEP or 3MF.",
+    helps: ["3D Printing", "CNC + Sheet Metal", "STEP, STL, 3MF"], win: "Cad.Build", m: "cad", msg: "design physical products with ai",
+    ship: { kind: "atat", x: .8, y: .4, t0: 1.4, ts: 2.5 } },                     // the snowspeeder's run, 0.6–2s
+];
+const pad = n => String(n).padStart(2, "0");
+const fmt = v => v >= 100000 ? Math.round(v / 1000) + "k" : v >= 1000 ? (v / 1000).toFixed(1) + "k" : String(v);
+
+/* ==========================================================================
+   MOTIFS: each card's own animation, inside its motif window.
+   at(ms, fn) schedules a step. Motion is stepped only; nothing eases.
+   ========================================================================== */
+const type = (pre, at, lines, t, tail = "") => {        // types lines into a <pre>, returns the end time
+  let done = "";
+  lines.forEach((ln, i) => {
+    for (let c = 2; c < ln.length; c += 3) { const s = done + ln.slice(0, c); at(t, () => pre.textContent = s); t += 22; }
+    const s2 = done + ln + tail + (i < lines.length - 1 ? "\n" : ""); at(t, () => pre.textContent = s2); done = s2; t += 40;
+  });
+  return t;
+};
+const MOTIFS = {
+  // 01: the audit flags what's missing, then each finding flips to a fix
+  seo(b, at, d, card) {
+    const F = [["no llms.txt", "llms.txt added"], ["missing schema", "FAQ schema"], ["LCP 4.1s", "images → webp"], ["no author bio", "E-E-A-T bio"]];
+    const P = ["Technical", "Schema", "GEO", "Fixes"];
+    b.innerHTML = F.map(([f]) => `<div class="d-row hid">! ${f}</div>`).join("");
+    const rows = b.querySelectorAll(".d-row"), bar = card.querySelector(".motif .win__bar");
+    P.forEach((p, k) => at(660 + k * 160, () => bar.textContent = `Seo.Audit · ${p}`));
+    rows.forEach((r, k) => at(700 + k * 90, () => { r.classList.remove("hid"); r.classList.add("hit"); }));
+    F.forEach(([, fx], k) => at(1180 + k * 90, () => { rows[k].textContent = "✓ " + fx; rows[k].classList.remove("hit"); }));
+    at(1180 + F.length * 90, () => { rows[0].classList.add("d-add"); bar.textContent = "Seo.Audit · 4 Fixed"; });
+  },
+
+  // 02: a plain-English test runs, then replays for free
+  e2e(b, at, d, card) {
+    b.innerHTML = '<pre class="m-term"></pre>';
+    const pre = b.firstChild, bar = card.querySelector(".motif .win__bar");
+    let t = type(pre, at, ["$ e2e run checkout", "act    upgrade to Pro  ✓", "assert prorated total ✓"], 660);
+    const end = pre.textContent;
+    at(t, () => bar.textContent = "Test.Run · Run 2");
+    ["run 2: replaying.", "run 2: replaying..", "run 2: 0 model calls ✓"].forEach((s, k) => at(t + 80 + k * 110, () => pre.textContent = end + "\n" + s));
+    at(t + 300, () => { pre.textContent = "$ e2e run checkout\nact    upgrade to Pro  ✓\nassert prorated total ✓\nrun 2: 0 model calls ✓"; bar.textContent = "Test.Run · Pass"; });
+  },
+
+  // 03: three sessions captured in full, then compressed and fed to the next one
+  mem(b, at, d, card) {
+    const S = ["s01", "s02", "s03"];
+    b.innerHTML = S.map(s => `<div class="fs-row"><span class="lb">${s}</span><div class="seg-bar" style="--v:0"></div><b></b></div>`).join("") +
+      `<div class="fs-row hid"><span class="lb hl2">s04</span><span class="mm">▶ context in</span><b>✓</b></div>`;
+    const rows = b.querySelectorAll(".fs-row"), bar = card.querySelector(".motif .win__bar");
+    S.forEach((_, k) => [.35, .7, 1].forEach((v, j) => at(660 + k * 90 + j * 60, () => {
+      rows[k].querySelector(".seg-bar").style.setProperty("--v", v); rows[k].querySelector("b").textContent = Math.round(48 * v) + "k";
+    })));
+    at(1080, () => bar.textContent = "Mem.Store · Compressing");
+    S.forEach((_, k) => at(1120 + k * 90, () => { rows[k].querySelector(".seg-bar").style.setProperty("--v", .06); rows[k].querySelector("b").textContent = "1.2k"; }));
+    at(1480, () => { rows[3].classList.remove("hid"); bar.textContent = "Mem.Store · Injected"; });
+  },
+
+  // 04: an agent asks for approval on the phone; one tap and it's running
+  t3(b, at, d, card) {
+    b.innerHTML = `<div class="d-row hid">codex   · done ✓</div><div class="d-row hid">claude  · needs you</div>` +
+      `<div class="pl-grid hid" style="margin-top:10px"><div class="pl">Deny</div><div class="pl">Approve</div></div>`;
+    const [r1, r2] = b.querySelectorAll(".d-row"), grid = b.querySelector(".pl-grid"), ok = b.querySelectorAll(".pl")[1], bar = card.querySelector(".motif .win__bar");
+    at(660, () => r1.classList.remove("hid"));
+    at(780, () => { r2.classList.remove("hid"); r2.classList.add("hit"); bar.textContent = "Remote.Ctl · 1 Waiting"; });
+    at(860, () => grid.classList.remove("hid"));
+    [940, 1040, 1140].forEach((t, k) => at(t, () => r2.classList.toggle("hit", k % 2 === 1)));
+    at(1240, () => ok.classList.add("on"));
+    at(1380, () => { r2.textContent = "claude  · running ▶"; r2.classList.remove("hit"); bar.textContent = "Remote.Ctl · Approved"; });
+  },
+
+  // 05: hold the key, the waveform runs, let go and the words paste
+  hex(b, at, d, card) {
+    b.innerHTML = `<div class="vs-top">Hold [fn] · ● Rec</div><div class="eq" style="height:70px">${"<i></i>".repeat(16)}</div><div class="oc-d"></div>`;
+    const top = b.querySelector(".vs-top"), bars = b.querySelectorAll(".eq i"), out = b.querySelector(".oc-d"), bar = card.querySelector(".motif .win__bar");
+    for (let k = 0; k < 8; k++) {
+      const r = RetroOS.rng(50 + k), h = [...bars].map(() => (.15 + r() * .85).toFixed(2));
+      at(660 + k * 65, () => bars.forEach((x, i) => x.style.setProperty("--h", h[i])));
+    }
+    at(1180, () => { bars.forEach(x => x.style.setProperty("--h", .05)); top.textContent = "Let Go · Transcribing"; });
+    const said = "add stripe to checkout";
+    for (let c = 2; c <= said.length; c += 2) at(1240 + c * 14, () => out.textContent = said.slice(0, c));
+    at(1240 + said.length * 14 + 40, () => { out.textContent = said; top.textContent = "✓ Pasted · On Device"; bar.textContent = "Hex.Dictate · Local"; });
+  },
+
+  // 06: three pricing pages fetched, one by one, into a CSV
+  scrape(b, at, d, card) {
+    const S = [["rival-a.com/pricing", "$49"], ["rival-b.com/pricing", "$79"], ["rival-c.com/pricing", "$39"]];
+    b.innerHTML = S.map(([u]) => `<div class="d-row hid">${u}  <span class="pr"></span></div>`).join("") + '<div class="d-row hid">→ prices.csv ✓</div>';
+    const rows = b.querySelectorAll(".d-row"), pr = b.querySelectorAll(".pr"), bar = card.querySelector(".motif .win__bar");
+    S.forEach(([, p], k) => {
+      const t = 660 + k * 200;
+      at(t, () => { rows[k].classList.remove("hid"); rows[k].classList.add("hit"); bar.textContent = `Crawl.Log · ${k + 1}/3`; });
+      [".", "..", "..."].forEach((s, j) => at(t + j * 50, () => pr[k].textContent = s));
+      at(t + 160, () => { pr[k].textContent = p; rows[k].classList.remove("hit"); });
+    });
+    at(1300, () => { rows[3].classList.remove("hid"); rows[3].classList.add("d-add"); bar.textContent = "Crawl.Log · Done"; });
+  },
+
+  // 07: the reference is cut into shots, then your video is built to the same rhythm
+  reel(b, at, d, card) {
+    const Wd = [38, 22, 56, 30, 44, 26, 64, 36];
+    let s = '<svg class="m-svg" viewBox="0 0 436 176"><text x="4" y="46">REF</text><text x="4" y="126">YOU</text>';
+    let x = 64;
+    Wd.forEach((w, k) => { s += `<rect class="o hid rf rf${k}" x="${x}" y="18" width="${w}" height="40"/><rect class="hid yo yo${k}" x="${x}" y="98" width="${w}" height="40"/>`; x += w + 6; });
+    b.innerHTML = s + "</svg>";
+    const rf = b.querySelectorAll(".rf"), yo = b.querySelectorAll(".yo"), bar = card.querySelector(".motif .win__bar");
+    at(660, () => { rf.forEach(r => r.classList.remove("hid")); bar.textContent = "Reel.Mimic · Analyzing"; });
+    rf.forEach((r, k) => at(720 + k * 50, () => r.classList.remove("o")));
+    at(1120, () => bar.textContent = "Reel.Mimic · Building");
+    yo.forEach((r, k) => at(1120 + k * 60, () => r.classList.remove("hid")));
+    at(1120 + Wd.length * 60, () => bar.textContent = "Reel.Mimic · Style Matched");
+  },
+
+  // 08: four plugins installed, then the first command runs
+  plugins(b, at, d, card) {
+    b.innerHTML = '<pre class="m-term"></pre>';
+    const pre = b.firstChild, bar = card.querySelector(".motif .win__bar");
+    const t = type(pre, at, ["+ sales          ✓", "+ marketing      ✓", "+ finance        ✓", "+ small-business ✓", "/sales:call-prep"], 660);
+    at(t, () => { pre.classList.add("cursor"); bar.textContent = "Plugin.Mgr · 4 Installed"; });
+  },
+
+  // 09: three themes dealt from fifty, one picked, then linted at eight widths
+  hallmark(b, at, d, card) {
+    const T = ["Dusk", "Cobalt", "Ribbon"];
+    b.innerHTML = `<div class="pl-grid" style="grid-template-columns:repeat(3,1fr)">${T.map(t => `<div class="pl">${t}</div>`).join("")}</div>` +
+      `<div class="oc-k">sloplint · 0/8 widths</div><div class="seg-bar hf-bar" style="--v:0; margin-top:8px"></div>`;
+    const P = b.querySelectorAll(".pl"), k8 = b.querySelector(".oc-k"), sb = b.querySelector(".seg-bar"), bar = card.querySelector(".motif .win__bar");
+    [0, 1, 2, 0, 1, 2, 1].forEach((n, k) => at(660 + k * 70, () => P.forEach((p, i) => p.classList.toggle("on", i === n))));
+    at(1150, () => bar.textContent = "Theme.Deal · Cobalt");
+    for (let k = 1; k <= 8; k++) at(1150 + k * 45, () => { k8.textContent = `sloplint · ${k}/8 widths`; sb.style.setProperty("--v", k / 8); });
+    at(1560, () => { k8.textContent = "✓ Floor Pass · 8/8"; bar.textContent = "Theme.Deal · Shipped"; });
+  },
+
+  // 10: the part is written as code, drawn edge by edge, then exported
+  cad(b, at, d, card) {
+    const code = ["box(40,20,8)", "hole(d=6)", "fillet(2)", "export .stl"];
+    const P = { a: [250, 70], b: [340, 40], c: [420, 70], d: [330, 100], A: [250, 110], D: [330, 140], C: [420, 110] };
+    const E = ["ab", "bc", "cd", "da", "aA", "dD", "cC", "AD", "DC"];
+    let s = '<svg class="m-svg" viewBox="0 0 436 176">';
+    code.forEach((c, k) => s += `<text class="hid cl${k}" x="4" y="${34 + k * 36}">${c}</text>`);
+    E.forEach(([p, q], k) => s += `<line class="hid ed${k}" x1="${P[p][0]}" y1="${P[p][1]}" x2="${P[q][0]}" y2="${P[q][1]}"/>`);
+    s += '<ellipse class="hid hole" cx="335" cy="70" rx="24" ry="11"/><text class="hid done" x="262" y="170">✓ bracket.stl</text>';
+    b.innerHTML = s + "</svg>";
+    const q = c => b.querySelector(c), bar = card.querySelector(".motif .win__bar");
+    E.forEach((_, k) => at(660 + k * 50, () => q(".ed" + k).classList.remove("hid")));
+    at(660, () => q(".cl0").classList.remove("hid"));
+    at(1120, () => { q(".cl1").classList.remove("hid"); q(".hole").classList.remove("hid"); });
+    at(1260, () => { q(".cl2").classList.remove("hid"); bar.textContent = "Cad.Build · DFM Check"; });
+    at(1420, () => { q(".cl3").classList.remove("hid"); q(".done").classList.remove("hid"); bar.textContent = "Cad.Build · DFM Pass"; });
+  },
+};
+
+/* ==========================================================================
+   CARD MARKUP
+   shell() renders once (textures keep running); layer() re-renders per play.
+   ========================================================================== */
+function shell(d, i) {
+  const ink = d.dark ? "#FEFEFE" : "#1E1E1E";
+  const dither = { pixel: 5, seed: 11 + i * 13, color: ink,
+    blobs: [{ x: i % 2 ? .98 : .02, y: .97, r: .34 }, { x: i % 2 ? .02 : .98, y: +(.3 + (i % 4) * .1).toFixed(2), r: .2 }] };
+  const life = { cell: 5, fps: 10, seed: i + 2, color: ink, gliders: 14 };
+  return `
+  <div class="ig card${d.dark ? " world-ink" : ""}" id="card-${pad(i + 1)}" data-i="${i}" data-fmt="reel"
+       style="--h:1920px; --bg:${d.bg}; --knock:${d.bg}">
+    <div class="glyph-corners" style="position:absolute; top:24px; left:0; right:0"></div>
+    <div class="top-meta t-micro"><span>10 Trending Repos · Solo Founders</span><span>Vol. 02 · Week Of Nov 3</span></div>
+    <div class="frame dots${d.dark ? " dots--paper" : ""}">
+      <canvas class="dither" data-ros="dither" data-opts='${JSON.stringify(dither)}'></canvas>
+      <canvas class="life" data-ros="life" data-opts='${JSON.stringify(life)}'></canvas>
+      ${d.ship && window.RetroOSCritters ? `<canvas class="critters" data-ros="critters" data-opts='${JSON.stringify({ color: ink, seed: i + 1, ...d.ship, t0: still ? d.ship.ts ?? d.ship.t0 : d.ship.t0 })}'></canvas>` : ""}
+      <div class="layer"></div>
+    </div>
+    <div class="foot"><div class="b64" data-ros="b64" data-msg="${d.msg}" data-len="190"></div></div>
+  </div>`;
+}
+
+function layer(d, i) {
+  return `
+    <span class="chip-inv kn rank" data-at="0">No.${pad(i + 1)}</span>
+    <div class="prog" data-at="0">${CARDS.map((_, k) => `<i${k <= i ? ' class="on"' : ""}></i>`).join("")}</div>
+    <div class="crop name" data-at="60"><div class="name-in"><div class="t-display nm${d.nc ? " no-case" : ""}" style="font-size:${d.fs || 150}px">${d.name}</div></div></div>
+    <div class="handle" data-at="140"><span class="chip-inv kn no-case hd"></span></div>
+    <div class="quote" data-at="240">
+      <span class="t-micro pan q-top">▶ Use It To</span>
+      <div class="q-box"><p class="q-txt" style="font-size:${d.qs || 90}px">${d.use.split(" ").map(w => `<span>${w} </span>`).join("")}</p></div>
+      <div class="q-foot t-micro"><span class="pan" data-at="1050">*${fmt(d.stars)} Stars · ${ASOF}</span><span class="pan" data-at="1050">${d.lang}</span></div>
+    </div>
+    <div class="rule-col pitch" data-at="400"><span class="t-micro">What It Is</span><p>${d.pitch}</p></div>
+    <div class="win helps" data-at="540"><div class="win__bar">Helps.With</div>
+      <div class="win__body">${d.helps.map((h, k) => `<span class="chip" data-at="${600 + k * 80}">${h}</span>`).join("")}</div></div>
+    <div class="win motif" data-at="640"><div class="win__bar">${d.win}</div><div class="win__body m-body"></div></div>`;
+}
+
+/* ==========================================================================
+   PLAYBACK
+   ========================================================================== */
+function play(el, still) {
+  const i = +el.dataset.i, d = CARDS[i];
+  (el.__t || []).forEach(clearTimeout); el.__t = [];
+  const L = el.querySelector(".layer");
+  L.innerHTML = layer(d, i);
+  el.querySelector("canvas.critters")?.__rewind?.();               // the ship's big moment lands in the first 2s
+  const q = [], at = (t, fn) => q.push([t, fn]);
+
+  L.querySelectorAll("[data-at]").forEach(n => at(+n.dataset.at, () => n.classList.add("in")));
+
+  const hd = L.querySelector(".hd"), txt = "▶ " + d.gh;           // handle types on (pixel type may)
+  for (let c = 2; c < txt.length; c += 2) { const s = txt.slice(0, c); at(140 + c * 9, () => hd.textContent = s); }
+  at(140 + txt.length * 9, () => hd.textContent = txt);
+
+  const words = [...L.querySelectorAll(".q-txt span")];             // founder use steps in word by word
+  words.forEach(w => w.classList.add("hid"));
+  words.forEach((w, k) => at(300 + k * 48, () => w.classList.remove("hid")));
+
+  MOTIFS[d.m](L.querySelector(".m-body"), at, d, el);
+
+  if (still) { q.sort((a, b) => a[0] - b[0]).forEach(([, f]) => f()); return; }
+  q.forEach(([t, f]) => el.__t.push(setTimeout(f, t)));
+}
+
+// Shrink text until it fits its box. Runs once fonts are in.
+function fitIn(box, txt, max, min) {
+  const cs = getComputedStyle(box);
+  const W = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const H = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  let s = max; txt.style.fontSize = s + "px";
+  while (s > min && (txt.scrollHeight > H + 2 || txt.offsetWidth > W + 1 || txt.scrollWidth > W + 1)) { s -= 4; txt.style.fontSize = s + "px"; }
+  return s;
+}
+function fit(el) {
+  const d = CARDS[+el.dataset.i];
+  d.fs = fitIn(el.querySelector(".name-in"), el.querySelector(".nm"), 184, 60);
+  d.qs = fitIn(el.querySelector(".q-box"), el.querySelector(".q-txt"), 112, 40);
+}
+
+/* ---------- build ---------- */
+const qs = new URLSearchParams(location.search);
+const still = qs.has("still");
+const gallery = document.getElementById("gallery");
+gallery.innerHTML = CARDS.map((d, i) => `
+  <div class="item" data-i="${i}">
+    <div class="item-meta"><span class="chip-inv">${pad(i + 1)} · ${d.name}</span>
+      <button class="btn" data-replay>Replay</button><a class="btn" href="?card=${pad(i + 1)}">1:1</a>
+      <a class="btn" href="https://github.com/${d.gh}" target="_blank" rel="noopener">Repo ↗</a></div>
+    <div class="cell">${shell(d, i)}</div>
+  </div>`).join("");
+const cards = [...document.querySelectorAll(".card")];
+const items = [...document.querySelectorAll(".item")];
+
+const present = qs.has("present") || qs.has("card");
+let cur = qs.has("card") ? Math.max(0, Math.min(CARDS.length - 1, parseInt(qs.get("card"), 10) - 1 || 0)) : 0;
+let auto = null;
+
+function fitScreen() {
+  const s = Math.min(innerWidth / 1080, innerHeight / 1920);
+  document.body.style.setProperty("--ps", s);
+}
+function go(i) {
+  cur = (i + CARDS.length) % CARDS.length;
+  items.forEach((it, k) => it.classList.toggle("active", k === cur));
+  play(cards[cur], still);
+}
+function toggleAuto() {
+  if (auto) { clearInterval(auto); auto = null; return; }
+  auto = setInterval(() => { if (cur === CARDS.length - 1) { clearInterval(auto); auto = null; } else go(cur + 1); }, 2000);
+}
+
+cards.forEach(c => play(c, true));   // lay out once so names and lines can be measured
+
+const fontsIn = Promise.race([
+  Promise.all([
+    document.fonts.load('600 150px "Inter Tight"'), document.fonts.load('400 40px "VT323"'),
+    document.fonts.load('400 24px "JetBrains Mono"'), document.fonts.load('400 48px "Inter Tight"'),
+  ]),
+  new Promise(r => setTimeout(r, 2500)),
+]);
+
+fontsIn.then(() => {
+  cards.forEach(fit);
+  if (present) {
+    document.body.classList.add("present");
+    fitScreen(); addEventListener("resize", fitScreen);
+    go(cur);
+    if (qs.has("auto")) toggleAuto();
+    addEventListener("keydown", e => {
+      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); go(cur + 1); }
+      else if (e.key === "ArrowLeft") go(cur - 1);
+      else if (e.key === "r" || e.key === "R") go(cur);
+      else if (e.key === "a" || e.key === "A") toggleAuto();
+      else if (e.key === "Escape") location.search = "";
+    });
+    addEventListener("click", () => go(cur + 1));
+  } else {
+    cards.forEach(c => play(c, still));
+    items.forEach(it => {
+      const c = it.querySelector(".card");
+      it.querySelector(".cell").addEventListener("click", () => play(c));
+      it.querySelector("[data-replay]").addEventListener("click", () => play(c));
+    });
+    document.getElementById("replay-all").addEventListener("click", () => cards.forEach(c => play(c)));
+  }
+});
+</script>
+</body>
+</html>
