@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>retro · Start Here</title>
+<style>
+  @font-face { font-family: "VT323"; src: url("brand/assets/fonts/vt323.woff2"); }
+  @font-face { font-family: "Inter Tight"; src: url("brand/assets/fonts/inter-tight.woff2"); font-weight: 100 900; }
+  @font-face { font-family: "JetBrains Mono"; src: url("brand/assets/fonts/jetbrains-mono.woff2"); font-weight: 100 900; }
+  :root { --pink: #F386A1; --teal: #09AEA1; --ink: #1E1E1E; --ink-86: rgba(30,30,30,.86); --paper: #FEFEFE; --win: #DEDEDE; --win-2: #C4C4C4; --green: #03AA5C; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--pink); color: var(--ink-86); font: 17px/1.5 "Inter Tight", Helvetica, sans-serif;
+         background-image: radial-gradient(rgba(30,30,30,.35) 1px, transparent 1.2px); background-size: 6px 6px; }
+  main { max-width: 920px; margin: 0 auto; padding: 48px 24px 96px; }
+  .label { display: inline-block; background: var(--ink); color: var(--pink); font: 22px/1 "VT323", monospace; padding: 3px 9px 5px; }
+  h1 { font-size: clamp(48px, 8vw, 92px); line-height: .86; letter-spacing: -0.05em; font-weight: 600; color: var(--ink); margin: 16px 0 10px; }
+  .lede { font-size: 20px; max-width: 640px; margin: 0 0 36px; }
+  .win { background: var(--win); border: 2px solid var(--ink); box-shadow: 5px 5px 0 rgba(30,30,30,.55); margin: 0 0 28px; }
+  .bar { display: flex; justify-content: space-between; background: var(--ink); color: var(--paper); font: 22px/1 "VT323", monospace; padding: 4px 12px 6px; }
+  .bar .r { color: var(--pink); }
+  .body { margin: 4px; border: 2px solid var(--ink); background: var(--paper); padding: 18px 22px; }
+  h2 { font-size: 30px; line-height: 1; letter-spacing: -0.04em; font-weight: 600; color: var(--ink); margin: 0 0 10px; }
+  p { margin: 0 0 12px; }
+  pre, code { font-family: "JetBrains Mono", Menlo, monospace; font-size: 14px; }
+  code { background: var(--win); padding: 1px 5px; }
+  pre { background: var(--ink); color: var(--paper); padding: 14px 16px; margin: 8px 0 14px; overflow-x: auto; line-height: 1.55; }
+  pre .c { color: #9a9a9a; }
+  pre .p { color: var(--pink); }
+  .tree { background: var(--win); color: var(--ink); }
+  .tree .c { color: #666; }
+  ul { margin: 4px 0 12px; padding-left: 22px; }
+  li { margin: 3px 0; }
+  .chip { display: inline-block; background: var(--win-2); font: 19px/1 "VT323", monospace; padding: 2px 7px 4px; margin-right: 4px; }
+  .ok { background: var(--green); color: var(--paper); }
+  .note { border-left: 2px solid var(--ink); padding-left: 12px; margin: 10px 0 0; font-size: 15px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  td { border-top: 1px dashed rgba(30,30,30,.55); padding: 7px 8px 7px 0; vertical-align: top; }
+  td:first-child { white-space: nowrap; }
+  .foot { font: 13px/1.4 "JetBrains Mono", monospace; color: var(--ink); margin-top: 40px; }
+</style>
+</head>
+<body>
+<main>
+  <span class="label">Retro.OS1 ▶ Start Here</span>
+  <h1>New Video,<br>Step By Step.</h1>
+  <p class="lede">From a finished video to the same video with Retro OS graphics and sound effects on top. You run five commands and ask Claude for one thing. Each step below says where the files go.</p>
+
+  <div class="win"><div class="bar"><span>Step 0 · Once Ever</span><span class="r">Setup</span></div><div class="body">
+    <h2>Make the <code>retro</code> command work everywhere</h2>
+    <p>The tool lives in your main checkout of the repo. Pull it, then add one line to <code>~/.zshrc</code> so <code>retro</code> works from any folder:</p>
+<pre><span class="c"># get the latest main</span>
+cd ~/conductor/repos/davecto-cutroom &amp;&amp; git pull
+
+<span class="c"># add the alias (once), then open a new Terminal tab</span>
+echo 'alias retro="$HOME/conductor/repos/davecto-cutroom/retro/retro"' &gt;&gt; ~/.zshrc</pre>
+    <p class="note">It uses the tools Cutroom already installed (HyperFrames, Chromium, Whisper). If a command says something is missing, run <code>node setup.mjs</code> once in the repo folder.</p>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Step 1 · Your Video</span><span class="r">Where It Goes</span></div><div class="body">
+    <h2>Put the finished video in <code>video/</code></h2>
+    <p>Export the final cut with all your edits and your voice, 9:16, ideally 4K. Drop it in the repo's <code>video/</code> folder:</p>
+<pre class="tree">davecto-cutroom/
+└── video/
+    └── <b>MyReel.mov</b>        <span class="c">← your video (git ignores video files automatically)</span></pre>
+    <p class="note">It can go anywhere, but keeping it in <code>video/</code> means the project's notes and beats get saved in git next to the other videos (step 7).</p>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Step 2 · New Project</span><span class="r">~1 Min</span></div><div class="body">
+    <h2>Run <code>retro new</code></h2>
+<pre>cd ~/conductor/repos/davecto-cutroom
+retro new video/MyReel.mov</pre>
+    <p>It transcribes the video, finds your face and the scene cuts, and makes a project folder next to the video:</p>
+<pre class="tree">video/
+├── MyReel.mov
+└── <b>MyReel-retro/</b>          <span class="c">← the project: run every other command in here</span>
+    ├── retro.json         <span class="c">which beats are on, moves, sound levels</span>
+    ├── words.json         <span class="c">the transcript, with word timings</span>
+    ├── faces.json         <span class="c">where your face is, frame by frame</span>
+    ├── beats/             <span class="c">empty for now: Claude writes the animations here</span>
+    └── out/               <span class="c">renders appear here</span></pre>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Step 3 · Animations</span><span class="r">Ask Claude</span></div><div class="body">
+    <h2>Ask Claude to write the beats</h2>
+    <p>Open Claude Code in the repo (or a Conductor workspace on it) and say something like:</p>
+<pre><span class="p">›</span> Add retro animations to video/MyReel-retro. Make them eye-catching
+  and different from the last video.</pre>
+    <p>Claude follows <code>retro/GUIDE.md</code>. It reads the transcript, splits it into beats (one idea each, a few seconds long) and writes one fresh animation per beat in <code>beats/01-…/index.html</code>, <code>beats/02-…/</code> and so on. It checks placement against your face rules, renders, and looks at a few frames.</p>
+    <p class="note">Things you can add to the ask: “use the Star Wars ships on the intro”, “make it teal”, “keep it sparse”, “more sound effects on the list part”.</p>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Step 4 · Preview</span><span class="r">localhost:4180</span></div><div class="body">
+    <h2>Watch it, switch things off, move things around</h2>
+<pre>cd video/MyReel-retro
+retro preview</pre>
+    <p>Open <b>http://localhost:4180</b>. The graphics and sounds play live over the video, with no render needed.</p>
+    <table>
+      <tr><td><span class="chip">Space</span></td><td>play / pause (the bar under the video scrubs)</td></tr>
+      <tr><td><span class="chip">Click A Name</span></td><td>jump to that beat</td></tr>
+      <tr><td><span class="chip">☑ Checkbox</span></td><td>beat on/off. Its sound effects go with it.</td></tr>
+      <tr><td><span class="chip">☑ ♪</span></td><td>mute just that beat's sounds</td></tr>
+      <tr><td><span class="chip">Click A Layer</span></td><td>then drag on the video, or use the arrow keys (Shift = bigger steps). <b>r</b> resets it, <b>Esc</b> lets go.</td></tr>
+      <tr><td><span class="chip">Face Zone</span></td><td>shows the red no-go box around your face and chin</td></tr>
+    </table>
+    <p class="note">Every change saves to <code>retro.json</code> as you go. Ctrl-C in Terminal stops the preview.</p>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Step 5 · Changes</span><span class="r">Two Ways</span></div><div class="body">
+    <h2>Change the look or the timing? Ask Claude. Small tweaks? Do it yourself.</h2>
+    <p>Name the beat: <i>“06: make the save dialog bigger”</i>, <i>“03 should land on ‘smarter’, not ‘ton’”</i>, <i>“redo 08, it's boring”</i>. For quick tweaks, use the preview or these commands (run them in the project folder):</p>
+<pre>retro ls                     <span class="c"># every beat: on/off, times, layers, sounds</span>
+retro off 04                 <span class="c"># turn beat 04 off (and its sounds)</span>
+retro on 04
+retro move 06 save 0 -5      <span class="c"># move beat 06's "save" layer up 5 (units = 1% of the width)</span>
+retro sfx 04 -4              <span class="c"># beat 04's sounds 4 dB quieter</span>
+retro sfx all -3             <span class="c"># all sound effects quieter</span>
+retro lint                   <span class="c"># anything over my face or under Instagram's buttons?</span></pre>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Step 6 · Render</span><span class="r">~3 Min</span></div><div class="body">
+    <h2>Make the final video</h2>
+<pre>cd video/MyReel-retro
+retro render</pre>
+    <p>That writes <b><code>out/MyReel-retro.mp4</code></b>: 1440×2560 (Instagram 2K), with the graphics on top and the sound effects mixed under your voice. Upload that one.</p>
+    <ul>
+      <li><code>retro render --draft</code> renders faster at lower quality, for checking.</li>
+      <li><code>retro render --video ../MyReel-v2.mov</code> puts the same graphics on a recoloured copy (the timing must be the same).</li>
+      <li>Only beats that changed get re-rendered, so the second render is quick.</li>
+      <li>On Instagram, turn on <b>Upload at highest quality</b> (Settings → Data usage and media quality).</li>
+    </ul>
+    <p class="note">Finishing in an editor instead? <code>out/overlays/</code> has every beat as a transparent .mov, <code>out/placements.csv</code> says where each one starts, and <code>out/sfx.wav</code> is the sound effects on their own.</p>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Step 7 · Keep It</span><span class="r">Optional</span></div><div class="body">
+    <h2>Save the project in git</h2>
+    <p>Commit the project folder (or ask Claude to merge it). Only the small files go in: <code>beats/</code>, <code>retro.json</code>, <code>words.json</code> and <code>faces.json</code>. Video files and <code>out/</code> are ignored automatically, so you can't commit a 100MB file by accident.</p>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Help.txt</span><span class="r">If Something's Off</span></div><div class="body">
+    <table>
+      <tr><td>“Not in a retro project”</td><td>You're in the wrong folder. <code>cd</code> into <code>video/MyReel-retro</code>, or add <code>-p video/MyReel-retro</code>.</td></tr>
+      <tr><td>Re-cut the video after making the project</td><td>Replace the .mov (same name), then run <code>retro words --redo</code> and <code>retro faces</code> in the project. Beats are timed to words, so most of them follow along.</td></tr>
+      <tr><td>Port 4180 is busy</td><td><code>retro preview --port 4190</code></td></tr>
+      <tr><td>Want to see an example</td><td><code>retro preview -p video/retro-os-graphics</code> is the prompting video you already made (put <code>PromptGuideNoText.mov</code> in <code>video/</code> first).</td></tr>
+      <tr><td>Every command</td><td><code>retro help</code></td></tr>
+    </table>
+  </div></div>
+
+  <div class="win"><div class="bar"><span>Map Of retro/</span><span class="r">What's Where</span></div><div class="body">
+<pre class="tree">retro/
+├── START.html     <span class="c">this page</span>
+├── README.md      <span class="c">the commands, in short</span>
+├── GUIDE.md       <span class="c">the rules Claude follows: your face rules, brand, sounds, starships</span>
+├── retro          <span class="c">the command (what the alias points at)</span>
+├── kit/           <span class="c">what every animation is built from</span>
+├── brand/         <span class="c">Retro OS: DESIGN.md, guide.html (open it!), fonts, the Star Wars reel</span>
+├── lib/           <span class="c">transcribe, faces, lint, render, sound synth, preview server</span>
+└── preview/       <span class="c">the preview page</span></pre>
+  </div></div>
+
+  <p class="foot">⩆ ∵ &nbsp; Made With Retro OS · Version 1.0 · ©2026 &nbsp; ∵ ⩆</p>
+</main>
+</body>
+</html>

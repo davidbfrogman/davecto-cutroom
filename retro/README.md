@@ -1,11 +1,13 @@
 # retro
 
+**New here? Open `START.html`** (`open retro/START.html`): a step-by-step walkthrough for a new video.
+
 Retro OS motion graphics and sound effects over a finished vertical video. Command-line tools plus a
 small preview page. It's separate from Cutroom: it only borrows the tools Cutroom installs
 (HyperFrames, GSAP, Chromium, the whisper venv in `~/Library/Application Support/Cutroom`).
 
 ```bash
-alias retro="$PWD/retro/retro"        # once, from the repo root (or put it in ~/.zshrc)
+alias retro="$HOME/conductor/repos/davecto-cutroom/retro/retro"   # once, in ~/.zshrc
 ```
 
 ## Use
