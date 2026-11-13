@@ -2,3 +2,15 @@ node_modules/
 .venv/
 .DS_Store
 *.log
+
+# Videos and renders never go in git. Retro projects keep only their sources
+# (beats/, retro.json, words.json, faces.json); out/ is all generated.
+*.mov
+*.MOV
+*.mp4
+*.m4v
+*.mkv
+*.wav
+*.m4a
+**/out/
+retro/.bin/

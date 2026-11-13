@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- 34.17–40.97 "Four, give it a way to check its own work, a test, a checklist, some way to figure out
+     whether it actually succeeded."
+     Self.Check 1.1 in the clear left column: "$ run checks" types on; "a test" → test.01 PASS;
+     "a checklist" → three boxes tick; "some way to figure out" → a Succeeded? meter fills in
+     four jumps; "succeeded" → ✓ Yes, 4/4. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>10 Self-check</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #S .win__body { padding: calc(var(--u) * 1.4); display: flex; flex-direction: column; gap: calc(var(--u) * 1.3); font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .row { display: flex; justify-content: space-between; align-items: center; white-space: nowrap; visibility: hidden; }
+    .sec { border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * 1.3); visibility: hidden; }
+    .box { display: inline-block; width: calc(var(--u) * 2.4); height: calc(var(--u) * 2.4); border: var(--hair) solid var(--ink); margin-right: calc(var(--u) * 1.2); vertical-align: -12%; position: relative; }
+    .box b { position: absolute; inset: 18%; background: var(--ink); visibility: hidden; }
+    .cl { display: block; margin-top: calc(var(--u) * 1.1); }
+    .seg { margin-top: calc(var(--u) * 1.2); }
+    #cur { visibility: hidden; }
+    #yes { font-size: calc(var(--u) * 6); padding: calc(var(--u) * .5) calc(var(--u) * 1.6) calc(var(--u) * .9); }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="7"></div>
+  </div>
+  <script>
+    R.START = 34.17;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    const items = ['goal', 'examples', 'rules'];
+    const S = R.win({ title: 'Self.Check', right: '1.1', variant: 'paper', x: 37, y: 26, w: 26, h: 65,
+      body: `<div><span class="type" id="cmd">$ run checks</span><span id="cur">█</span></div>
+             <div class="sec" id="sT"><div class="micro">A Test</div></div>
+             <div class="row" id="t1"><span>test.01</span><span class="chip chip--green">PASS</span></div>
+             <div class="sec" id="sC"><div class="micro">A Checklist</div>
+               ${items.map((s, i) => `<span class="cl h" id="c${i}"><span class="box"><b id="b${i}"></b></span>${s}</span>`).join('')}</div>
+             <div class="sec" id="sS"><div class="micro">Succeeded?</div>${R.seg(4)}
+               <div class="row" id="pct" style="margin-top:calc(var(--u) * 1.2)"><span id="pv">0/4</span><span class="chip-inv h" id="yes">✓ Yes</span></div></div>` });
+    S.id = 'S';
+    R.open(S, 34.3, { from: { x: 50, y: 100 } });
+    R.type(R.$('#cmd'), 34.54, 24);
+    R.blink(R.$('#cur'), 35.1, 36.5, 0.5);
+    R.show(R.$('#sT'), 36.5);
+    R.show(R.$('#t1'), 36.6);
+    R.flash(R.$('#t1'), 36.6, 1);
+    R.show(R.$('#sC'), 37.2);
+    [37.26, 37.5, 37.74].forEach((t, i) => { R.show(R.$(`#c${i}`), t); R.show(R.$(`#b${i}`), t + 0.2); });
+    R.show(R.$('#sS'), 38.24);
+    R.show(R.$('#pct'), 38.24);
+    S.querySelectorAll('.seg i').forEach((c, i) => {
+      const t = [38.48, 39.08, 39.56, 40.0][i];
+      R.tl.set(c, { backgroundColor: '#1E1E1E' }, R.T(t));
+      R.text(R.$('#pv'), t, `${i + 1}/4`);
+    });
+    R.show(R.$('#yes'), 40.4);
+    R.flash(S, 40.4, 2);
+    R.tl.set('#yes', { backgroundColor: '#03AA5C', color: '#FEFEFE' }, R.T(40.4));
+    // Sound.
+    R.sfx('open', 34.2); for (let i = 0; i < 12; i++) R.sfx('type', 34.54 + i / 24); R.sfx('success', 36.6);
+    [37.46, 37.7, 37.94].forEach(t => R.sfx('tick', t)); [38.48, 39.08, 39.56, 40.0].forEach(t => R.sfx('tick', t));
+    R.sfx('success', 40.4);
+    R.done(40.97);
+  </script>
+</body>
+</html>

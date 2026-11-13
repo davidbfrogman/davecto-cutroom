@@ -1,0 +1,113 @@
+<!doctype html>
+<!-- 19.40–24.34 "Here's the four-part framework that I'd use today that's in line with what Anthropic recommends."
+     A boot loader (stepped spinner, bar in uneven jumps) gives way to Prompt.Framework 4.0: four
+     slots drop in one per beat as Pending; on "Anthropic" a Save Changes? dialog (layer "save")
+     lands over the card and a pixel cursor clicks Save on "recommends" as every slot flips to
+     Ready. A clock ticks in the title bar. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>06 Framework</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #boot .win__body { display: flex; align-items: center; gap: calc(var(--u) * 2.4); background: #E2E2E2; }
+    .spin { position: relative; width: calc(var(--u) * 7); height: calc(var(--u) * 7); flex: none; }
+    .spin i { position: absolute; width: calc(var(--u) * 1.6); height: calc(var(--u) * 1.6); background: var(--win-2); }
+    .spin i.on { background: var(--ink); }
+    .bootr { flex: 1; font: calc(var(--u) * 4)/1 var(--f-pixel); }
+    .pbar { margin-top: calc(var(--u) * 1.4); height: calc(var(--u) * 2.8); border: var(--hair) solid var(--grey); position: relative; }
+    .pbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--ink); }
+    #fw .win__body { padding: calc(var(--u) * 1.6) calc(var(--u) * 2); }
+    .r4 { display: grid; grid-template-columns: auto 1fr calc(var(--u) * 17) calc(var(--u) * 16); align-items: center; gap: calc(var(--u) * 2);
+          height: calc(var(--u) * 6.4); border-bottom: var(--hair) dashed var(--ink-55); font: calc(var(--u) * 4.4)/1 var(--f-pixel); visibility: hidden; }
+    .r4 .chip-inv { font-size: calc(var(--u) * 3.8); }
+    .st { text-align: right; color: var(--grey); white-space: nowrap; }
+    .st.ok { color: var(--green); }
+    #sv .win__body { display: flex; gap: calc(var(--u) * 2.4); align-items: flex-start; padding: calc(var(--u) * 1.8) calc(var(--u) * 2); }
+    #sv .col { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 2); }
+    #sv .hd { font-size: calc(var(--u) * 4.7); line-height: .86; color: var(--ink-86); }
+    #sv .btns, #sv .prog, #sv .done { display: flex; align-items: center; gap: calc(var(--u) * 1.6); font: calc(var(--u) * 3.9)/1 var(--f-pixel); white-space: nowrap; }
+    #sv .prog, #sv .done { visibility: hidden; position: absolute; left: 0; top: 0; }
+    #sv .slot { position: relative; height: calc(var(--u) * 6); }
+    #sv .slot > * { position: absolute; left: 0; top: 0; }
+    #sv .btn { border: var(--hair) solid var(--ink); background: var(--paper); padding: calc(var(--u) * .7) calc(var(--u) * 1.8) calc(var(--u) * 1); }
+    #sv .btn.def { outline: calc(var(--u) * .45) solid var(--ink); outline-offset: calc(var(--u) * .4); }
+    #sv .prog .seg { width: calc(var(--u) * 14); }
+    #cursor { z-index: 20; }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 19.4;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    // Boot.
+    const dots = Array.from({ length: 8 }, (_, i) => { const a = i / 8 * Math.PI * 2; return `<i style="left:calc(var(--u) * ${2.7 + Math.cos(a) * 2.7});top:calc(var(--u) * ${2.7 + Math.sin(a) * 2.7})"></i>`; }).join('');
+    const B = R.win({ title: 'Framework.OS1', right: 'Boot', x: 10, y: 92, w: 56, h: 19,
+      body: `<div class="spin">${dots}</div><div class="bootr"><span id="bt">Loading framework…</span><div class="pbar"><i id="pf"></i></div></div>` });
+    B.id = 'boot';
+    R.open(B, 19.45, { from: { x: 40, y: 110 } });
+    const spins = B.querySelectorAll('.spin i');
+    for (let k = 0; k < 9; k++) spins.forEach((el, i) => R.tl.set(el, { backgroundColor: i === k % 8 ? '#1E1E1E' : '#C4C4C4' }, R.T(19.45 + k * R.F)));
+    [[19.52, 12], [19.66, 38], [19.73, 41], [19.86, 77], [20.0, 100]].forEach(([t, p]) => R.tl.set('#pf', { width: `${p}%` }, R.T(t)));
+    R.hide(B, 20.08);
+
+    // Framework window.
+    const parts = [['01', 'Goal'], ['02', 'Examples'], ['03', 'Hard Rules'], ['04', 'Self-Check']];
+    const F = R.win({ title: 'Prompt.Framework 4.0', right: '09:41:19', x: 6, y: 92, w: 76, h: 35, variant: 'paper',
+      body: parts.map(([n, s], i) => `<div class="r4" id="r${i}"><span class="chip-inv">${n}</span><span>${s}</span>${R.seg(4)}<span class="st" id="s${i}">Pending</span></div>`).join('') });
+    F.id = 'fw';
+    R.open(F, 20.04, { from: { x: 38, y: 101 } });
+    const clock = F.querySelector('.win__bar .r');
+    for (let s = 1; s <= 4; s++) R.text(clock, 20.04 + s, `09:41:${19 + s}`);
+    [20.34, 20.58, 20.78, 20.92].forEach((t, i) => R.show(R.$(`#r${i}`), t));
+    // "in line with" — a scan ticks down the rows.
+    [21.9, 22.08, 22.32, 22.52].forEach((t, i) => R.flash(R.$(`#r${i}`), t, 1));
+    // "Anthropic": a Save Changes? dialog nudges the viewer to save the post.
+    const floppy = R.pix(['kkkkkkkkkkk.', 'kknnnnnnnkkk', 'kknnnnnnnkkk', 'kknnnnnnnkkk', 'kkkkkkkkkkkk', 'kkkkkkkkkkkk',
+                          'kpppppppppkk', 'kpkkkkkkkpkk', 'kpppppppppkk', 'kpkkkkkppkkk', 'kpppppppppkk', 'kkkkkkkkkkkk'], 0.9);
+    const mark = R.pix(['kkkkk', 'knnnk', 'knnnk', 'knnnk', 'knnnk', 'knknk', 'kk.kk'], 0.85);
+    const SV = R.win({ title: 'Save Changes?', right: '⌘S', variant: 'paper', layer: 'save', x: 17, y: 95, w: 54, h: 29,
+      body: `<span id="fl">${floppy}</span><div class="col"><div class="disp hd">You'll Want To<br>Save This.</div>
+             <div class="slot"><div class="btns" id="btns"><span class="btn def" id="sbtn">Save ▶</span><span class="btn">Later</span></div>
+               <div class="prog" id="prog"><span>Saving</span>${R.seg(4)}</div>
+               <div class="done" id="done">${mark}<span>Tap Save <span id="chev">▶▶▶</span></span></div></div></div>` });
+    SV.id = 'sv';
+    R.open(SV, 22.76, { from: { x: 44, y: 110 } });
+    R.flash(SV, 22.76, 2);
+    // Pixel cursor steps to Save and clicks on "recommends".
+    const cur = R.box('h', { id: 'cursor', layer: 'save', x: 79, y: 129, html: R.pix(['k.......', 'kk......', 'kpk.....', 'kppk....', 'kpppk...', 'kppppk..', 'kpppppk.', 'kppppppk', 'kppppkkk', 'kpkkpk..', 'kk.kppk.', '....kk..'], 0.75) });
+    R.show(cur, 22.95);
+    [[23.08, 68, 125], [23.2, 54, 121], [23.3, 42.5, 117]].forEach(([t, x, y]) => R.tl.set(cur, { left: `${x}vw`, top: `${y}vw` }, R.T(t)));
+    R.tl.set('#sbtn', { backgroundColor: '#1E1E1E', color: '#F386A1' }, R.T(23.38));
+    R.hide(R.$('#btns'), 23.48);
+    R.hide(cur, 23.52);
+    R.show(R.$('#prog'), 23.48);
+    SV.querySelectorAll('#prog .seg i').forEach((c, i) => R.tl.set(c, { backgroundColor: '#1E1E1E' }, R.T(23.5 + i * 0.09)));
+    R.hide(R.$('#prog'), 23.86);
+    R.show(R.$('#done'), 23.86);
+    R.text(SV.querySelector('.win__bar .t'), 23.86, 'Saved ✓');
+    R.tl.set(SV.querySelector('.win__bar .r'), { color: '#03AA5C' }, R.T(23.86));
+    R.flash(R.$('#fl'), 23.86, 1);
+    R.blink(R.$('#chev'), 24.0, 24.34, 0.3);
+    // "recommends": each slot fills and flips to Ready.
+    parts.forEach((_, i) => {
+      const t = 23.38 + i * 0.1;
+      F.querySelectorAll(`#r${i} .seg i`).forEach((c, j) => R.tl.set(c, { backgroundColor: '#1E1E1E' }, R.T(t + j * 0.033)));
+      R.text(R.$(`#s${i}`), t + 0.13, 'Ready ✓');
+      R.tl.set(`#s${i}`, { color: '#03AA5C' }, R.T(t + 0.13));
+    });
+    // Sound.
+    R.sfx('open', 19.35); [19.52, 19.66, 19.73, 19.86].forEach(t => R.sfx('tick', t)); R.sfx('boot', 20.0);
+    [20.34, 20.58, 20.78, 20.92].forEach(t => R.sfx('tick', t));
+    R.sfx('notify', 22.76, { layer: 'save' }); [23.08, 23.2, 23.3].forEach(t => R.sfx('tick', t, { layer: 'save' })); R.sfx('thunk', 23.38, { layer: 'save' });
+    [23.5, 23.59, 23.68, 23.77].forEach(t => R.sfx('tick', t, { layer: 'save' })); R.sfx('success', 23.86, { layer: 'save' });
+    R.done(24.34);
+  </script>
+</body>
+</html>

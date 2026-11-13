@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- 30.40–34.17 "Three, give it a few hard rules, something it absolutely can't get wrong."
+     Rules.cfg in the clear left column: MUST / NEVER / ALWAYS chips drop on "few hard rules" with
+     their rule typing on; padlocks snap shut on "absolutely can't"; on "wrong" the file goes
+     read-only: Exceptions: 0. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>09 Hard rules</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #K .win__body { padding: calc(var(--u) * 1.4); display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); }
+    .rl { position: relative; visibility: hidden; border-bottom: var(--hair) dashed var(--ink-55); padding-bottom: calc(var(--u) * 1.2); }
+    .rl .chip-inv { font-size: calc(var(--u) * 3.6); }
+    .rl .type { display: block; margin-top: calc(var(--u) * .9); font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .rl .lk { position: absolute; right: 0; top: 0; visibility: hidden; }
+    .ft { margin-top: auto; display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.5)/1 var(--f-pixel); visibility: hidden; }
+    .rl { display: flex; align-items: center; gap: calc(var(--u) * 1.6); }
+    .rl .chip-inv { min-width: calc(var(--u) * 12); text-align: center; }
+    .rl .type { display: inline-block; margin-top: 0; font-size: calc(var(--u) * 4); }
+    .rl .lk { position: static; margin-left: auto; order: 2; }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="4"></div>
+  </div>
+  <script>
+    R.START = 30.4;
+    R.sfxAuto = false;   // sounds are listed by hand at the end (the approved mix)
+    const lock = R.pix(['.kkk.', 'k...k', 'k...k', 'kkkkk', 'kkpkk', 'kkpkk', 'kkkkk'], 0.8);
+    const rules = [['MUST', 'cite sources'], ['NEVER', 'invent data'], ['ALWAYS', 'reply in JSON']];
+    const K = R.win({ title: 'Rules.cfg', right: 'RW', variant: 'paper', x: 22, y: 88, w: 46, h: 38,
+      body: rules.map(([k, v], i) => `<div class="rl" id="r${i}"><span class="chip-inv">${k}</span><span class="lk" id="k${i}">${lock}</span><span class="type" id="t${i}">${v}</span></div>`).join('') +
+            `<div class="ft" id="ft"><span>Exceptions</span><span class="chip-inv">0</span></div>` });
+    K.id = 'K';
+    R.open(K, 30.62, { from: { x: 45, y: 72 } });
+    [31.1, 31.28, 31.66].forEach((t, i) => { R.show(R.$(`#r${i}`), t); R.type(R.$(`#t${i}`), t + 0.03, 34); });
+    [32.76, 33.0, 33.26].forEach((t, i) => { R.show(R.$(`#k${i}`), t); R.flash(R.$(`#r${i}`), t, 1); });
+    R.text(K.querySelector('.win__bar .r'), 33.84, 'RO');
+    R.show(R.$('#ft'), 33.96);
+    R.flash(K, 33.96, 2);
+    // Sound.
+    R.sfx('open', 30.52);
+    [31.1, 31.28, 31.66].forEach(t => { R.sfx('pop', t); for (let i = 0; i < 12; i++) R.sfx('type', t + .03 + i / 34); });
+    [32.76, 33.0, 33.26].forEach(t => R.sfx('lock', t)); R.sfx('thunk', 33.96);
+    R.done(34.17);
+  </script>
+</body>
+</html>
