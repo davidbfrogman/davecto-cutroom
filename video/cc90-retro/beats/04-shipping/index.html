@@ -1,0 +1,90 @@
+<!doctype html>
+<!-- 04 10.43–12.55 "So how are they not shipping absolute garbage?"
+     Above the head (lime). Shipping.dept: a conveyor belt running boxes into the back of a truck,
+     the shipped counter ticking up as each one goes in (quiet ticks). On "absolute" a stinking
+     garbage bag rides onto the belt between the boxes; on "garbage" the belt stops dead with the bag
+     mid-belt, QC: auto flips to ⚠ QC: GARBAGE? and flashes (alert). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>04-shipping</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #SH .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .hd { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    #qc.al { background: var(--warm); color: var(--paper); }
+    .fl { position: relative; flex: 1; }
+    .belt { position: absolute; left: 0; width: calc(var(--u) * 56); bottom: 0; height: calc(var(--u) * 15); overflow: hidden; }
+    .track { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--u) * 2.6); border-top: var(--hair) solid var(--ink); border-bottom: var(--hair) solid var(--ink); overflow: hidden; }
+    #tr { position: absolute; left: 0; top: 0; bottom: 0; display: flex; gap: calc(var(--u) * 1.6); padding-top: calc(var(--u) * .5); }
+    #tr i { display: block; flex: none; width: calc(var(--u) * 1.6); height: calc(var(--u) * 1.2); background: var(--ink); }
+    .it { position: absolute; bottom: calc(var(--u) * 2.6); visibility: hidden; }
+    .stink { position: absolute; left: calc(var(--u) * 1); bottom: calc(var(--u) * 7); }
+    .truck { position: absolute; right: 0; bottom: 0; }
+    .truck span { position: absolute; left: calc(var(--u) * 2.4); top: calc(var(--u) * 3.6); font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+  </style>
+</head>
+<body data-world="lime">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 313 / 30;                                   // 10.433, the scene cut
+    const END = 12.55, W = p => R.w(p, R.START - 0.1);
+    const box = R.pix(['kkkkkkkk', 'knnkknnk', 'knnkknnk', 'kkkkkkkk', 'knnnnnnk', 'knnnnnnk', 'kkkkkkkk'], .85);
+    const bag = R.pix(['...kk...', '..k..k..', '...kk...', '.kkkkkk.', 'kwwwwwwk', 'kwkwwkwk', 'kwwwwwwk', 'kwwwwwwk', '.kkkkkk.'], .85);
+    const s1 = R.pix(['.k...k.', 'k...k..', '.k...k.', '..k...k'], .55), s2 = R.pix(['k...k..', '.k...k.', '..k...k', '.k...k.'], .55);
+    const truck = R.pix([
+      'kkkkkkkkkkkkkk......', 'kppppppppppppk......', 'kppppppppppppkkkkk..', 'kppppppppppppknnnkk.', 'kppppppppppppknnnnk.',
+      'kppppppppppppkkkkkkk', 'kppppppppppppkkkkkkk', 'kkkkkkkkkkkkkkkkkkkk', '..kkk.......kkk.....', '..kpk.......kpk.....', '..kkk.......kkk.....'], 1.1);
+    const N = 8, SP = 0.32, V = 34;                       // boxes, spawn gap (s), belt speed (u/s)
+    const ab = W('absolute'), gb = W('garbage');
+    const bagT = gb - 30 / V;                             // the bag is mid-belt when the belt stops
+    const SH = R.win({ title: 'Shipping.dept', right: '<span id="ct">1,204</span> shipped', x: 4, y: 21, w: 82, h: 30,
+      body: `<div class="hd"><span>line 1 · prod</span><span class="chip" id="qc">QC: auto</span></div>
+        <div class="fl"><div class="belt">${[...Array(N)].map((_, i) => `<div class="it" id="b${i}">${box}</div>`).join('')}
+          <div class="it" id="bg">${bag}<div class="stink" id="s1">${s1}</div><div class="stink" id="s2">${s2}</div></div>
+          <div class="track"><div id="tr">${'<i></i>'.repeat(26)}</div></div></div>
+          <div class="truck">${truck}<span>SHIP IT</span></div></div>` });
+    SH.id = 'SH';
+    R.open(SH, Math.max(W('so'), R.START + 4 * R.F));         // room for the zoom trail inside the beat
+
+    // boxes leave every SP seconds; the bag cuts in at bagT
+    const spawns = [];
+    for (let i = 0, t = R.START - 1.2; spawns.length < N; t += SP) if (Math.abs(t - bagT) > SP * .6) spawns.push(t);
+    const els = spawns.map((_, i) => R.$('#b' + i)), BG = R.$('#bg'), ct = R.$('#ct'), tr = R.$('#tr'), S1 = R.$('#s1'), S2 = R.$('#s2');
+    const end = 56;
+    let shipped = 1204;
+    const pos = (s, t) => -7 + V * (Math.min(t, gb) - s);
+    R.every(R.START, END, t => {
+      let n = 1204;
+      spawns.forEach((s, i) => {
+        const x = pos(s, t), el = els[i];
+        el.style.left = R.u(x.toFixed(1));
+        el.style.visibility = x > -7 && x < end ? 'visible' : 'hidden';
+        if (x >= end) n++;
+      });
+      const bx = pos(bagT, t);
+      BG.style.left = R.u(bx.toFixed(1));
+      BG.style.visibility = t >= bagT ? 'visible' : 'hidden';
+      const f = Math.round(t * 15);
+      S1.style.visibility = f % 2 ? 'visible' : 'hidden'; S2.style.visibility = f % 2 ? 'hidden' : 'visible';
+      ct.textContent = n.toLocaleString('en-US');
+      tr.style.transform = `translateX(${R.u((-(V * Math.min(t, gb)) % 3.2).toFixed(2))})`;
+    });
+    // a quiet tick for each box that goes into the truck
+    spawns.forEach(s => { const t = s + (end + 7) / V; if (t > R.START + .1 && t < gb) R.sfx('tick', t, { vol: -8 }); });
+
+    const qc = R.$('#qc');
+    R.text(qc, gb, '⚠ QC: GARBAGE?');
+    R.tl.set(qc, { backgroundColor: 'var(--warm)', color: 'var(--paper)' }, R.T(gb));
+    R.flash(qc, gb, 3);
+    R.flash(BG, gb + 2 * R.F, 2);
+    R.sfx('alert', gb);
+    R.done(END);
+  </script>
+</body>
+</html>

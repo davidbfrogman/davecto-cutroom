@@ -1,0 +1,103 @@
+<!doctype html>
+<!-- 09 41.70–51.80 "And three, you want a second agent to be the one reviewing the code. That way it can
+     look for performance issues, security issues, and it won't have any of the constraints of the
+     first agent."
+     Above the head (pink). Step 3 of 3 header: "3 ·" on "three", "A second agent reviews." on "second
+     agent" (pop). Agents (own layer): AGENT 1 (grey, wrote it) is there; AGENT 2 (pink) arrives on
+     "second agent" (pop) and its eyes dart left and right while it reviews. review.diff opens on
+     "reviewing the code"; a scan box steps down the lines and loops. On "performance issues" lines
+     3–4 light up with ⚠ O(n²) (alert); on "security issues" lines 6–7 with ⚠ SQL injection (alert).
+     On "constraints" a padlock and BIASED land on agent 1 (lock); on "first agent" agent 2 gets
+     FRESH EYES ✓ (success). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>09-second</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #HD .win__body { background: var(--accent); display: flex; align-items: center; padding-bottom: calc(var(--u) * .6) !important; gap: calc(var(--u) * 2); padding: 0 calc(var(--u) * 2); }
+    #HD .disp { font-size: calc(var(--u) * 5.2); line-height: 1; }
+    #h2 { visibility: hidden; }
+    #CD .win__body { background: var(--paper); padding: calc(var(--u) * 1) 0; }
+    .cl { position: relative; display: grid; grid-template-columns: calc(var(--u) * 4) 1fr; font: 700 calc(var(--u) * 2.35)/1 var(--f-mono); height: calc(var(--u) * 2.75); align-items: center; white-space: pre; }
+    .cl b { font-weight: 400; color: var(--grey); text-align: right; padding-right: calc(var(--u) * 1); }
+    .fl { position: absolute; right: calc(var(--u) * .8); visibility: hidden; font-size: calc(var(--u) * 3); z-index: 2; }
+    #sb { position: absolute; left: calc(var(--u) * .4); right: calc(var(--u) * .4); height: calc(var(--u) * 2.75); border: var(--hair) solid var(--ink); outline: var(--hair) solid var(--accent); visibility: hidden; }
+    #AG .win__body { background: var(--win-2); display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: calc(var(--u) * .6); }
+    .ag { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .5); font: calc(var(--u) * 2.8)/1 var(--f-pixel); }
+    .ag small { font: calc(var(--u) * 2.3)/1 var(--f-pixel); color: var(--ink-55); }
+    #a2 { visibility: hidden; }
+    .ey { display: none; }
+    #lk { position: absolute; left: 50%; top: calc(var(--u) * 2.6); transform: translateX(-50%); visibility: hidden; }
+    #bi, #fe { position: absolute; left: 50%; transform: translateX(-50%) rotate(-4deg); top: calc(var(--u) * 1.4); visibility: hidden; white-space: nowrap; font-size: calc(var(--u) * 2.9); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 41.70;
+    const END = 51.80, W = p => R.w(p, R.START - 0.1);
+
+    // Step 3 of 3
+    const HD = R.win({ title: 'Step 3 of 3', right: '✣ steal this', layer: 'head', x: 4, y: 20.5, w: 82, h: 12.5,
+      body: `<span class="disp">3 ·</span><span class="disp" id="h2">A second agent reviews.</span>` });
+    HD.id = 'HD';
+    const sa = W('second agent');
+    R.open(HD, Math.max(W('and three'), R.START + 4 * R.F));  // room for the zoom trail inside the beat
+    R.show(R.$('#h2'), sa); R.sfx('pop', sa, { layer: 'head' });
+
+    // Agents
+    const bot = (eyes, c) => R.pix(['....kk....', '....kk....', '.kkkkkkkk.', '.knnnnnnk.', eyes, '.knnnnnnk.', '.knkkkknk.', '.kkkkkkkk.', 'kkkkkkkkkk', 'k.kkkkkk.k'].map(r => r.replace(/n/g, c)), .72);
+    const EC = '.knknnknk.', EL = '.kknnknnk.', ER = '.knnknnkk.';
+    const lock = R.pix(['..kkk..', '.k...k.', '.k...k.', 'kkkkkkk', 'knnnnnk', 'knnknnk', 'knnknnk', 'kkkkkkk'], .8);
+    const AG = R.win({ title: 'Agents', right: '2', layer: 'agents', x: 64, y: 34.5, w: 22, h: 32,
+      body: `<div class="ag" id="a1">${bot(EC, 'w')}<span>AGENT 1</span><small>wrote it</small><div id="lk">${lock}</div><span class="chip-inv" id="bi">BIASED</span></div>
+        <div class="ag" id="a2"><div class="ey" id="e0" style="display:block">${bot(EC, 'n')}</div><div class="ey" id="e1">${bot(EL, 'n')}</div><div class="ey" id="e2">${bot(ER, 'n')}</div>
+          <span>AGENT 2</span><small>reviews it</small><span class="chip chip--world" id="fe">FRESH EYES ✓</span></div>` });
+    AG.id = 'AG';
+    R.open(AG, W('you want'), { sfx: false });
+    R.show(R.$('#a2'), sa); R.sfx('pop', sa + 0.1, { layer: 'agents' });
+
+    // review.diff
+    const CODE = ['async function signup(req) {', '  const all = await db.users();', '  for (const a of all)', '    for (const b of all) dup(a, b);',
+      '  const e = req.body.email;', '  const q = "SELECT * FROM u " +', "    \"WHERE email='\" + e + \"'\";", '  return db.run(q);', '}'];
+    const CD = R.win({ title: 'review.diff', right: 'agent 2 · line <span id="ln">1</span>', layer: 'code', x: 4, y: 34.5, w: 58, h: 32,
+      body: `<div style="position:relative">${CODE.map((c, i) => `<div class="cl" id="c${i}"><b>${i + 1}</b><span>${c.replace(/</g, '&lt;')}</span></div>`).join('')}
+        <div id="sb"></div>
+        <span class="chip chip--warm fl" id="f1" style="top:calc(var(--u) * 2.75 * 2.5)">⚠ O(n²)</span>
+        <span class="chip chip--warm fl" id="f2" style="top:calc(var(--u) * 2.75 * 5.5)">⚠ SQL injection</span></div>` });
+    CD.id = 'CD';
+    const rv = W('reviewing');
+    R.open(CD, rv);
+    const sb = R.$('#sb'), ln = R.$('#ln');
+    R.every(rv, END, t => {
+      const k = Math.floor((t - rv) * 7.5) % CODE.length;
+      sb.style.top = `calc(var(--u) * ${(2.75 * k).toFixed(2)})`;
+      ln.textContent = k + 1;
+    });
+    R.show(sb, rv);
+    const pf = W('performance'), se = W('security');
+    const flag = (rows, chip, t) => {
+      rows.forEach(r => R.tl.set(R.$('#c' + r), { backgroundColor: 'var(--accent)' }, R.T(t)));
+      R.show(R.$(chip), t); R.flash(R.$(chip), t, 1); R.sfx('alert', t, { layer: 'code', vol: -3 });
+    };
+    flag([2, 3], '#f1', pf);
+    flag([5, 6], '#f2', se);
+
+    // agent 2's eyes dart while it reviews
+    const ey = [R.$('#e0'), R.$('#e1'), R.$('#e2')];
+    R.every(rv, END, t => { const k = [0, 1, 0, 2][Math.floor((t - rv) * 3) % 4]; ey.forEach((e, i) => { e.style.display = i === k ? 'block' : 'none'; }); });
+
+    // constraints of the first agent
+    const co = W('constraints'), fa = W('first agent');
+    R.show(R.$('#lk'), co); R.show(R.$('#bi'), co); R.sfx('lock', co, { layer: 'agents' });
+    R.show(R.$('#fe'), fa); R.flash(R.$('#fe'), fa, 1); R.sfx('success', fa, { layer: 'agents' });
+    R.done(END);
+  </script>
+</body>
+</html>

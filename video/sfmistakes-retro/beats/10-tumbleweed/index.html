@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- 10 37.96–42.00 "They think they're gonna build their app, launch it, and magically customers will show up."
+     Launch.plan (yellow) below the chest: a checklist ticks "Build app" on "build", "Launch it"
+     on "launch", then "✣ magically" sparkles on "magically" and the visitor counter waits at
+     000000 while a pixel tumbleweed rolls across the empty desert strip on "customers will show up",
+     and two cricket chirps. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>10-tumbleweed</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #LP .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); padding: calc(var(--u) * 1.4); }
+    .top { display: flex; gap: calc(var(--u) * 2.4); }
+    .chk { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1); font: calc(var(--u) * 3.8)/1 var(--f-pixel); white-space: nowrap; }
+    .chk span { display: flex; align-items: center; gap: calc(var(--u) * 1.2); }
+    .box { width: calc(var(--u) * 3.2); height: calc(var(--u) * 3.2); border: var(--hair) solid var(--ink); display: inline-flex; align-items: center; justify-content: center; font-size: calc(var(--u) * 3.4); }
+    .box b { visibility: hidden; font-weight: normal; }
+    #m3 { visibility: hidden; }
+    .vis { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: calc(var(--u) * .6); font: calc(var(--u) * 3)/1 var(--f-pixel); }
+    #vc { background: var(--ink); color: var(--accent); font: calc(var(--u) * 7)/1 var(--f-pixel); padding: calc(var(--u) * .4) calc(var(--u) * 1) calc(var(--u) * .8); letter-spacing: .08em; }
+    .desert { position: relative; flex: 1; border-top: var(--hair) solid var(--ink); overflow: hidden; }
+    .desert .ground { position: absolute; left: 0; right: 0; bottom: calc(var(--u) * 1.2); border-bottom: var(--hair) dashed var(--ink); }
+    #tw { position: absolute; bottom: calc(var(--u) * 1.4); }
+    #cr { position: absolute; right: calc(var(--u) * 1); top: calc(var(--u) * .8); font: calc(var(--u) * 3)/1 var(--f-mono); }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 37.96;
+    const LP = R.win({ title: 'Launch.plan', right: 'v1.0 final', x: 6, y: 72, w: 76, h: 42,
+      body: `<div class="top">
+          <div class="chk">
+            <span><i class="box"><b id="c1">✓</b></i>Build app</span>
+            <span><i class="box"><b id="c2">✓</b></i>Launch it</span>
+            <span><i class="box"><b id="c3">?</b></i>Customers show up <em id="m3" style="font-style:normal">✣ magically</em></span>
+          </div>
+          <div class="vis"><span>Visitors</span><span id="vc">000000</span></div>
+        </div>
+        <div class="desert"><div class="ground"></div><div id="tw" class="h"></div><span id="cr" class="h">chirp. chirp.</span></div>` });
+    LP.id = 'LP';
+    R.open(LP, R.w('think'), { from: { x: 45, y: 60 } });
+
+    R.show(R.$('#c1'), R.w('build')); R.sfx('tick', R.w('build'));
+    R.show(R.$('#c2'), R.w('launch')); R.sfx('tick', R.w('launch'));
+    const mg = R.w('magically');
+    R.show(R.$('#m3'), mg); R.show(R.$('#c3'), mg);
+    R.blink(R.$('#m3'), mg + 0.4, 42, 0.27);
+    R.sfx('sparkle', mg);
+
+    // Tumbleweed: two frames of a pixel bramble, rolling left to right in hops.
+    const TW = [
+      ['..kk.k..', '.k..k.k.', 'k.kk..kk', '.k..kk.k', 'k.k..k.k', 'kk.kk..k', '.k.k.kk.', '..k.kk..'],
+      ['..k.kk..', '.kk.k.k.', 'k..kk.k.', 'kk.k..kk', 'k.kk.k.k', '.k..k.kk', '.kk.k.k.', '..kk.k..'],
+    ].map(r => R.pix(r, 1));
+    const tw = R.$('#tw'), cu = R.w('customers'), end = 42;
+    R.show(tw, cu);
+    R.every(cu, end, t => {
+      const k = Math.floor((t - cu) * 15);
+      tw.innerHTML = TW[k % 2];
+      tw.style.left = `calc(var(--u) * ${-8 + k * 1.4})`;
+      tw.style.bottom = `calc(var(--u) * ${1.4 + (k % 4 === 1 ? 1 : 0)})`;
+    });
+    const su = R.w('show');
+    R.show(R.$('#cr'), su);
+    R.sfx('blip', su, { freq: 3800, vol: -10 }); R.sfx('blip', su + 0.18, { freq: 3800, vol: -10 });
+    R.flash(R.$('#vc'), R.w('up', su), 2);
+    R.done(42);
+  </script>
+</body>
+</html>

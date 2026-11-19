@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- 14 58.44–62.40 "Comment guide below and I'll send it to you for free and follow along for more tips on building with AI."
+     Above the head (coral). Keyboard: G U I D E press themselves one by one on "guide" (type clicks)
+     into the comment field, ⏎ goes down on "below" (thunk): posted ✓. Mail: an envelope with
+     guide.pdf in it on "and I'll", seals on "send it to you" (close), $0.00 postage on "free" (pop). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>14-keys</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #KB .win__body { background: var(--win-2); display: flex; flex-direction: column; gap: calc(var(--u) * .8); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .fld { display: flex; justify-content: space-between; align-items: center; background: var(--paper); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .5) calc(var(--u) * 1) calc(var(--u) * .7);
+           font: calc(var(--u) * 4)/1 var(--f-pixel); }
+    #tx { font-family: var(--f-mono); font-weight: 700; font-size: calc(var(--u) * 3.6); }
+    #cur { display: inline-block; width: calc(var(--u) * 1.8); height: calc(var(--u) * 3.4); background: var(--ink); vertical-align: bottom; margin-left: calc(var(--u) * .3); }
+    #ps { visibility: hidden; }
+    .kr { display: flex; gap: calc(var(--u) * .6); margin-bottom: calc(var(--u) * .5); }
+    .kr:nth-child(3) { margin-left: calc(var(--u) * 2.4); }
+    .kr:nth-child(4) { margin-left: calc(var(--u) * 5.4); }
+    .k { width: calc(var(--u) * 6.4); height: calc(var(--u) * 3.8); background: var(--paper); border: var(--hair) solid var(--ink); box-shadow: 0 calc(var(--u) * .5) 0 var(--ink);
+         display: flex; align-items: center; justify-content: center; font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    .k.ent { width: calc(var(--u) * 10); }
+    #EV .win__body { background: var(--paper); display: flex; align-items: center; gap: calc(var(--u) * 1.6); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .inf { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * .7); font: calc(var(--u) * 3.3)/1 var(--f-pixel); white-space: nowrap; }
+    #cl { display: none; }
+    #fr { visibility: hidden; }
+  </style>
+</head>
+<body data-world="coral">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 58.44;
+    const END = 62.40, W = p => R.w(p, R.START - 0.1);
+    const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+    const KB = R.win({ title: 'Comment', right: '@davecto', x: 4, y: 20.5, w: 82, h: 29,
+      body: `<div class="fld"><span><span id="tx"></span><i id="cur"></i></span><span class="chip chip--green" id="ps">posted ✓</span></div>
+        ${ROWS.map((r, i) => `<div class="kr">${[...r].map(c => `<span class="k" id="k${c}">${c}</span>`).join('')}${i === 2 ? '<span class="k ent" id="kE">⏎</span>' : ''}</div>`).join('')}` });
+    KB.id = 'KB';
+    R.open(KB, W('comment'));   // zooms out of its own centre, so it follows the layer's move
+    R.blink(R.$('#cur'), W('comment'), END, 0.4);
+
+    const press = (el, t) => {
+      R.tl.set(el, { backgroundColor: 'var(--accent)', y: R.u(.5), boxShadow: 'none' }, R.T(t));
+      R.tl.set(el, { backgroundColor: 'var(--paper)', y: 0, boxShadow: `0 ${R.u(.5)} 0 var(--ink)` }, R.T(t) + 2 * R.F);
+    };
+    const gu = W('guide');
+    [...'GUIDE'].forEach((c, i) => {
+      const t = gu + i * 2 * R.F;
+      press(R.$('#k' + c), t);
+      R.text(R.$('#tx'), t, 'GUIDE'.slice(0, i + 1));
+      R.sfx('type', t);
+    });
+    const bl = W('below') + 0.15;
+    press(R.$('#kE'), bl); R.sfx('thunk', bl);
+    R.show(R.$('#ps'), bl + R.F);
+
+    // Mail
+    const env = r => R.pix(r, .8);
+    const op = env(['...kkkkkkkk...', '...kppppppk...', '...kpkkkkpk...', 'kkkkppppppkkkk', 'kpkkpkkkkpkkpk', 'kppkkppppkkppk', 'kpppkkkkkkpppk', 'kppppppppppppk', 'kppppppppppppk', 'kkkkkkkkkkkkkk']);
+    const cl = env(['..............', '..............', '..............', 'kkkkkkkkkkkkkk', 'kkppppppppppkk', 'kpkkppppppkkpk', 'kpppkkppkkpppk', 'kpppppknnkpppk', 'kppppppnnppppk', 'kkkkkkkkkkkkkk']);
+    const EV = R.win({ layer: 'mail', title: 'Mail', right: '1 out', x: 4, y: 51.5, w: 40, h: 17,
+      body: `<div><div id="op">${op}</div><div id="cl">${cl}</div></div>
+        <div class="inf"><span>guide.pdf → you</span><span><span id="ms">drafting…</span> <span class="chip-inv" id="fr">$0.00</span></span></div>` });
+    EV.id = 'EV';
+    const an = W("and i'll"), se = W('send'), fe = W('free');
+    R.open(EV, an);
+    R.tl.set(R.$('#op'), { display: 'none' }, R.T(se)); R.tl.set(R.$('#cl'), { display: 'block' }, R.T(se));
+    R.text(R.$('#ms'), se, 'sent ✓'); R.sfx('close', se, { layer: 'mail' });
+    R.show(R.$('#fr'), fe); R.flash(R.$('#fr'), fe, 1); R.sfx('pop', fe, { layer: 'mail' });
+
+    R.done(END);
+  </script>
+</body>
+</html>

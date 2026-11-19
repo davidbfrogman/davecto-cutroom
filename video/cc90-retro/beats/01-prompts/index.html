@@ -1,0 +1,66 @@
+<!doctype html>
+<!-- 01 0–3.17 "Everyone's obsessed with writing better AI prompts."
+     Below the chest (magenta: he walks right up to the lens and his face ends at the top). prompt.txt: "make app" sits in the editor; every word adds more prompt
+     voodoo (". pls." / "make it GOOD." / "you are a world-class 10x engineer." / "take a deep breath.
+     i will tip $200.") typed in fast (type clicks) while the file name grows prompt_v2 → _FINAL →
+     _FINAL_v7_REAL and the rewrite counter spins to #47. On "prompts": ✣ needs more adjectives (pop). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01-prompts</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PR .win__body { background: var(--paper); display: flex; flex-direction: column; justify-content: space-between; padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6); }
+    .pr { font: 700 calc(var(--u) * 3.4)/1.3 var(--f-mono); letter-spacing: -.01em; }
+    #cur { display: inline-block; width: calc(var(--u) * 1.8); height: calc(var(--u) * 3.6); background: var(--accent); vertical-align: text-bottom; margin-left: calc(var(--u) * .3); }
+    .ft { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.4)/1 var(--f-pixel); border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * 1); }
+    #nm { visibility: hidden; transform: rotate(-2deg); }
+  </style>
+</head>
+<body data-world="magenta">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 0;
+    const END = 3.17, W = p => R.w(p, 0);
+    const S = ['make app', '. pls.', ' make it GOOD.', ' you are a world-class 10x engineer.', ' take a deep breath. i will tip $200.'];
+    const NAMES = ['prompt.txt', 'prompt_v2.txt', 'prompt_FINAL.txt', 'prompt_FINAL_v7.txt', 'prompt_FINAL_v7_REAL.txt'];
+    const PR = R.win({ title: NAMES[0], right: 'rewrite #1', x: 4, y: 101, w: 82, h: 28,
+      body: `<div class="pr"><span id="tx">${S[0]}</span><i id="cur"></i></div>
+        <div class="ft"><span>words: <span id="wc">2</span></span><span class="chip-inv" id="nm">✣ needs more adjectives</span></div>` });
+    PR.id = 'PR';
+    const t0 = W("everyone's") + 0.3;   // he walks up to the lens, so this sits below the chest
+    R.open(PR, t0);
+    R.blink(R.$('#cur'), t0, END, 0.4);
+
+    // each word adds more voodoo, typed in fast
+    const ts = [W('obsessed'), W('writing'), W('better'), W('ai')], pr = W('prompts');
+    const full = S.join(''), tx = R.$('#tx'), wc = R.$('#wc');
+    const marks = [];
+    let acc = S[0].length;
+    ts.forEach((a, i) => {
+      const L = S[i + 1].length, d = Math.min(0.4, (ts[i + 1] ?? pr) - a - 0.04);
+      marks.push([a, acc, acc + L, d]);
+      acc += L;
+      for (let k = 0; k < d; k += 2 * R.F) R.sfx('type', a + k);
+      R.text(PR.querySelector('.win__bar .t'), a, NAMES[i + 1]);
+    });
+    R.every(ts[0], END, t => {
+      let n = S[0].length;
+      for (const [a, s, e, d] of marks) if (t >= a) n = s + Math.round((e - s) * Math.min(1, (t - a) / d));
+      tx.textContent = full.slice(0, n);
+      wc.textContent = full.slice(0, n).split(/\s+/).filter(Boolean).length;
+    });
+    const rr = PR.querySelector('.win__bar .r');
+    R.count(rr, ts[0], pr - ts[0], 1, 47, v => `rewrite #${Math.round(v)}`);
+
+    R.show(R.$('#nm'), pr); R.sfx('pop', pr);
+    R.flash(PR.querySelector('.win__bar'), pr, 1);
+    R.done(END);
+  </script>
+</body>
+</html>

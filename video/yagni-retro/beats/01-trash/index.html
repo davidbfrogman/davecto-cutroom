@@ -1,0 +1,97 @@
+<!doctype html>
+<!-- 01 0–4.67 "A lot of people vibe-coding their first app think that they don't need to know any
+     software engineering principles."
+     Two windows above the head. Vibe-o-meter (pink): an EQ bouncing at full vibes from "vibe coding",
+     first_app.exe chip on "first app". Desktop: SWE_101.pdf sits next to the Trash; on "don't need"
+     a cursor grabs it, drags it across and drops it in on "engineering" (thunk), and the Trash reads
+     1,184 pp on "principles" (strike). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01-trash</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #VB .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .hd { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    #vr { font-size: calc(var(--u) * 4.6); }
+    .eq { flex: 1; display: flex; align-items: flex-end; gap: calc(var(--u) * .5); border-bottom: var(--hair) solid var(--ink); }
+    .eq i { flex: 1; background: var(--accent); border: var(--hair) solid var(--ink); border-bottom: 0; height: 30%; }
+    .eq i:nth-child(3n) { background: var(--ink); }
+    #DK .win__body { background: var(--win-2); padding: 0; }
+    .ic { position: absolute; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .5); }
+    .ic span { font: calc(var(--u) * 2.8)/1 var(--f-pixel); background: var(--paper); padding: 0 calc(var(--u) * .4) calc(var(--u) * .2); white-space: nowrap; }
+    #doc.sel span { background: var(--ink); color: var(--paper); }
+    #lid { position: relative; }
+    #junk { position: absolute; left: calc(var(--u) * 2.6); top: calc(var(--u) * -1.4); visibility: hidden; }
+    #cur { position: absolute; visibility: hidden; }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 0;
+    const END = 4.67;
+
+    // Vibe-o-meter
+    const VB = R.win({ title: 'Vibe-o-meter', right: '♪ on', x: 4, y: 96, w: 44, h: 27,
+      body: `<div class="hd"><span>Vibes</span><span id="vr">98.6%</span></div>
+        <div class="eq">${'<i></i>'.repeat(14)}</div>
+        <div class="hd"><span class="micro">Engineering: skip</span><span class="chip-inv h" id="fa">first_app.exe</span></div>` });
+    VB.id = 'VB';
+    const vb = R.w('vibe');
+    R.open(VB, vb, { from: { x: 38, y: 55 } });
+    const bars = R.$$('.eq i');
+    const hn = (a, b) => { const x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return x - Math.floor(x); };
+    R.every(vb, END, t => {
+      const f = Math.round(t * 15);
+      bars.forEach((b, i) => { b.style.height = `${18 + Math.round(hn(i, f) * 10) * 8}%`; });
+      R.$('#vr').textContent = `${(96 + hn(99, f) * 3.9).toFixed(1)}%`;
+    });
+    R.show(R.$('#fa'), R.w('app')); R.sfx('pop', R.w('app'));
+
+    // Desktop: the textbook goes in the Trash.
+    const doc = R.pix(['kkkkkk..', 'kppppkk.', 'kppppkpk', 'kppppkkk', 'kpnnnnpk', 'kppppppk', 'kpkkkkpk', 'kppppppk', 'kpkkkppk', 'kppppppk', 'kkkkkkkk'], .9);
+    const lid = R.pix(['...kkkk...', 'kkkkkkkkkk'], .9);
+    const can = R.pix(['.kkkkkkkk.', '.kwkwkwkk.', '.kwkwkwkk.', '.kwkwkwkk.', '.kwkwkwkk.', '.kwkwkwkk.', '.kwkwkwkk.', '.kwkwkwkk.', '.kkkkkkkk.'], .9);
+    const junk = R.pix(['kkkkk', 'kpnpk', 'kpppk'], .9);
+    const cur = R.pix(['k......', 'kk.....', 'kpk....', 'kppk...', 'kpppk..', 'kppppk.', 'kpppppk', 'kppkkkk', 'kpk....', 'kk.....'], .7);
+    const DK = R.win({ layer: 'trash', title: 'Desktop', right: '1 item', x: 52, y: 96, w: 34, h: 27,
+      body: `<div class="ic" id="doc" style="left:calc(var(--u)*2);top:calc(var(--u)*2.5)">${doc}<span>SWE_101.pdf</span></div>
+        <div class="ic" id="tr" style="left:calc(var(--u)*20);top:calc(var(--u)*3.5)"><div id="lid">${lid}<div id="junk">${junk}</div></div>${can}<span id="tl">Trash</span></div>
+        <div id="cur">${cur}</div>` });
+    DK.id = 'DK';
+    const th = R.w('think');
+    R.open(DK, th, { from: { x: 38, y: 55 } });
+
+    const D = R.$('#doc'), C = R.$('#cur');
+    const dn = R.w("don't"), nd = R.w('need'), a = R.w('to know'), b = R.w('engineering');
+    // the cursor arrives, grabs, drags (linear, on twos), drops
+    R.tl.set(C, { visibility: 'visible', left: R.u(12), top: R.u(14) }, R.T(dn));
+    R.tl.set(C, { left: R.u(6), top: R.u(7) }, R.T(dn + R.F * 2));
+    R.tl.set(D, { filter: 'invert(1)' }, R.T(nd));
+    R.sfx('tick', nd);
+    const x0 = 2, y0 = 2.5, x1 = 20.6, y1 = 0;
+    R.every(a, b, t => {
+      const p = (t - a) / (b - a);
+      D.style.left = R.u(x0 + (x1 - x0) * p); D.style.top = R.u(y0 + (y1 - y0) * p);
+      C.style.left = R.u(6 + (x1 - x0) * p); C.style.top = R.u(7 + (y1 - y0) * p);
+    });
+    R.tl.set(R.$('#lid'), { y: R.u(-1.6) }, R.T(a + (b - a) * 0.6));
+    R.tl.set(D, { visibility: 'hidden' }, R.T(b));
+    R.tl.set(R.$('#junk'), { visibility: 'visible' }, R.T(b));
+    R.tl.set(C, { left: R.u(27), top: R.u(10) }, R.T(b + R.F * 2));
+    R.sfx('thunk', b);
+    const pr = R.w('principles');
+    R.text(R.$('#tl'), pr, '1,184 pp');
+    R.text(DK.querySelector('.win__bar .r'), pr, 'Trash: 1');
+    R.flash(R.$('#tl'), pr, 2);
+    R.sfx('strike', pr);
+    R.done(END);
+  </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<!-- 02 4.03–7.70 "But most founders make these three mistakes that prevent them from ever finding it."
+     A System-1 style bomb dialog (coral) above the head: "Founder.app has unexpectedly quit" on
+     "founders", three error codes land on "three mistakes", then a "Finding PMF" bar crawls to 99%
+     on "prevent them from ever" and stalls; "finding it" → NOT FOUND, Resume greys out. The bomb's
+     fuse spark blinks the whole time. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>02-system-error</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #BX .win__body { background: var(--paper); display: flex; gap: calc(var(--u) * 2.4); padding: calc(var(--u) * 1.8); }
+    .ic { position: relative; flex: none; }
+    #spark { position: absolute; left: calc(var(--u) * 9.6); top: 0; }
+    .txt { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); font: calc(var(--u) * 3.8)/1 var(--f-pixel); min-width: 0; }
+    .txt .big { font-size: calc(var(--u) * 4.4); white-space: nowrap; }
+    .codes { display: flex; gap: calc(var(--u) * 1); }
+    .row { display: flex; align-items: center; gap: calc(var(--u) * 1.2); white-space: nowrap; }
+    .row .seg { flex: 1; }
+    .row .seg i { height: calc(var(--u) * 2.8); }
+    .row .seg i.on { background: var(--accent); }
+    .btns { display: flex; align-items: center; gap: calc(var(--u) * 1.2); margin-top: auto; }
+    .btn { border: var(--hair) solid var(--ink); background: var(--paper); padding: calc(var(--u) * .5) calc(var(--u) * 2) calc(var(--u) * .8); font: calc(var(--u) * 3.8)/1 var(--f-pixel); }
+    .btn.def { outline: calc(var(--u) * .5) solid var(--ink); outline-offset: calc(var(--u) * .3); }
+    #res.off { color: var(--grey); border-color: var(--grey); }
+  </style>
+</head>
+<body data-world="coral">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 4.03;
+    const BOMB = R.pix([
+      '.......kk..',
+      '......k....',
+      '....kkkk...',
+      '...kkkkkk..',
+      '..kkkkkkkk.',
+      '.kkpkkkkkkk',
+      '.kpkkkkkkkk',
+      '.kkkkkkkkkk',
+      '.kkkkkkkkkk',
+      '..kkkkkkkk.',
+      '...kkkkkk..',
+    ], 1.2);
+    const SPARK = R.pix(['n.n', '.n.', 'n.n'], 0.9);
+    const BX = R.win({ title: 'System Error', right: 'ID = 03', x: 4, y: 20.5, w: 80, h: 28,
+      body: `<div class="ic">${BOMB}<div id="spark">${SPARK}</div></div>
+        <div class="txt">
+          <span class="big">Sorry, a system error occurred.</span>
+          <span id="q">Founder.app has unexpectedly quit.</span>
+          <div class="row h" id="bar"><span>Finding PMF</span>${R.seg(10)}<span id="pct">0%</span></div>
+          <div class="btns"><span class="chip-inv h" id="e1">ERR 01</span><span class="chip-inv h" id="e2">ERR 02</span><span class="chip-inv h" id="e3">ERR 03</span>
+            <span class="btn" style="margin-left:auto">Restart</span><span class="btn def" id="res">Resume</span></div>
+        </div>` });
+    BX.id = 'BX';
+    R.open(BX, R.w('founders'), { from: { x: 48, y: 62 }, sfx: 'alert' });
+    R.blink(R.$('#spark'), R.w('founders'), 7.7, 0.27);
+
+    // "three mistakes": one error code per beat of the words.
+    [['e1', 'three'], ['e2', 'three'], ['e3', 'mistakes']].forEach(([id, w], i) => {
+      const t = R.w(w) + (i === 1 ? 0.2 : 0);
+      R.show(R.$('#' + id), t);
+      R.sfx('pop', t);
+    });
+
+    // The search crawls to 99% and stalls.
+    const a = R.w('prevent'), b = R.w('ever'), cells = R.$$('#bar .seg i');
+    R.show(R.$('#bar'), a);
+    cells.slice(0, 9).forEach((c, i) => R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(a + (b - a) * (i + 1) / 9)));
+    R.count(R.$('#pct'), a, b - a, 0, 99, v => `${Math.round(v)}%`);
+    R.sfx('tick', a); R.sfx('tick', b);
+    R.blink(cells[9], b, R.w('finding'), 0.2);
+
+    const nf = R.w('finding');
+    R.text(R.$('#pct'), nf, 'NOT FOUND');
+    R.flash(R.$('#bar'), nf, 2);
+    R.sfx('error', nf);
+    R.tl.set(R.$('#res'), { color: 'var(--grey)', borderColor: 'var(--grey)', outlineColor: 'var(--grey)' }, R.T(nf));
+    R.done(7.7);
+  </script>
+</body>
+</html>

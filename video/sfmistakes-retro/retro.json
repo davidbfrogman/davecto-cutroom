@@ -1,0 +1,149 @@
+{
+  "video": "../sfmistakes.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-fit-puzzle": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          -8.5
+        ]
+      }
+    },
+    "02-system-error": {
+      "on": true,
+      "move": {
+        "main": [
+          8,
+          -13
+        ]
+      }
+    },
+    "03-about-dave": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          -4
+        ]
+      }
+    },
+    "04-feature-factory": {
+      "on": true,
+      "move": {
+        "*": [
+          6,
+          -9
+        ]
+      }
+    },
+    "05-phone": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          -12
+        ]
+      }
+    },
+    "06-switchboard": {
+      "on": true,
+      "move": {
+        "main": [
+          3,
+          -10.5
+        ],
+        "notes": [
+          -19.5,
+          -10.5
+        ]
+      }
+    },
+    "07-yes-machine": {
+      "on": true,
+      "move": {
+        "*": [
+          6,
+          -7.5
+        ]
+      }
+    },
+    "08-reviews": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          -6
+        ]
+      }
+    },
+    "09-empty-folder": {
+      "on": true,
+      "move": {
+        "label": [
+          23.2,
+          95
+        ],
+        "main": [
+          6,
+          2
+        ]
+      }
+    },
+    "10-tumbleweed": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          26.5
+        ]
+      }
+    },
+    "11-channels": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          28.5
+        ]
+      }
+    },
+    "12-pre-launch": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          28.5
+        ]
+      }
+    },
+    "13-printer": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          -5
+        ]
+      }
+    },
+    "14-comment": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          79.5
+        ],
+        "outbox": [
+          13.5,
+          -21
+        ],
+        "follow": [
+          -4.5,
+          -9.5
+        ]
+      }
+    }
+  }
+}

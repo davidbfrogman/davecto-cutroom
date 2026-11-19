@@ -1,0 +1,121 @@
+{
+  "video": "../chatcardshort.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-card-linked": {
+      "on": true,
+      "move": {
+        "main": [
+          7,
+          -9.5
+        ]
+      }
+    },
+    "02-agent-shops": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -13
+        ]
+      }
+    },
+    "03-bot-radar": {
+      "on": true,
+      "move": {
+        "*": [
+          22.5,
+          89
+        ],
+        "resume": [
+          -69.5,
+          -97
+        ],
+        "main": [
+          -1,
+          14.5
+        ]
+      }
+    },
+    "04-captcha": {
+      "on": true,
+      "move": {
+        "main": [
+          18,
+          96.5
+        ],
+        "decade": [
+          -47.5,
+          -6
+        ]
+      }
+    },
+    "05-fingerprint": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          89.5
+        ],
+        "strings": [
+          10.5,
+          9
+        ]
+      }
+    },
+    "06-firewall": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          5.5
+        ]
+      }
+    },
+    "07-signature": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          10
+        ],
+        "note": [
+          0.5,
+          -8.5
+        ]
+      }
+    },
+    "08-proof-audit": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -9
+        ]
+      }
+    },
+    "09-no-win": {
+      "on": true,
+      "move": {
+        "main": [
+          17,
+          95.5
+        ],
+        "score": [
+          -54.5,
+          -7.5
+        ]
+      }
+    },
+    "10-approve-decline": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          94
+        ]
+      }
+    }
+  }
+}

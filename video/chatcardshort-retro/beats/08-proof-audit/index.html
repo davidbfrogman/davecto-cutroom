@@ -1,0 +1,75 @@
+<!doctype html>
+<!-- 08 29.14–40.33 "…done is proven that that request was made by OpenAI. You haven't proven that that
+     purchase was legitimate, or that that's even the product that the user wanted to buy."
+     Proof.Audit (sage) above the head, three claims checked one at a time, each with blinking
+     Checking dots. "OpenAI" → claim 01 ✓ Proven (success), the coverage bar fills a third and the
+     counter steps to 33.3%. "legitimate" → claim 02 ✗ Not Proven (error, row flashes).
+     "wanted" → claim 03 ✗ Not Proven. "buy" → the 33.3% flashes and a footnote lands:
+     *Signature Only (Proof). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08 Proof audit</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PA .win__body { background: var(--paper); display: flex; flex-direction: column; padding: calc(var(--u) * .6) calc(var(--u) * 1.8) calc(var(--u) * .9); }
+    .cl { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: calc(var(--u) * 1.6); height: calc(var(--u) * 4.3);
+          border-bottom: var(--hair) dashed var(--ink-55); font: calc(var(--u) * 3.5)/1 var(--f-pixel); white-space: nowrap; visibility: hidden; }
+    .cl .chip-inv { font-size: calc(var(--u) * 3.1); }
+    .cl .s { min-width: calc(var(--u) * 17); display: grid; justify-items: end; color: var(--grey); }
+    .cl .s > span { grid-area: 1 / 1; }
+    .cl .s .y { color: var(--paper); background: var(--green); padding: calc(var(--u) * .2) calc(var(--u) * .7) calc(var(--u) * .4); }
+    .cl .s .n { color: var(--paper); background: var(--coral); padding: calc(var(--u) * .2) calc(var(--u) * .7) calc(var(--u) * .4); }
+    .ft { margin-top: auto; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: calc(var(--u) * 2); }
+    .ft .seg { width: 100%; }
+    .ft .seg i { height: calc(var(--u) * 2.6); }
+    #pct { font: calc(var(--u) * 5.6)/.8 var(--f-pixel); }
+    #lab, #fn { grid-area: 1 / 1; }
+    #fn { visibility: hidden; }
+    .ft .lb { display: grid; }
+    #fn u { text-underline-offset: .2em; }
+  </style>
+</head>
+<body data-world="sage">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="10"></div>
+  </div>
+  <script>
+    R.START = R.w('done is', 0);
+    const claims = ['Sent By OpenAI', 'Purchase Is Legit', 'User Wanted This'];
+    const PA = R.win({ title: 'Proof.Audit', right: 'sig1 · 1 Key', x: 5, y: 20.5, w: 80, h: 28.5,
+      body: claims.map((c, i) => `<div class="cl" id="c${i}"><span class="chip-inv">0${i + 1}</span><span>${c}</span><span class="s"><span id="k${i}">Checking<span id="d${i}">…</span></span><span class="h" id="v${i}">${i ? '<span class="n">✗ Not Proven</span>' : '<span class="y">✓ Proven</span>'}</span></span></div>`).join('') +
+        `<div class="ft"><span class="lb"><span class="micro" id="lab">Proof Coverage</span><span class="micro" id="fn">*Signature Only <u>(Proof)</u></span></span>${R.seg(3)}<span id="pct">0.0%</span></div>` });
+    PA.id = 'PA';
+    R.open(PA, R.START + 0.06, { from: { x: 48, y: 66 } });
+
+    const verdict = (i, at, ok) => {
+      R.hide(R.$(`#k${i}`), at); R.show(R.$(`#v${i}`), at);
+      R.flash(R.$(`#c${i}`), at, ok ? 1 : 2);
+      R.sfx(ok ? 'success' : 'error', at);
+    };
+    // 01: the signature does prove who sent it.
+    R.show(R.$('#c0'), R.START + 0.2);
+    R.blink(R.$('#d0'), R.START + 0.2, R.w('OpenAI'), 0.4);
+    verdict(0, R.w('OpenAI'), true);
+    R.tl.set(PA.querySelectorAll('.seg i')[0], { backgroundColor: '#1E1E1E' }, R.T(R.w('OpenAI')));
+    R.count(R.$('#pct'), R.w('OpenAI'), 0.4, 0, 33.3, v => `${v.toFixed(1)}%`);
+    // 02 and 03: it doesn't prove the rest.
+    const c1 = R.w("haven't"), c2 = R.w('even the product');
+    R.show(R.$('#c1'), c1); R.sfx('tick', c1);
+    R.blink(R.$('#d1'), c1, R.w('legitimate'), 0.4);
+    verdict(1, R.w('legitimate'), false);
+    R.show(R.$('#c2'), c2); R.sfx('tick', c2);
+    R.blink(R.$('#d2'), c2, R.w('wanted'), 0.4);
+    verdict(2, R.w('wanted'), false);
+    const buy = R.w('buy');
+    R.flash(R.$('#pct'), buy, 3);
+    R.show(R.$('#fn'), buy); R.hide(R.$('#lab'), buy);
+    R.text(PA.querySelector('.win__bar .r'), buy, '1 Of 3');
+    R.done(40.33);
+  </script>
+</body>
+</html>

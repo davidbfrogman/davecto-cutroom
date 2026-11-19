@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- 11 51.43–54.90 "So if you want to make sure that ChatGPT isn't buying you the wrong thing, here's how
+     you should be prompting it."
+     Order.Confirmed (paper, coral accents) above the head: the agent's order types on: 1× Battle
+     Station, moon-sized, pre-owned; "buying" → the price counts up to $1,000,000,000,000.00. A
+     pixel Death Star turns on the right; its beams converge (sweep) and on "wrong thing" it fires
+     across the order (crash), the window flashes and ✗ Wrong Thing drops in (error). "here's how" →
+     Here's How ▶▶▶ (pop), chevrons blinking. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>11 Wrong thing</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="ships.js"></script>
+  <style>
+    #OR .win__body { padding: calc(var(--u) * 1.1) calc(var(--u) * 1.8); display: flex; flex-direction: column; gap: calc(var(--u) * .7); }
+    #OR .r1 { display: flex; gap: calc(var(--u) * 1.4); align-items: center; }
+    #OR .r1 .chip-inv { font-size: calc(var(--u) * 3.4); }
+    #OR .px { font-size: calc(var(--u) * 4.4); }
+    #OR .mono { font-size: calc(var(--u) * 2.5); }
+    #OR .h2 { visibility: hidden; }
+    #price { font: calc(var(--u) * 4.2)/1 var(--f-pixel); background: var(--accent); padding: 0 calc(var(--u) * .6); align-self: flex-start; }
+    .tags { display: flex; gap: calc(var(--u) * 1.2); margin-top: auto; }
+    .tags span { visibility: hidden; font-size: calc(var(--u) * 3.3); }
+    #wr { background: var(--coral); color: var(--ink); }
+  </style>
+</head>
+<body data-world="coral">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="6"></div>
+  </div>
+  <script>
+    R.START = 51.43;
+    const OR = R.win({ title: 'Order.Confirmed', right: 'Agent ✓', variant: 'paper', x: 4, y: 20.5, w: 82, h: 27.3,
+      body: `<div class="r1 h2" id="a"><span class="chip-inv">Order #0042</span><span class="micro h2" id="c">Moon-Sized · Pre-Owned</span></div>
+        <div class="px"><span class="type" id="b">1× Battle Station</span></div>
+        <span id="price" class="h2">$12.00</span>
+        <div class="tags"><span class="chip-inv" id="wr">✗ Wrong Thing</span><span class="chip-inv" id="hh">Here's How <span id="chev">▶▶▶</span></span></div>` });
+    OR.id = 'OR';
+    R.open(OR, R.w('So if'), { from: { x: 55, y: 60 } });
+    R.show(R.$('#a'), R.w('want'));
+    R.type(R.$('#b'), R.w('make sure'), 26);
+    R.show(R.$('#c'), R.w('Chad GPT'));
+    const buy = R.w('buying');
+    R.show(R.$('#price'), R.w("isn't"));
+    R.count(R.$('#price'), buy, 0.6, 12, 1e12, v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    R.sfx('tick', buy); R.sfx('tick', buy + 0.27); R.sfx('tick', buy + 0.53);
+
+    // The Death Star: beams converge on "the", the superlaser fires on "wrong".
+    const wrong = R.w('wrong thing'), from = R.w('want');
+    R.ship('deathstar', { x: 5, y: 27, w: 79.5, h: 19.5, from, to: 56.87, t0: 4.6 - (wrong - from), opts: { x: .87, y: .5, r: 13, every: 6 } });
+    R.sfx('sweep', wrong - 0.6);
+    R.sfx('crash', wrong);
+    R.flash(OR, wrong + R.F, 2);
+    R.show(R.$('#wr'), wrong + 0.2);
+    R.sfx('error', wrong + 0.2);
+    R.text(OR.querySelector('.win__bar .r'), wrong + 0.2, 'Agent ✗');
+    // "here's how"
+    const hh = R.w("here's how");
+    R.show(R.$('#hh'), hh);
+    R.sfx('pop', hh);
+    R.blink(R.$('#chev'), hh + 0.3, 56.87, 0.4);
+    R.done(56.87);
+  </script>
+</body>
+</html>

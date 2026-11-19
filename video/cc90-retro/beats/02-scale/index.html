@@ -1,0 +1,81 @@
+<!doctype html>
+<!-- 02 3.17–6.67 "Meanwhile, the people that are writing Claude code have figured out something much
+     more important."
+     Above the head (yellow). Priorities.scale: a balance with three "prompt" cards on the left pan,
+     tipped their way. "Claude Code team" lands in the title bar on "Claude code". On "figured out" a
+     ??? crate drops onto the right pan (thunk); on "something much more" the beam ratchets over to the
+     crate's side (sweep) and on "important" the crate reads PROCESS and ▲ way more important stamps
+     in (crash). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>02-scale</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #SC .win__body { background: var(--paper); padding: calc(var(--u) * .6); }
+    #sv { display: block; width: 100%; height: 100%; }
+    #sv text { font-family: var(--f-pixel); }
+    #mi { position: absolute; right: calc(var(--u) * 1.4); top: calc(var(--u) * 1.2); visibility: hidden; transform: rotate(-3deg); font-size: calc(var(--u) * 4.2); }
+    #ws { visibility: hidden; }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 3.17;
+    const END = 6.6667, W = p => R.w(p, R.START - 0.1);
+    const SC = R.win({ title: 'Priorities.scale', right: '<span id="ws">Claude Code team</span>', x: 4, y: 20.5, w: 82, h: 33,
+      body: `<svg id="sv" viewBox="0 0 80 29" preserveAspectRatio="xMidYMid meet"></svg><span class="chip-inv" id="mi">▲ way more important</span>` });
+    SC.id = 'SC';
+    R.open(SC, Math.max(W('meanwhile'), R.START + 4 * R.F));   // room for the zoom trail inside the beat
+    R.show(R.$('#ws'), W('claude code')); R.sfx('pop', W('claude code'), { vol: -4 });
+
+    const fg = W('figured'), land = W('out'), so = W('something'), mo = W('more'), im = W('important');
+    const sv = R.$('#sv'), PX = 40, PY = 8, L = 27, SW = .45;
+    const cs = getComputedStyle(document.body), ink = cs.getPropertyValue('--ink').trim(), acc = cs.getPropertyValue('--accent').trim(), pap = cs.getPropertyValue('--paper').trim();
+    const deg = t => t < so ? -9 : t < mo ? -9 + 9 * Math.min(1, (t - so) / (mo - so)) : Math.min(14, 14 * (t - mo) / (im - mo));
+    const draw = t => {
+      const a = deg(t) * Math.PI / 180, cx = L * Math.cos(a), sy = L * Math.sin(a);
+      const ends = [[PX - cx, PY - sy], [PX + cx, PY + sy]];
+      let s = `<polygon points="${PX},${PY} ${PX - 5},26 ${PX + 5},26" fill="${ink}"/>
+        <rect x="${PX - 9}" y="26" width="18" height="1.6" fill="${ink}"/>
+        <line x1="${ends[0][0]}" y1="${ends[0][1]}" x2="${ends[1][0]}" y2="${ends[1][1]}" stroke="${ink}" stroke-width="1.1"/>
+        <rect x="${PX - 1.2}" y="${PY - 1.2}" width="2.4" height="2.4" fill="${acc}" stroke="${ink}" stroke-width="${SW}"/>`;
+      const pans = ends.map(([x, y]) => {
+        const py = y + 9;
+        s += `<line x1="${x}" y1="${y}" x2="${x - 8}" y2="${py}" stroke="${ink}" stroke-width="${SW}"/><line x1="${x}" y1="${y}" x2="${x + 8}" y2="${py}" stroke="${ink}" stroke-width="${SW}"/>
+          <rect x="${x - 9}" y="${py}" width="18" height="1.2" fill="${ink}"/>`;
+        return [x, py];
+      });
+      // three prompt cards on the left pan
+      const [lx, ly] = pans[0];
+      for (let k = 0; k < 3; k++) {
+        const y = ly - 2.6 * (k + 1), dx = [-0.6, 0.8, -0.2][k];
+        s += `<rect x="${lx - 6 + dx}" y="${y}" width="12" height="2.4" fill="${pap}" stroke="${ink}" stroke-width="${SW}"/>
+          <text x="${lx + dx}" y="${y + 1.95}" font-size="2.4" text-anchor="middle" fill="${ink}">prompt</text>`;
+      }
+      // the crate falls onto the right pan
+      if (t >= fg) {
+        const [rx, ry] = pans[1], top = ry - 8;
+        const y = t < land ? -9 + (top + 9) * Math.min(1, (t - fg) / (land - fg)) : top;
+        s += `<rect x="${rx - 7}" y="${y}" width="14" height="8" fill="${acc}" stroke="${ink}" stroke-width="${SW * 2}"/>
+          <line x1="${rx - 7}" y1="${y}" x2="${rx + 7}" y2="${y + 8}" stroke="${ink}" stroke-width="${SW}"/><line x1="${rx + 7}" y1="${y}" x2="${rx - 7}" y2="${y + 8}" stroke="${ink}" stroke-width="${SW}"/>
+          <rect x="${rx - 6}" y="${y + 2.6}" width="12" height="3" fill="${ink}"/>
+          <text x="${rx}" y="${y + 5.05}" font-size="2.9" text-anchor="middle" fill="${acc}">${t >= im ? 'PROCESS' : '???'}</text>`;
+      }
+      sv.innerHTML = s;
+    };
+    draw(R.START);
+    R.every(R.START, END, draw);
+    R.sfx('thunk', land);
+    R.sfx('sweep', so, { vol: -3 });
+    R.show(R.$('#mi'), im); R.flash(R.$('#mi'), im, 1); R.sfx('crash', im, { vol: -4 });
+    R.done(END);
+  </script>
+</body>
+</html>

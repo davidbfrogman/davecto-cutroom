@@ -1,0 +1,97 @@
+<!doctype html>
+<!-- 02 4.67–8.87 "But there's three ridiculously easy principles that could save you hours of fighting with AI."
+     YOU vs AI.fight (coral), below the chest: a fighting-game HUD. ROUND 1; three power-up slots
+     fill on "three ridiculously easy" (rising blips), EASY on "easy", FIGHT! on "principles".
+     "save you hours" runs the HRS SAVED clock to 14.5; on "fighting" YOU jabs and the AI's health
+     drains hit by hit (strike), and on "AI" it's K.O. (crash). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>02-versus</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #FT .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .hud { display: grid; grid-template-columns: auto 1fr calc(var(--u) * 10) 1fr auto; gap: calc(var(--u) * 1); align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .hud .seg i { background: var(--accent); }
+    #hb { display: flex; flex-direction: column; align-items: center; background: var(--ink); color: var(--accent); padding: calc(var(--u) * .3) 0 calc(var(--u) * .5); }
+    #hb b { font: calc(var(--u) * 4.4)/1 var(--f-pixel); font-weight: normal; }
+    #hb small { font: calc(var(--u) * 1.8)/1 var(--f-mono); color: var(--paper); }
+    .arena { flex: 1; position: relative; border-bottom: var(--hair) solid var(--ink); }
+    .arena .dots { position: absolute; inset: 0; opacity: .25; }
+    .fa, .fb, .bot { position: absolute; bottom: 0; }
+    .fa, .fb { left: calc(var(--u) * 6); }
+    .fb { visibility: hidden; }
+    .bot { right: calc(var(--u) * 6); }
+    #ko { visibility: hidden; }
+    #msg { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); font: calc(var(--u) * 6.4)/1 var(--f-pixel); background: var(--ink); color: var(--accent); padding: calc(var(--u) * .3) calc(var(--u) * 1.4) calc(var(--u) * .7); white-space: nowrap; }
+    .ft { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .slots { display: flex; gap: calc(var(--u) * .8); align-items: center; }
+    .slots i { display: inline-block; font-style: normal; width: calc(var(--u) * 4.4); text-align: center; border: var(--hair) solid var(--ink); padding: calc(var(--u) * .3) 0 calc(var(--u) * .5); }
+  </style>
+</head>
+<body data-world="coral">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 4.67;
+    const END = 8.87, W = p => R.w(p, R.START - 0.1);
+    const you = r => R.pix(r, 1.3);
+    const guard = you(['..kkk.....', '..kpk.....', '..kkk.....', '...k.nn...', '.kkkknn...', '...k......', '...k......', '..k.k.....', '.k...k....', 'k.....k...']);
+    const jab = you(['..kkk.....', '..kpk.....', '..kkk.....', '...k......', '.kkkkkkknn', '...k....nn', '...k......', '..k.k.....', '.k...k....', 'k.....k...']);
+    const bot = e => R.pix(['....k.....', '....n.....', '.kkkkkkkk.', `.kw${e}ww${e}wk.`, '.kwwwwwwk.', '.kwkkkkwk.', '.kkkkkkkk.', '..k....k..', '..k....k..', '.kk....kk.'], 1.3);
+    const FT = R.win({ title: 'YOU vs AI.fight', right: 'Round 1', x: 4, y: 66, w: 82, h: 34,
+      body: `<div class="hud"><span>YOU</span><span id="hy">${R.seg(10)}</span><div id="hb"><b id="hh">99</b><small id="hl">TIME</small></div><span id="ha">${R.seg(10)}</span><span>AI</span></div>
+        <div class="arena"><div class="dots"></div><div class="fa">${guard}</div><div class="fb">${jab}</div>
+          <div class="bot" id="ok">${bot('n')}</div><div class="bot" id="ko">${bot('k')}</div><span id="msg">ROUND 1</span></div>
+        <div class="ft"><span class="slots">Power-ups <i id="s0">·</i><i id="s1">·</i><i id="s2">·</i></span><span class="chip-inv h" id="md">EASY</span></div>` });
+    FT.id = 'FT';
+    R.open(FT, W('but'), { from: { x: 45, y: 50 } });
+    const msg = R.$('#msg');
+    R.blink(R.$('#hh'), W('but'), W('save'), 0.53);
+
+    // three power-ups, one per word
+    ['three', 'ridiculously', 'easy'].forEach((w, i) => {
+      const t = W(w), s = R.$('#s' + i);
+      R.tl.set(s, { backgroundColor: 'var(--accent)' }, R.T(t));
+      R.text(s, t, String(i + 1));
+      R.sfx('blip', t, { freq: 500 * 2 ** (i * 4 / 16) });
+    });
+    R.text(msg, W('three'), '3 POWER-UPS');
+    R.show(R.$('#md'), W('easy') + 0.15); R.sfx('pop', W('easy') + 0.15);
+    R.text(msg, W('principles'), 'FIGHT!');
+    R.flash(msg, W('principles'), 2); R.sfx('thunk', W('principles'));
+
+    // the clock turns into hours saved
+    const sv = W('save'), ho = W('hours');
+    R.text(R.$('#hl'), sv, 'HRS SAVED');
+    R.text(R.$('#hh'), R.START, '99');
+    R.count(R.$('#hh'), sv, W('fighting') - sv, 0, 14.5, v => v.toFixed(1));
+    R.tl.set(R.$('#hh'), { autoAlpha: 1 }, R.T(sv));
+    R.sfx('tick', ho);
+
+    // fighting: five jabs, AI loses two cells a hit
+    const f0 = W('fighting'), ai = W('ai');
+    const fa = R.$('.fa'), fb = R.$('.fb'), cells = R.$$('#ha .seg i').reverse();
+    for (let k = 0; k < 5; k++) {
+      const t = f0 + (ai - f0) * k / 4;
+      R.tl.set(fa, { visibility: 'hidden' }, R.T(t)); R.tl.set(fb, { visibility: 'visible' }, R.T(t));
+      R.tl.set(fa, { visibility: 'visible' }, R.T(t) + R.F); R.tl.set(fb, { visibility: 'hidden' }, R.T(t) + R.F);
+      R.tl.set(cells[k * 2], { backgroundColor: 'transparent' }, R.T(t));
+      R.tl.set(cells[k * 2 + 1], { backgroundColor: 'transparent' }, R.T(t));
+      if (k % 2 === 0) R.sfx('strike', t, { vol: -4 });
+    }
+    R.text(msg, f0, 'COMBO x5');
+    R.text(msg, ai, 'K.O.!');
+    R.tl.set(R.$('#ok'), { visibility: 'hidden' }, R.T(ai));
+    R.tl.set(R.$('#ko'), { visibility: 'visible', rotation: 90, transformOrigin: '50% 100%' }, R.T(ai));
+    R.text(FT.querySelector('.win__bar .r'), ai, 'YOU WIN');
+    R.flash(msg, ai, 3); R.sfx('crash', ai);
+    R.hide(FT, 8.72);   // the next shot's face is detected a few frames early
+    R.done(END);
+  </script>
+</body>
+</html>

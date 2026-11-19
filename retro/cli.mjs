@@ -8,6 +8,7 @@ import { join, resolve } from 'node:path';
 import { detect, layout } from './lib/faces.mjs';
 import { describe, lint } from './lib/lint.mjs';
 import { probe } from './lib/probe.mjs';
+import { secs } from './lib/progress.mjs';
 import { checkDeps, createProject, duration, findProject, Project, PYTHON, RETRO, sh } from './lib/project.mjs';
 import { exportVideo, frames, renderOverlays, writeSfx } from './lib/render.mjs';
 
@@ -152,7 +153,7 @@ const cmds = {
 
   async frames() {
     const p = P(), [id] = p.match([argv.shift()]), pr = await probes(p, [id]), x = pr[id];
-    const movs = renderOverlays(p, [id]);
+    const movs = await renderOverlays(p, [id]);
     let ts = argv.map(Number);
     if (!ts.length) ts = [0.15, 0.4, 0.65, 0.92].map(k => +(x.start + (x.end - x.start) * k).toFixed(2));
     console.log(frames(p, id, x, movs[id], ts, { faces: p.faces(), zones: !flag('--clean') }));
@@ -196,12 +197,16 @@ const cmds = {
     const ids = p.match(argv).filter(id => p.on(id));
     const off = p.beatIds().filter(id => !p.on(id));
     if (off.length) console.log(`off: ${off.join(', ')}`);
+    const t0 = Date.now();
+    process.stdout.write(`… checking ${ids.length} beats (timing, placement, sounds) `);
     const pr = await probe(p, ids, size);
     const issues = lint(p, pr, p.faces());
+    console.log(issues.length ? `${issues.length} placement note(s):` : 'ok');
     issues.forEach(i => console.log(`! ${describe(i)}`));
-    const movs = renderOverlays(p, ids, size);
-    const out = exportVideo(p, pr, movs, { video: video ? resolve(video) : p.video, size, sfx: !noSfx, draft });
+    const movs = await renderOverlays(p, ids, size);
+    const out = await exportVideo(p, pr, movs, { video: video ? resolve(video) : p.video, size, sfx: !noSfx, draft });
     console.log(`→ ${out}`);
+    console.log(`  done in ${secs((Date.now() - t0) / 1000)} · show it in Finder: open -R "${out}"`);
   },
 
   async preview() {

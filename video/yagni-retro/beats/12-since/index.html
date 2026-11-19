@@ -1,0 +1,76 @@
+<!doctype html>
+<!-- 12 50.60–54.78 "These principles have been around forever and I think they're even more useful in the age of AI."
+     Above the head, two windows (sage). Get Info: principles.txt with its punch card; on "around
+     forever" Created rolls back from 2026 to 1974 (sweep) and "52 yrs old" lands (pop).
+     Usefulness.chart: decade bars rise on "I think they're even" (ticks); the AI bar climbs on "more
+     useful" and on "age of AI" bursts up out of its own window (crash): +312%. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>12-since</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #GI .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.4); }
+    .card { position: relative; height: calc(var(--u) * 11); background: var(--accent); border: var(--hair) solid var(--ink); clip-path: polygon(calc(var(--u) * 2.4) 0, 100% 0, 100% 100%, 0 100%, 0 calc(var(--u) * 2.4)); padding: calc(var(--u) * .6) calc(var(--u) * 1.4); }
+    .card p { margin: 0; font: calc(var(--u) * 2.2)/1 var(--f-mono); letter-spacing: .1em; }
+    .holes { display: grid; grid-template-columns: repeat(28, 1fr); grid-auto-rows: calc(var(--u) * 1.5); gap: calc(var(--u) * .2) calc(var(--u) * .3); margin-top: calc(var(--u) * .8); }
+    .holes i { display: block; }
+    .holes i.o { background: var(--ink); }
+    .rw { display: grid; grid-template-columns: calc(var(--u) * 15) 1fr; font: calc(var(--u) * 3.3)/1 var(--f-pixel); white-space: nowrap; }
+    .rw span:first-child { color: var(--grey); text-align: right; padding-right: calc(var(--u) * 1.4); }
+    #age { visibility: hidden; margin-left: calc(var(--u) * 1); }
+    #CH .win__body { background: var(--paper); overflow: visible; padding: calc(var(--u) * 1.4); display: flex; flex-direction: column; gap: calc(var(--u) * 1); }
+    .plot { position: relative; height: calc(var(--u) * 24); display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: 100%; gap: calc(var(--u) * .8); align-items: end; border-bottom: var(--hair) solid var(--ink); }
+    .plot i { display: block; height: 0; background: var(--win-2); border: var(--hair) solid var(--ink); border-bottom: 0; position: relative; }
+    .plot i#ai { background: var(--accent); }
+    #pc { position: absolute; left: 50%; top: calc(var(--u) * -4.6); transform: translateX(-50%); visibility: hidden; white-space: nowrap; }
+    .lb { display: grid; grid-template-columns: repeat(6, 1fr); gap: calc(var(--u) * .8); font: calc(var(--u) * 2.6)/1 var(--f-pixel); text-align: center; }
+  </style>
+</head>
+<body data-world="sage">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 50.60;
+    const END = 54.78, W = p => R.w(p, R.START - 0.1);
+    R.seed(19);
+    const holes = [...Array(28 * 4)].map(() => `<i class="${R.rnd() < .28 ? 'o' : ''}"></i>`).join('');
+    const GI = R.win({ title: 'Get Info', right: 'principles.txt', x: 4, y: 20.5, w: 46, h: 41,
+      body: `<div class="card"><p>YAGNI · DRY · KISS</p><div class="holes">${holes}</div></div>
+        <div class="rw"><span>Kind</span><span>Plain wisdom</span></div>
+        <div class="rw"><span>Created</span><span><span id="yr">2026</span><span class="chip-inv" id="age">52 yrs</span></span></div>
+        <div class="rw"><span>Modified</span><span>never</span></div>
+        <div class="rw"><span>Size</span><span>3 lines · 0 deps</span></div>` });
+    GI.id = 'GI';
+    R.open(GI, W('these'), { from: { x: 48, y: 76 } });
+    const ar = W('around'), an = W('and');
+    R.count(R.$('#yr'), ar, an - ar, 2026, 1974, v => String(Math.round(v)));
+    R.sfx('sweep', ar);
+    R.show(R.$('#age'), an); R.sfx('pop', an);
+
+    // Usefulness.chart
+    const H = [30, 36, 40, 46, 52];
+    const CH = R.win({ layer: 'chart', title: 'Usefulness', right: '▲', x: 54, y: 27, w: 32, h: 40,
+      body: `<div class="plot">${H.map((_, i) => `<i id="b${i}"></i>`).join('')}<i id="ai"><span class="chip-inv" id="pc">+312%</span></i></div>
+        <div class="lb"><span>70s</span><span>80s</span><span>90s</span><span>00s</span><span>10s</span><span>AI</span></div>` });
+    CH.id = 'CH';
+    const th = W('i think');
+    R.open(CH, th - 0.2, { from: { x: 30, y: 40 } });
+    const ev = W('even');
+    H.forEach((h, i) => { const t = th + (ev - th) * i / 4; R.tl.set(R.$('#b' + i), { height: `${h}%` }, R.T(t)); R.sfx('tick', t, { vol: -5 }); });
+    const ai = R.$('#ai'), mo = W('more'), us = R.we('useful'), ag = W('age'), en = W('ai');
+    R.every(mo, en + 0.2, t => {
+      const u = t < us ? 24 * (t - mo) / (us - mo) * .8 : t < ag ? 19.2 : 19.2 + (37.5 - 19.2) * Math.min(1, (t - ag) / (en + 0.2 - ag));
+      ai.style.height = `calc(var(--u) * ${u.toFixed(2)})`;
+    });
+    R.sfx('sweep', ag);
+    R.show(R.$('#pc'), en + 0.2); R.flash(R.$('#pc'), en + 0.2, 2);
+    R.sfx('crash', en + 0.2);
+    R.done(END);
+  </script>
+</body>
+</html>

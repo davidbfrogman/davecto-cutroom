@@ -1,0 +1,85 @@
+<!doctype html>
+<!-- 11 45.84–50.60 "It'll be easier to debug, easier to maintain, and use less tokens when you wanna change it."
+     simple.js character sheet (blue) above the head, RPG style: a pixel knight and three stats.
+     A bug crawls in on "easier" and gets squashed on "debug" (strike) as DEBUG fills +7 (blips);
+     MAINTAIN fills +6 on "maintain"; TOKEN COST drains to −78% on "less tokens"; LEVEL UP! LV 31 on
+     "change it" (success). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>11-stats</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #CS .win__body { background: var(--paper); display: grid; grid-template-columns: calc(var(--u) * 22) 1fr; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1.4); }
+    .pt { position: relative; background: var(--win); border: var(--hair) solid var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 1); }
+    .pt span { font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    #lv { background: var(--ink); color: var(--accent); padding: 0 calc(var(--u) * .6) calc(var(--u) * .2); }
+    .sts { display: flex; flex-direction: column; justify-content: space-between; }
+    .st { display: grid; grid-template-columns: calc(var(--u) * 17) 1fr calc(var(--u) * 7); align-items: center; gap: calc(var(--u) * 1); font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .st .seg i { height: calc(var(--u) * 3); }
+    .st .seg i.on { background: var(--accent); }
+    .st b { font-weight: normal; text-align: right; visibility: hidden; }
+    #s2 .seg i.on { background: var(--ink); }
+    .bug { position: absolute; visibility: hidden; }
+    #up { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-4deg); font: calc(var(--u) * 6.4)/1 var(--f-pixel); background: var(--accent); border: var(--hair) solid var(--ink);
+          padding: calc(var(--u) * .4) calc(var(--u) * 1.6) calc(var(--u) * .9); box-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 var(--ink); visibility: hidden; white-space: nowrap; }
+  </style>
+</head>
+<body data-world="blue">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 45.84;
+    const END = 50.60, W = p => R.w(p, R.START - 0.1);
+    const knight = R.pix(['....kkkk....', '...knnnnk...', '..kkkkkkkk..', '..kpkppkpk..', '..kkkkkkkk..', '...kwwwwk...', '.kkkwwwwkkk.', 'kwwkwnnwkwwk', 'kwwkwnnwkwwk', '.kkkwwwwkkk.', '...kwkkwk...', '...kk..kk...'], 1.1);
+    const bugA = R.pix(['k...k', '.kkk.', 'knnnk', '.kkk.', 'k...k'], .8), bugB = R.pix(['.k.k.', 'kkkkk', '.nnn.', 'kkkkk', '.k.k.'], .8);
+    const splat = R.pix(['n.k.n', '.nkn.', 'kknkk', '.nkn.', 'n.k.n'], .8);
+    const STATS = [['DEBUG', 2, 9, '+7'], ['MAINTAIN', 3, 9, '+6'], ['TOKEN COST', 10, 2, '−78%']];
+    const CS = R.win({ title: 'simple.js', right: 'Character', x: 4, y: 20.5, w: 82, h: 31,
+      body: `<div class="pt">${knight}<span>simple.js</span><span id="lv">LV 30</span></div>
+        <div class="sts">${STATS.map(([n, v], i) => `<div class="st" id="s${i}"><span>${n}</span>${R.seg(10)}<b id="d${i}"></b></div>`).join('')}</div>
+        <div class="bug" id="ba" style="top:calc(var(--u)*2)">${bugA}</div><div class="bug" id="bb" style="top:calc(var(--u)*2)">${bugB}</div><div class="bug" id="bs">${splat}</div>
+        <span id="up">LEVEL UP!</span>` });
+    CS.id = 'CS';
+    R.open(CS, W("it'll"), { from: { x: 46, y: 62 } });
+    const segs = STATS.map((_, i) => R.$$(`#s${i} .seg i`));
+    STATS.forEach(([, v], i) => segs[i].forEach((c, k) => { if (k < v) c.classList.add('on'); }));
+
+    const fill = (i, t, from, to) => {
+      const n = Math.abs(to - from);
+      for (let k = 0; k < n; k++) {
+        const at = t + k * R.F, idx = to > from ? from + k : from - 1 - k;
+        R.tl.set(segs[i][idx], { backgroundColor: to > from ? (i === 2 ? 'var(--ink)' : 'var(--accent)') : 'transparent' }, R.T(at));
+        if (k % 2 === 0) R.sfx('blip', at, { freq: to > from ? 500 * 2 ** (k / 8) : 700 * 2 ** (-k / 8), vol: -6 });
+      }
+      R.text(R.$('#d' + i), t, STATS[i][3]); R.show(R.$('#d' + i), t + n * R.F);
+    };
+
+    // a bug crawls along the DEBUG row and gets squashed
+    const ea = W('easier'), db = W('debug');
+    const BA = R.$('#ba'), BB = R.$('#bb'), BS = R.$('#bs');
+    R.every(ea, db, t => {
+      const f = Math.round((t - ea) * 15), x = 70 - f * 1.6;
+      [BA, BB].forEach(b => { b.style.left = `calc(var(--u) * ${x})`; b.style.top = 'calc(var(--u) * 3.2)'; });
+      BA.style.visibility = f % 2 ? 'hidden' : 'visible'; BB.style.visibility = f % 2 ? 'visible' : 'hidden';
+    });
+    R.tl.set([BA, BB], { visibility: 'hidden' }, R.T(db));
+    R.tl.set(BS, { visibility: 'visible', left: `calc(var(--u) * ${70 - Math.round((db - ea) * 15) * 1.6})`, top: 'calc(var(--u) * 3.2)' }, R.T(db));
+    R.tl.set(BS, { visibility: 'hidden' }, R.T(db + 0.6));
+    R.sfx('strike', db);
+    fill(0, db + 0.1, 2, 9);
+    fill(1, W('maintain'), 3, 9);
+    fill(2, W('less tokens'), 10, 2);
+
+    const ch = W('change');
+    R.show(R.$('#up'), ch); R.flash(R.$('#up'), ch, 2);
+    R.text(R.$('#lv'), ch, 'LV 31');
+    R.sfx('success', ch);
+    R.done(END);
+  </script>
+</body>
+</html>

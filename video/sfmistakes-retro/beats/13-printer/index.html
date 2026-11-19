@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- 13 50.13–54.90 "If you want my free breakdown on eight common mistakes I see solo founders making,"
+     DotMatrix.80 (orange) above the head prints the breakdown on tractor-feed paper that feeds down
+     out of it, a line at a time from "breakdown" to "making" (a type click per line; the head
+     steps across). FREE · $0.00 shows on its LCD on "free". Mistakes 01–03 (the ones in this video)
+     print in clear; 04–08 come out redacted. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>13-printer</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PR .win__body { background: var(--win-2); display: flex; align-items: center; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1) calc(var(--u) * 1.4); }
+    .slot { position: relative; flex: 1; height: calc(var(--u) * 2.4); background: var(--ink); }
+    #head { position: absolute; top: calc(var(--u) * -.6); width: calc(var(--u) * 3); height: calc(var(--u) * 3.6); background: var(--accent); border: var(--hair) solid var(--ink); }
+    .lcd { background: var(--ink); color: var(--accent); font: calc(var(--u) * 3.4)/1 var(--f-pixel); padding: calc(var(--u) * .4) calc(var(--u) * 1) calc(var(--u) * .7); white-space: nowrap; }
+    .led { width: calc(var(--u) * 1.6); height: calc(var(--u) * 1.6); background: var(--green); border: var(--hair) solid var(--ink); }
+    .feed { overflow: hidden; }
+    .paper { position: absolute; left: 0; right: 0; top: 0; background: var(--paper); border-left: var(--hair) dashed var(--ink-55); border-right: var(--hair) dashed var(--ink-55);
+             padding: calc(var(--u) * .6) calc(var(--u) * 5) calc(var(--u) * 1); min-height: 100%; }
+    .paper::before, .paper::after { content: ''; position: absolute; top: 0; bottom: 0; width: calc(var(--u) * 3);
+             background: radial-gradient(circle, var(--win-2) 32%, var(--ink) 36%, var(--ink) 44%, transparent 48%) 0 var(--off, 0) / calc(var(--u) * 3) calc(var(--u) * 2.6); }
+    .paper::before { left: calc(var(--u) * .4); } .paper::after { right: calc(var(--u) * .4); }
+    .paper div { font: calc(var(--u) * 3.2)/calc(var(--u) * 2.6) var(--f-pixel); white-space: nowrap; overflow: hidden; }
+    .paper div.t { font-size: calc(var(--u) * 3.8); }
+    .paper s { text-decoration: none; background: var(--ink); color: var(--ink); }
+  </style>
+</head>
+<body data-world="orange">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 50.13;
+    const PR = R.win({ title: 'DotMatrix.80', right: 'LPT1', x: 10, y: 20.5, w: 68, h: 11.5,
+      body: `<i class="led" id="led"></i><div class="slot"><i id="head"></i></div><span class="lcd" id="lcd">READY</span>` });
+    PR.id = 'PR';
+    const FD = R.box('feed h', { x: 15, y: 32, w: 58, h: 17, html: '<div class="paper" id="pp"></div>' });
+    R.open(PR, R.w('want'), { from: { x: 50, y: 52 } });
+    R.show(FD, R.w('want'));
+
+    const fr = R.w('free');
+    R.text(R.$('#lcd'), fr, 'FREE · $0.00'); R.flash(R.$('.lcd'), fr, 2); R.sfx('pop', fr);
+
+    // The printout, newest line nearest the printer.
+    const L = [
+      '<div class="t">BREAKDOWN.TXT</div>', '8 common mistakes · solo founders', '------------------------------',
+      '01 Building before calling', '02 Asking friends & family', '03 No distribution plan',
+      '04 <s>xxxxxxxxxxxxxxxxxx</s>', '05 <s>xxxxxxxxxxxxxx</s>', '06 <s>xxxxxxxxxxxxxxxxxxxx</s>', '07 <s>xxxxxxxxxxxxxxx</s>', '08 <s>xxxxxxxxxxxxxxxxx</s>',
+    ].map(s => s.startsWith('<div') ? s : `<div>${s}</div>`);
+    const a = R.w('breakdown'), b = R.w('making'), pp = R.$('#pp'), head = R.$('#head');
+    R.every(a, 54.9, t => {
+      const n = Math.min(L.length, 1 + Math.floor((t - a) / (b - a) * (L.length - 1)));
+      pp.innerHTML = L.slice(0, n).reverse().join('');
+      pp.style.setProperty('--off', `calc(var(--u) * ${n * 2.6})`);
+      head.style.left = `${(Math.floor((t - a) * 15) * 37) % 92}%`;
+    });
+    L.forEach((_, i) => R.sfx('type', a + (b - a) * i / (L.length - 1), { vol: -3 }));
+    R.text(R.$('#lcd'), R.w('eight'), '8 MISTAKES');
+    R.blink(R.$('#led'), a, 54.9, 0.27);
+    R.text(R.$('#lcd'), b + 0.2, 'DONE ✓');
+    R.sfx('success', b + 0.2);
+    R.done(54.9);
+  </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<!-- 06 22.33–25.64 "But now OpenAI is telling websites, hey, don't block our bots."
+     Close-up, so the firewall sits low (below the chest) and the message sits to the right of the
+     head. Firewall.sys (coral): five pixel bots fidget in a queue against a brick wall, Policy:
+     BLOCK. "telling websites" → Msg.Inbox opens (notify), From OpenAI · To All Websites; "hey," and
+     "Don't Block Our Bots." land in display type. "block" → the policy flips to ALLOW (thunk), the
+     wall opens in three steps and the bots march through into the shop (rising blips). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>06 Firewall</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #FW .win__body { background: var(--paper); padding: 0; }
+    .st { position: absolute; left: calc(var(--u) * 1.6); right: calc(var(--u) * 1.6); top: calc(var(--u) * 1.2); display: flex; justify-content: space-between; align-items: center;
+          font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    #pol { font-size: calc(var(--u) * 3.6); }
+    .ground { position: absolute; left: 0; right: 0; bottom: calc(var(--u) * 2.2); border-top: var(--hair) solid var(--ink); }
+    .wall { position: absolute; left: calc(var(--u) * 35); width: calc(var(--u) * 7.4); bottom: calc(var(--u) * 2.2); display: flex; flex-direction: column; }
+    .wall .row { display: flex; height: calc(var(--u) * 2.9); }
+    .wall .row i { flex: 1; background: var(--accent); border: var(--hair) solid var(--ink); margin: 0 calc(var(--u) * -.1) calc(var(--u) * -.2) 0; }
+    .wall .row.off i:first-child { flex: .5; } .wall .row.off i:last-child { flex: .5; }
+    .bot { position: absolute; bottom: calc(var(--u) * 2.4); }
+    .shop { position: absolute; right: calc(var(--u) * 2); bottom: calc(var(--u) * 2.2); display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .6);
+            font: calc(var(--u) * 2.9)/1 var(--f-pixel); }
+    #MS .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.2); }
+    #MS .ln { font: calc(var(--u) * 2.9)/1 var(--f-pixel); white-space: nowrap; }
+    #MS .ln span { color: var(--grey); }
+    #MS hr { border: 0; border-top: var(--hair) dashed var(--ink-55); margin: calc(var(--u) * .4) 0; width: 100%; }
+    #MS .disp { font-size: calc(var(--u) * 4.4); line-height: .92; color: var(--ink-86); }
+    #MS .disp .hl { display: inline-block; background: var(--accent); color: var(--ink); padding: calc(var(--u) * .3) calc(var(--u) * .4) 0; }
+  </style>
+</head>
+<body data-world="coral">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="4"></div>
+  </div>
+  <script>
+    R.START = 22.33;
+    const BOT = R.pix(['..k..k..', '..k..k..', 'kkkkkkkk', 'kppppppk', 'kpnppnpk', 'kppppppk', 'kpkkkkpk', 'kkkkkkkk', '.kk..kk.', '.k....k.'], 0.68);
+    const SHOP = R.pix(['nnnnnnnnnn', 'npnpnpnpnp', 'kkkkkkkkkk', 'kppppppppk', 'kpkkpppkpk', 'kpkkpppkpk', 'kppppppppk', 'kkkkkkkkkk'], 0.8);
+    const rows = 7, home = [1.6, 8.2, 14.8, 21.4, 28];
+    const FW = R.win({ title: 'Firewall.sys', right: 'Inbound', x: 5, y: 99, w: 80, h: 37,
+      body: `<div class="st"><span class="micro">Rule 01 · UA: *Bot* · Deny</span><span class="chip-inv" id="pol">Policy: Block ■</span></div>
+        <div class="ground"></div>
+        <div class="wall">${[...Array(rows)].map((_, i) => `<div class="row ${i % 2 ? 'off' : ''}" id="w${i}"><i></i><i></i>${i % 2 ? '<i></i>' : ''}</div>`).join('')}</div>
+        ${home.map((x, i) => `<div class="bot" id="b${i}" style="left:calc(var(--u) * ${x})">${BOT}</div>`).join('')}
+        <div class="shop">${SHOP}<span>shop.example</span></div>` });
+    FW.id = 'FW';
+    R.open(FW, R.w('But now'), { from: { x: 44, y: 90 } });
+
+    // Bots fidget in the queue until the wall opens, then march through on twos.
+    const blk = R.w('block'), gate = blk + 3 * R.F, bots = home.map((_, i) => R.$(`#b${i}`));
+    R.every(R.START, gate, t => {
+      const k = Math.round(t * 15);
+      bots.forEach((b, i) => { b.style.left = R.u(home[i]); b.style.transform = (k + i) % 4 < 2 ? 'none' : `translateY(${R.u(-0.68)})`; b.style.visibility = 'visible'; });
+    });
+    R.every(gate, 25.64, t => {
+      const k = Math.round((t - gate) * 15);
+      bots.forEach((b, i) => {
+        const x = home[i] + 4 * k;
+        b.style.left = R.u(x); b.style.transform = k % 2 ? `translateY(${R.u(-0.68)})` : 'none';
+        b.style.visibility = x > 62 ? 'hidden' : 'visible';
+      });
+    });
+    home.forEach((x, i) => { const k = Math.ceil((42.5 - x) / 4); R.sfx('blip', gate + k * R.F, { freq: 500 * 2 ** ((i * 3) / 16), vol: -3 }); });
+
+    // "block": the policy flips and the wall opens.
+    R.text(R.$('#pol'), blk, 'Policy: Allow □');
+    R.tl.set('#pol', { backgroundColor: '#03AA5C', color: '#FEFEFE' }, R.T(blk));
+    R.flash(R.$('#pol'), blk, 1);
+    R.sfx('thunk', blk);
+    [[6], [5], [4]].forEach((g, s) => g.forEach(i => R.hide(R.$(`#w${i}`), blk + (s + 1) * R.F)));
+
+    // The message, to the right of the head.
+    const MS = R.win({ layer: 'msg', title: 'Msg.Inbox', right: '(1)', x: 68, y: 22, w: 18, h: 41,
+      body: `<div class="ln">From: <span>OpenAI</span></div><div class="ln h" id="to">To: <span>Websites</span></div><hr>
+        <div class="disp h" id="hey">Hey,</div><div class="disp h" id="dont">Don't<br><span class="hl">Block</span><br>Our<br>Bots.</div>` });
+    MS.id = 'MS';
+    R.open(MS, R.w('telling'), { from: { x: 60, y: 45 }, sfx: 'notify' });
+    R.show(R.$('#to'), R.w('websites'));
+    R.show(R.$('#hey'), R.w('hey'));
+    R.sfx('pop', R.w('hey'), { layer: 'msg' });
+    R.show(R.$('#dont'), R.w("don't"));
+    R.blink(MS.querySelector('.win__bar .r'), R.w('telling') + 0.2, 25.64, 0.4);
+    R.done(25.64);
+  </script>
+</body>
+</html>

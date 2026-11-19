@@ -1,0 +1,100 @@
+<!doctype html>
+<!-- 01 0–4.03 "Everyone knows that finding product market fit is the fastest way to build a successful startup."
+     PMF.finder (teal) above the head: a product piece hops around a market grid looking for the hole,
+     one hop per word ("finding", "product", "market"), and locks in on "fit". Then a growth chart
+     builds bar by bar from "fastest" to "startup" while the multiplier counts to 193.6x. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01-fit-puzzle</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PF .win__body { display: flex; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1.4); background: var(--paper); }
+    .col { display: flex; flex-direction: column; gap: calc(var(--u) * 1); }
+    .board { position: relative; background: var(--win); border: var(--hair) solid var(--ink); }
+    .board > i { position: absolute; width: calc(var(--u) * 2.4); height: calc(var(--u) * 2.4); }
+    .board > i::after { content: ''; position: absolute; left: 40%; top: 40%; width: 20%; height: 20%; background: var(--ink-55); }
+    .board > i.hole { background: var(--paper); outline: var(--hair) dashed var(--ink); outline-offset: calc(var(--u) * -.2); }
+    .board > i.hole::after { display: none; }
+    .board > i.lit { background: var(--accent); }
+    #pc { position: absolute; filter: drop-shadow(calc(var(--u) * .35) calc(var(--u) * .35) 0 var(--ink)); }
+    .micro { white-space: nowrap; }
+    .st { font: calc(var(--u) * 3.4)/1 var(--f-pixel); display: flex; justify-content: space-between; align-items: center; }
+    .chart { position: relative; flex: 1; display: flex; align-items: flex-end; gap: calc(var(--u) * .5); border-left: var(--hair) solid var(--ink); border-bottom: var(--hair) solid var(--ink); padding: 0 calc(var(--u) * .5); }
+    .chart b { flex: 1; background: var(--ink); visibility: hidden; }
+    .chart b:last-child { background: var(--accent); outline: var(--hair) solid var(--ink); }
+    #mx { font: calc(var(--u) * 7)/1 var(--f-pixel); }
+  </style>
+</head>
+<body data-world="teal">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 0;
+    const C = 2.4, COLS = 14, ROWS = 9;
+    const MASK = ['..n..', 'nnnnn', 'nnnn.', 'nnnnn'];
+    const HC = 8, HR = 3;   // hole position (cells)
+    const hole = new Set();
+    MASK.forEach((r, y) => [...r].forEach((c, x) => { if (c === 'n') hole.add(`${HC + x},${HR + y}`); }));
+    let cells = '';
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+      const k = `${x},${y}`;
+      cells += `<i class="${hole.has(k) ? 'hole' : ''}" data-k="${k}" style="left:calc(var(--u) * ${x * C});top:calc(var(--u) * ${y * C})"></i>`;
+    }
+    const PF = R.win({ title: 'PMF.finder', right: 'v0.1', x: 6, y: 22, w: 76, h: 43,
+      body: `<div class="col">
+          <div class="board" style="width:calc(var(--u) * ${COLS * C + .4});height:calc(var(--u) * ${ROWS * C + .4})">${cells}
+            <div id="pc" class="h">${R.pix(MASK, C)}</div></div>
+          <div class="st"><span id="st">Scanning market</span><span class="chip-inv h" id="fit">Fit 100%</span></div>
+          <div class="micro">Product ▸ Market</div>
+        </div>
+        <div class="col" style="flex:1">
+          <div class="st"><span>Growth</span><span id="mx">0.0x</span></div>
+          <div class="chart">${'<b></b>'.repeat(9)}</div>
+          <div class="st"><span class="micro">D1 → D365</span><span class="chip chip--green h" id="ok">Startup ✓</span></div>
+        </div>` });
+    PF.id = 'PF';
+    R.open(PF, 0.24, { from: { x: 46, y: 70 } });
+
+    // The piece hunts: wrong spot, wrong spot, wrong spot, fit.
+    const pc = R.$('#pc'), st = R.$('#st');
+    const hops = [[1, 4, 'finding'], [4, 0, 'product'], [1, 0, 'market'], [HC, HR, 'fit']];
+    hops.forEach(([x, y, w], i) => {
+      const t = R.w(w);
+      R.tl.set(pc, { left: R.u(x * C), top: R.u(y * C) }, R.T(t));
+      if (i === 0) R.show(pc, t);
+      if (i < 3) { R.text(st, t, `Try ${i + 1}/4 ✗`); R.sfx('tick', t); }
+    });
+    const fit = R.w('fit');
+    R.text(st, fit, 'Locked');
+    R.show(R.$('#fit'), fit);
+    R.flash(R.$('#fit'), fit, 2);
+    R.sfx('lock', fit);
+    // After the lock, the market lights up around the piece, ring by ring.
+    const all = R.$$('.board > i');
+    for (let r = 1; r <= 4; r++) {
+      const t = fit + 0.1 + r * R.F;
+      all.forEach(el => {
+        const [x, y] = el.dataset.k.split(',').map(Number);
+        const d = Math.max(Math.abs(x - (HC + 2)), Math.abs(y - (HR + 1.5)));
+        if (!hole.has(el.dataset.k) && d <= r * 1.6 && d > (r - 1) * 1.6) R.tl.set(el, { backgroundColor: 'var(--ink)' }, R.T(t));
+      });
+    }
+
+    // The hockey stick: one bar per frame-step from "fastest" to "startup".
+    const H = [3, 4, 5, 7, 9, 14, 24, 45, 100];
+    const bars = R.$$('.chart b'), a = R.w('fastest'), b = R.w('startup');
+    bars.forEach((el, i) => { el.style.height = `${H[i]}%`; R.show(el, a + (b - a) * i / (bars.length - 1)); });
+    R.sfx('sweep', a);
+    R.count(R.$('#mx'), a, b - a, 0, 193.6, v => `${v.toFixed(1)}x`);
+    R.show(R.$('#ok'), R.w('successful'));
+    R.sfx('success', b);
+    R.close(PF, 3.92, { sfx: false });
+    R.done(4.03);
+  </script>
+</body>
+</html>

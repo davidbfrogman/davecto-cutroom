@@ -1,0 +1,95 @@
+<!doctype html>
+<!-- 05 14.66–19.63 "Basically don't overbuild for a million users before you actually have one user."
+     Architecture.v9 (orange) above the head: from "don't overbuild" the diagram builds itself
+     column by column, CDN, load balancers, six APIs, cache/queue/workers, four DB shards, wires
+     everywhere (rising blips). Capacity sweeps to 1,000,000 on "million users" (sweep, crash), the
+     bill counts to $4,812.37/mo on "before you actually", and on "one user" a single pixel person
+     walks up to the front door while the whole cluster greys out: Load 0.0001%. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05-overbuild</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #AR .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); padding: calc(var(--u) * 1.4); }
+    .hd { display: flex; justify-content: space-between; align-items: flex-end; font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .hd b { display: block; font: calc(var(--u) * 6.4)/1 var(--f-pixel); font-weight: normal; }
+    .dg { position: relative; flex: 1; border: var(--hair) solid var(--ink); background: var(--win); }
+    .dg .dots { position: absolute; inset: 0; opacity: .2; }
+    .dg svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .dg line { stroke: var(--ink); stroke-width: 2; vector-effect: non-scaling-stroke; visibility: hidden; }
+    .nd { position: absolute; transform: translate(-50%, -50%); width: calc(var(--u) * 8.6); padding: calc(var(--u) * .5) 0 calc(var(--u) * .7); text-align: center;
+          background: var(--accent); border: var(--hair) solid var(--ink); box-shadow: calc(var(--u) * .35) calc(var(--u) * .35) 0 var(--ink-55);
+          font: calc(var(--u) * 2.8)/1 var(--f-pixel); white-space: nowrap; visibility: hidden; }
+    .nd.db { background: var(--ink); color: var(--accent); }
+    #usr { position: absolute; left: 4%; top: 50%; transform: translate(-50%, -50%); visibility: hidden; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .4); }
+    #usr span { font: calc(var(--u) * 2.6)/1 var(--f-pixel); background: var(--ink); color: var(--paper); padding: 0 calc(var(--u) * .4) calc(var(--u) * .2); }
+    .ft { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+  </style>
+</head>
+<body data-world="orange">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 14.66;
+    const END = 19.63, W = p => R.w(p, R.START - 0.1);
+    // column, rows (y%), labels
+    const COLS = [
+      [15, [50], ['CDN']],
+      [29, [28, 72], ['LB-1', 'LB-2']],
+      [44, [16, 50, 84], ['API-1', 'API-2', 'API-3']],
+      [57, [16, 50, 84], ['API-4', 'API-5', 'API-6']],
+      [72, [16, 50, 84], ['Cache', 'Queue', 'Workers']],
+      [89, [11, 37, 63, 89], ['DB-0', 'DB-1', 'DB-2', 'DB-3']],
+    ];
+    const N = []; COLS.forEach(([x, ys, ls], c) => ys.forEach((y, i) => N.push({ c, x, y, l: ls[i] })));
+    const E = [];
+    N.forEach((a, i) => N.forEach((b, j) => {
+      if (b.c !== a.c + 1) return;
+      if (a.c === 2 && Math.abs(a.y - b.y) > 1) return;          // API-1..3 → API-4..6 straight across
+      E.push([i, j]);
+    }));
+    const AR = R.win({ title: 'Architecture.v9', right: 'k8s · 16 pods', x: 4, y: 20.5, w: 82, h: 48,
+      body: `<div class="hd"><span>Capacity<b id="cap">0</b></span><span style="text-align:right">Bill<b id="bill">$0.00</b></span></div>
+        <div class="dg"><div class="dots"></div><svg viewBox="0 0 100 100" preserveAspectRatio="none">${E.map(([i, j], k) => `<line id="e${k}" x1="${N[i].x}" y1="${N[i].y}" x2="${N[j].x}" y2="${N[j].y}"/>`).join('')}</svg>
+          ${N.map((n, i) => `<div class="nd${n.c === 5 ? ' db' : ''}" id="n${i}" style="left:${n.x}%;top:${n.y}%">${n.l}</div>`).join('')}
+          <div id="usr">${R.pix(['.kkk.', '.knk.', '.kkk.', 'kkkkk', '.kkk.', '.kkk.', '.k.k.', '.k.k.'], 1)}<span>you: 1</span></div></div>
+        <div class="ft"><span>Users: <span id="us">0</span></span><span class="chip-inv h" id="ld">Load 0.0001%</span></div>` });
+    AR.id = 'AR';
+    R.open(AR, W('basically'), { from: { x: 54, y: 80 } });
+
+    // build: one node at a time from "don't" to "million"; its incoming wires with it
+    const a = W("don't"), b = W('million');
+    N.forEach((n, i) => {
+      const t = a + (b - a) * i / (N.length - 1);
+      R.show(R.$('#n' + i), t);
+      E.forEach(([p, q], k) => { if (q === i) R.show(R.$('#e' + k), t); });
+      if (i % 2 === 0) R.sfx('blip', t, { freq: 400 * 2 ** (i / 10), vol: -5 });
+    });
+
+    // capacity to a million
+    const fr = W('for'), us = W('users');
+    R.count(R.$('#cap'), fr, us + 0.2 - fr, 0, 1000000);
+    R.sfx('sweep', fr); R.sfx('crash', us + 0.2);
+    R.flash(R.$('#cap'), us + 0.2, 2);
+
+    // the bill
+    const bf = W('before');
+    R.count(R.$('#bill'), bf, W('have') - bf, 0, 4812.37, v => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo`);
+    R.sfx('tick', W('have'));
+
+    // one user
+    const on = W('one user'), u = W('user');
+    R.show(R.$('#usr'), on); R.sfx('pop', on);
+    R.text(R.$('#us'), on, '1');
+    N.forEach((n, i) => R.tl.set(R.$('#n' + i), { backgroundColor: 'var(--win)', color: 'var(--grey)', boxShadow: 'none' }, R.T(on + 0.07 + n.c * R.F)));
+    R.show(R.$('#ld'), u + 0.1); R.flash(R.$('#ld'), u + 0.1, 2);
+    R.sfx('alert', u + 0.1);
+    R.done(END);
+  </script>
+</body>
+</html>

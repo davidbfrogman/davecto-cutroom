@@ -1,0 +1,149 @@
+{
+  "video": "../yagni.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-trash": {
+      "on": true,
+      "move": {
+        "trash": [
+          -6.5,
+          9
+        ],
+        "main": [
+          9.5,
+          6
+        ]
+      }
+    },
+    "02-versus": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          30
+        ]
+      }
+    },
+    "03-boot": {
+      "on": true,
+      "move": {
+        "main": [
+          7,
+          -11.5
+        ]
+      }
+    },
+    "04-yagni": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          0
+        ]
+      }
+    },
+    "05-overbuild": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          0
+        ]
+      }
+    },
+    "06-echo": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -4.5
+        ]
+      }
+    },
+    "07-copies": {
+      "on": true,
+      "move": {
+        "copies": [
+          5,
+          0
+        ]
+      }
+    },
+    "08-ages": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -10
+        ],
+        "kiss": [
+          5,
+          -8
+        ]
+      }
+    },
+    "09-contraption": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -4.5
+        ]
+      }
+    },
+    "10-diff": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -8
+        ]
+      }
+    },
+    "11-stats": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -11
+        ]
+      }
+    },
+    "12-since": {
+      "on": true,
+      "move": {
+        "main": [
+          4.5,
+          -7.5
+        ],
+        "chart": [
+          10,
+          19.5
+        ]
+      }
+    },
+    "13-floppies": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -2
+        ]
+      }
+    },
+    "14-keys": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -1.5
+        ],
+        "mail": [
+          46,
+          -16
+        ]
+      }
+    }
+  }
+}

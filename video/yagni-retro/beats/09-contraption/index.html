@@ -1,0 +1,113 @@
+<!doctype html>
+<!-- 09 35.90–40.40 "AI is oftentimes gonna recommend the most complex solution to a problem."
+     AI.suggest (teal) above the head. The prompt "> add a button" types on "AI is"; on "recommend"
+     the AI's answer builds itself part by part on a pixel canvas: ramp, chute, ramp, six dominoes,
+     seesaw, gear, piston, button (ticks), while lines/deps count to 4,812 / 47. On "complex" the
+     ball rolls, the dominoes fall, the seesaw kicks the gear, the piston comes down and presses
+     the tiny button on "problem" (thunk): ✓ button clicked. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>09-contraption</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #AI .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .rw { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.4)/1 var(--f-pixel); white-space: nowrap; }
+    #cv { width: 100%; aspect-ratio: 200 / 36; image-rendering: pixelated; border-bottom: var(--hair) solid var(--ink); }
+    #ok { visibility: hidden; }
+  </style>
+</head>
+<body data-world="teal">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 35.90;
+    const END = 40.40, W = p => R.w(p, R.START - 0.1);
+    const AI = R.win({ title: 'AI.suggest', right: 'solution_v1', x: 4, y: 20.5, w: 82, h: 31,
+      body: `<div class="rw"><span class="type" id="pr">&gt; add a button</span><span id="ok" class="chip-inv">✓ button clicked</span></div>
+        <canvas id="cv" width="200" height="36"></canvas>
+        <div class="rw"><span>lines <span id="ln">0</span> · deps <span id="dp">0</span> · services <span id="sv">0</span></span><span class="micro" id="st">thinking…</span></div>` });
+    AI.id = 'AI';
+    R.open(AI, W('ai'), { from: { x: 46, y: 62 } });
+    R.type(R.$('#pr'), W('is'), 30);
+
+    const cv = R.$('#cv'), g = cv.getContext('2d');
+    const INK = '#1E1E1E', ACC = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#09AEA1', GREY = '#858585';
+    const px = (x, y, c = INK) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), 1, 1); };
+    const line = (x0, y0, x1, y1, c = INK) => {
+      x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
+      const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+      let e = dx + dy;
+      for (;;) { px(x0, y0, c); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } }
+    };
+    const rect = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+    const ball = (x, y) => { rect(x - 2, y - 1, 5, 3, INK); rect(x - 1, y - 2, 3, 5, INK); rect(x - 1, y - 1, 3, 3, ACC); };
+    const circle = (cx, cy, r) => { for (let a = 0; a < 64; a++) px(cx + r * Math.cos(a / 64 * 2 * Math.PI), cy + r * Math.sin(a / 64 * 2 * Math.PI)); };
+
+    // ball path: ramp 1, drop, ramp 2 (polyline, x/y)
+    const PATH = [[8, 4], [46, 14], [50, 26], [82, 31], [85, 31]];
+    const DOM = [90, 98, 106, 114, 122, 130];
+    const PARTS = ['ramps', 'dominoes', 'seesaw', 'gear', 'piston', 'button'];
+
+    // times
+    const b0 = W('recommend'), b1 = W('complex'), r1 = W('solution') + 0.25, d1 = W('a problem'), pr = W('problem') + 0.25;
+    const tPart = PARTS.map((_, i) => b0 + (b1 - b0) * i / (PARTS.length - 1));
+    const has = (t, name) => t >= tPart[PARTS.indexOf(name)];
+    const along = p => {        // point at fraction p of the path
+      const L = PATH.slice(1).map((q, i) => Math.hypot(q[0] - PATH[i][0], q[1] - PATH[i][1])), T = L.reduce((a, b) => a + b);
+      let d = p * T;
+      for (let i = 0; i < L.length; i++) { if (d <= L[i]) { const f = d / L[i]; return [PATH[i][0] + (PATH[i + 1][0] - PATH[i][0]) * f, PATH[i][1] + (PATH[i + 1][1] - PATH[i][1]) * f]; } d -= L[i]; }
+      return PATH[PATH.length - 1];
+    };
+
+    const draw = t => {
+      g.clearRect(0, 0, 200, 36);
+      line(0, 35, 199, 35, GREY);
+      if (has(t, 'ramps')) {
+        line(6, 7, 46, 17); line(46, 17, 46, 22); line(48, 29, 82, 34); line(10, 8, 10, 35, GREY); line(44, 17, 44, 35, GREY);
+        line(52, 20, 52, 27, GREY);
+      }
+      // dominoes
+      if (has(t, 'dominoes')) DOM.forEach((x, k) => {
+        const tk = r1 + (d1 - r1) * k / DOM.length, fall = t < tk ? 0 : Math.min(1, (t - tk) / ((d1 - r1) / DOM.length));
+        const ang = fall * 1.15;
+        line(x, 34, x + Math.sin(ang) * 10, 34 - Math.cos(ang) * 10); line(x + 1, 34, x + 1 + Math.sin(ang) * 10, 34 - Math.cos(ang) * 10);
+      });
+      // seesaw: tips when the last domino lands
+      const tipped = t >= d1;
+      if (has(t, 'seesaw')) { line(146, 34, 143, 35); line(146, 34, 149, 35); const s = tipped ? -4 : 0; line(136, 31 - s, 156, 31 + s); }
+      // gear spins after the seesaw kicks it
+      const spin = t < d1 ? 0 : (t - d1) * 9;
+      if (has(t, 'gear')) {
+        circle(166, 18, 8); circle(166, 18, 2);
+        for (let k = 0; k < 6; k++) { const a = spin + k * Math.PI / 3; line(166 + Math.cos(a) * 3, 18 + Math.sin(a) * 3, 166 + Math.cos(a) * 10, 18 + Math.sin(a) * 10); }
+        line(156, 31 + (tipped ? 4 : 0), 160, 24, GREY);
+      }
+      // piston comes down onto the button
+      const down = t < d1 ? 0 : Math.min(1, (t - d1) / (pr - d1));
+      if (has(t, 'piston')) { line(174, 18, 188, 6 + down * 4); line(188, 2, 188, 10 + down * 16); rect(185, 10 + down * 16, 7, 2, INK); }
+      if (has(t, 'button')) { rect(183, 31, 11, 4, INK); rect(184, 32, 9, 2, t >= pr ? ACC : '#FEFEFE'); }
+      // the ball
+      if (has(t, 'ramps')) { const p = t < b1 ? 0 : Math.min(1, (t - b1) / (r1 - b1)); const [x, y] = along(p); ball(x, y); }
+    };
+    draw(R.START);
+    R.every(b0, END, draw);
+    tPart.forEach(t => R.sfx('tick', t, { vol: -5 }));
+    R.count(R.$('#ln'), b0, b1 - b0, 0, 4812);
+    R.count(R.$('#dp'), b0, b1 - b0, 0, 47);
+    R.count(R.$('#sv'), b0, b1 - b0, 0, 9);
+    R.text(R.$('#st'), b0, 'building…');
+    R.text(R.$('#st'), b1, 'running');
+    R.sfx('sweep', b1);
+    DOM.forEach((_, k) => { if (k % 2 === 0) R.sfx('tick', r1 + (d1 - r1) * k / DOM.length, { vol: -3 }); });
+    R.sfx('thunk', pr);
+    R.show(R.$('#ok'), pr); R.flash(R.$('#ok'), pr, 2);
+    R.text(R.$('#st'), pr, 'overkill.');
+    R.done(END);
+  </script>
+</body>
+</html>

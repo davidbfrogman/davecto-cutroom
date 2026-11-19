@@ -1,0 +1,136 @@
+{
+  "video": "../OpenAICardV2ZoomsRaw.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-card-linked": {
+      "on": true,
+      "move": {
+        "main": [
+          8,
+          -6
+        ]
+      }
+    },
+    "02-agent-shops": {
+      "on": true,
+      "move": {
+        "main": [
+          7,
+          -9.5
+        ]
+      }
+    },
+    "03-bot-radar": {
+      "on": true,
+      "move": {
+        "*": [
+          22.5,
+          89
+        ],
+        "resume": [
+          -69.5,
+          -97
+        ],
+        "main": [
+          3.5,
+          6
+        ]
+      }
+    },
+    "04-captcha": {
+      "on": true,
+      "move": {
+        "main": [
+          18.5,
+          97.5
+        ],
+        "decade": [
+          -47.5,
+          -6
+        ]
+      }
+    },
+    "05-fingerprint": {
+      "on": true,
+      "move": {
+        "main": [
+          5.5,
+          90
+        ],
+        "strings": [
+          10,
+          5.5
+        ]
+      }
+    },
+    "06-firewall": {
+      "on": true
+    },
+    "07-signature": {
+      "on": true
+    },
+    "08-proof-audit": {
+      "on": true,
+      "move": {
+        "main": [
+          6,
+          -9
+        ]
+      }
+    },
+    "09-no-win": {
+      "on": true,
+      "move": {
+        "main": [
+          3,
+          -11.5
+        ],
+        "score": [
+          -60,
+          51.5
+        ]
+      }
+    },
+    "10-approve-decline": {
+      "on": true,
+      "move": {
+        "main": [
+          4.5,
+          -13.5
+        ]
+      }
+    },
+    "11-wrong-thing": {
+      "on": true,
+      "move": {
+        "main": [
+          8.5,
+          91
+        ]
+      }
+    },
+    "12-punch-card": {
+      "on": true,
+      "move": {
+        "main": [
+          5.5,
+          90.5
+        ]
+      }
+    },
+    "13-receipt": {
+      "on": true,
+      "move": {
+        "ship": [
+          -7,
+          -12
+        ],
+        "main": [
+          1.5,
+          83.5
+        ]
+      }
+    }
+  }
+}
