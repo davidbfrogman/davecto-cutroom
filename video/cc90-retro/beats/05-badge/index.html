@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- 05 12.55–16.25 "By the way, I'm Dave, your CTO on trying to help you build cool stuff with AI."
+     Above the head (blue), two windows. ID Badge: a pixel portrait (top knot, glasses, moustache,
+     green sweater) with NAME: DAVE typed on "Dave", ROLE: your CTO on "CTO", MISSION: help you build /
+     cool stuff w/ AI typed on "help" and "cool", and a barcode. Door 03 (its own layer): a pixel door
+     with a red-blinking reader LOCKED; on "build" the badge's stripe swipes (blip run) and on
+     "stuff" the LED goes green: ACCESS GRANTED (success). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05-badge</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #ID .win__body { background: var(--paper); display: grid; grid-template-columns: calc(var(--u) * 15) 1fr; grid-template-rows: 1fr auto; gap: calc(var(--u) * 1) calc(var(--u) * 1.6); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .ph { background: var(--accent); border: var(--hair) solid var(--ink); display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+    .fs { display: flex; flex-direction: column; gap: calc(var(--u) * .55); font: calc(var(--u) * 3.2)/1 var(--f-pixel); min-width: 0; }
+    .fs small { font: calc(var(--u) * 2.3)/1 var(--f-pixel); color: var(--grey); }
+    .fs .v { font-size: calc(var(--u) * 3.9); }
+    .bc { grid-column: 1 / -1; position: relative; display: flex; gap: calc(var(--u) * .35); height: calc(var(--u) * 3.4); align-items: stretch; }
+    .bc i { display: block; background: var(--ink); }
+    #sw { position: absolute; top: calc(var(--u) * -.5); bottom: calc(var(--u) * -.5); width: calc(var(--u) * 2.4); background: var(--accent); visibility: hidden; }
+    #DR .win__body { background: var(--win-2); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(var(--u) * 1.2) calc(var(--u) * .8); }
+    .rd { display: flex; align-items: center; gap: calc(var(--u) * .8); }
+    #led { width: calc(var(--u) * 2.4); height: calc(var(--u) * 2.4); border: var(--hair) solid var(--ink); background: var(--warm); }
+    #st { font: calc(var(--u) * 3.2)/1 var(--f-pixel); text-align: center; white-space: nowrap; }
+  </style>
+</head>
+<body data-world="blue">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 12.55;
+    const END = 16.25, W = p => R.w(p, R.START - 0.1);
+    R.seed(7);
+    const face = R.pix(['.....kk.....', '....kkkk....', '..kkkkkkkk..', '.kkkkkkkkkk.', '.kppppppppk.', '.kkkkppkkkk.', '.kppkkkkppk.', '.kkkkppkkkk.',
+      '.kppppppppk.', '.kpkkkkkkpk.', '.kppppppppk.', '..kppppppk..', 'gggggggggggg', 'gggggggggggg'], 1.0);
+    const bars = [...Array(34)].map(() => `<i style="width:calc(var(--u) * ${(0.3 + Math.round(R.rnd() * 3) * 0.3).toFixed(1)})"></i>`).join('');
+    const ID = R.win({ title: 'ID Badge', right: 'DaveCTO Inc.', layer: 'badge', x: 4, y: 21, w: 56, h: 36,
+      body: `<div class="ph">${face}</div>
+        <div class="fs"><small>NAME</small><span class="v"><span class="type" id="f1">DAVE</span></span>
+          <small>ROLE</small><span class="v"><span class="type" id="f2">your CTO</span></span>
+          <small>MISSION</small><span><span class="type" id="f3">help you build</span></span><span><span class="type" id="f4">cool stuff w/ AI</span></span></div>
+        <div class="bc">${bars}<i id="sw"></i></div>` });
+    ID.id = 'ID';
+    R.open(ID, Math.max(W('by the way'), R.START + 4 * R.F)); // room for the zoom trail inside the beat
+    R.type(R.$('#f1'), W('dave'), 20);
+    R.type(R.$('#f2'), W('cto') + 0.08, 24);
+    R.type(R.$('#f3'), W('help'), 26);
+    R.type(R.$('#f4'), W('cool'), 30);
+
+    // Door 03
+    const door = R.pix(['kkkkkkkkkk', 'kwwwwwwwwk', 'kwkkkkkkwk', 'kwkppppkwk', 'kwkppppkwk', 'kwkkkkkkwk', 'kwwwwwwwwk', 'kwwwwwkkwk', 'kwwwwwkkwk',
+      'kwwwwwwwwk', 'kwkkkkkkwk', 'kwkppppkwk', 'kwkppppkwk', 'kwkkkkkkwk', 'kwwwwwwwwk', 'kkkkkkkkkk'], .95);
+    const DR = R.win({ title: 'Door 03', right: '', layer: 'door', x: 63, y: 21, w: 23, h: 36,
+      body: `${door}<div class="rd"><i id="led"></i><span class="px" style="font-size:calc(var(--u) * 3)">reader</span></div><span id="st">LOCKED</span>` });
+    DR.id = 'DR';
+    R.open(DR, W("i'm"), { sfx: false });
+    const led = R.$('#led'), bu = W('build'), sf = W('stuff');
+    R.blink(led, W("i'm"), sf, 0.5);
+
+    // swipe on "build", granted on "stuff"
+    const sw = R.$('#sw');
+    R.every(bu, sf, t => { const k = Math.min(1, (t - bu) / (sf - bu - R.F)); sw.style.visibility = 'visible'; sw.style.left = `calc(${(k * 100).toFixed(1)}% - var(--u) * ${(k * 2.4).toFixed(2)})`; });
+    R.hide(sw, sf);
+    for (let i = 0; i < 6; i++) R.sfx('blip', bu + (sf - bu) * i / 6, { freq: 500 * 2 ** (i / 16), vol: -6, layer: 'badge' });
+    R.tl.set(led, { autoAlpha: 1, backgroundColor: 'var(--green)' }, R.T(sf));
+    R.text(R.$('#st'), sf, 'GRANTED ✓');
+    R.flash(R.$('#st'), sf, 2);
+    R.text(DR.querySelector('.win__bar .r'), sf, 'open');
+    R.sfx('success', sf, { layer: 'door' });
+    R.done(END);
+  </script>
+</body>
+</html>

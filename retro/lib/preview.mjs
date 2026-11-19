@@ -56,8 +56,8 @@ export async function serve(project, port) {
           const { id, on, move, sfx } = JSON.parse(body), pr = fresh(), b = pr.beat(id);
           if (on != null) b.on = on;
           if (sfx != null) { if (sfx) delete b.sfx; else b.sfx = false; }
-          if (move) {
-            b.move = Object.fromEntries(Object.entries(move).filter(([, v]) => v[0] || v[1]).map(([k, [x, y]]) => [k, [Math.round(x * 10) / 10, Math.round(y * 10) / 10]]));
+          if (move) {   // kept to 0.01u so a snapped centre stays dead centre
+            b.move = Object.fromEntries(Object.entries(move).filter(([, v]) => v[0] || v[1]).map(([k, [x, y]]) => [k, [Math.round(x * 100) / 100, Math.round(y * 100) / 100]]));
             if (!Object.keys(b.move).length) delete b.move;
           }
           pr.save();

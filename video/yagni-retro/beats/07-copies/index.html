@@ -1,0 +1,81 @@
+<!doctype html>
+<!-- 07 22.66–30.13 "Basically you don't want to maintain 10 different copies of the same code across the
+     code base. It'll only chew through your tokens and time."
+     Above the head. formatDate.js opens on "want"; from "10" to "base" nine more copies cascade
+     open on top of it (copy, copy 2, _old, FINAL, FINAL-v2 ...), rising blips, the counter in each
+     title bar. On "chew" Tokens.meter (magenta) opens over them: a toothy chomper eats the token bar
+     from right to left while the count runs 200,000 → 0 on "tokens", and the clock runs +6h 40m on
+     "and time"; OUT OF TOKENS (error). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-copies</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .cp .win__bar { font-size: calc(var(--u) * 3.2); }
+    .cp .win__body { background: var(--paper); padding: calc(var(--u) * 1) calc(var(--u) * 1.4); font: calc(var(--u) * 2.5)/1.45 var(--f-mono); white-space: pre; }
+    .cp .win__body b { font-weight: 400; background: var(--accent); }
+    #TK .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); padding: calc(var(--u) * 1.4); }
+    .rw { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .rw b { font-weight: normal; font-size: calc(var(--u) * 5); }
+    .bar { position: relative; display: flex; gap: calc(var(--u) * .3); height: calc(var(--u) * 4); }
+    .bar i { flex: 1; background: var(--accent); border: var(--hair) solid var(--ink); }
+    #jaw { position: absolute; top: calc(var(--u) * -.7); }
+    #jaw .shut { display: none; }
+    #oot { visibility: hidden; }
+  </style>
+</head>
+<body data-world="magenta">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 22.66;
+    const END = 30.13, W = p => R.w(p, R.START - 0.1);
+    const NAMES = ['formatDate.js', 'formatDate copy.js', 'formatDate copy 2.js', 'utils/fmtDate.js', 'formatDate_old.js',
+      'formatDate2.js', 'helpers/date.js', 'formatDate-FINAL.js', 'FINAL-v2.js', 'formatDate (1).js'];
+    const CODE = i => `function formatDate(d) {\n  return d.${i % 3 === 1 ? '<b>toUTCString</b>' : 'toISOString'}()\n    .slice(0, ${i % 4 === 3 ? '<b>11</b>' : '10'});\n}`;
+    const wins = NAMES.map((n, i) => {
+      const el = R.win({ layer: 'copies', title: n, right: `${i + 1}/10`, x: 4 + i * 2.6, y: 20.5 + i * 2.3, w: 46, h: 20, body: CODE(i) });
+      el.classList.add('cp');
+      return el;
+    });
+    R.open(wins[0], W('want'), { from: { x: 48, y: 72 } });
+    const a = W('10'), b = W('base');
+    wins.slice(1).forEach((el, k) => {
+      const t = a + (b - a) * k / 8;
+      R.open(el, t, { from: { x: 27 + k * 2.6, y: 31 + k * 2.3 }, steps: 1, sfx: false });
+      R.sfx('blip', t, { freq: 400 * 2 ** (k / 8), vol: -4, layer: 'copies' });
+    });
+
+    // Tokens.meter
+    const shut = R.pix(['..kkkkk', '.kknnnk', 'kpkpnnk', 'kpkpnnk', 'kpkpnnk', '.kknnnk', '..kkkkk'], .8);
+    const open = R.pix(['..kkkkk', '.kknnnk', 'kpkpnnk', '.....nk', 'kpkpnnk', '.kknnnk', '..kkkkk'], .8);
+    const TK = R.win({ layer: 'tokens', title: 'Tokens.meter', right: '⚠', x: 42, y: 39, w: 44, h: 24,
+      body: `<div class="rw"><span>Tokens</span><b id="tok">200,000</b></div>
+        <div class="bar">${'<i></i>'.repeat(16)}<div id="jaw"><div class="op">${open}</div><div class="shut">${shut}</div></div></div>
+        <div class="rw"><span>Time</span><b id="tim">+0h 00m</b></div>
+        <div class="rw"><span class="micro">10 copies × every change</span><span class="chip-inv" id="oot">OUT OF TOKENS</span></div>` });
+    TK.id = 'TK';
+    const ch = W('chew'), tk = R.we('tokens'), an = W('and'), ti = R.we('time');
+    R.open(TK, ch, { from: { x: 40, y: 45 } });
+    const cells = R.$$('#TK .bar i'), jaw = R.$('#jaw'), op = jaw.querySelector('.op'), sh = jaw.querySelector('.shut');
+    R.every(ch, ti, t => {
+      const p = Math.min(1, (t - ch) / (tk - ch)), left = Math.round(16 * (1 - p));
+      cells.forEach((c, i) => { c.style.background = i < left ? 'var(--accent)' : 'transparent'; });
+      jaw.style.left = `calc(${(left / 16) * 100}% - var(--u) * 1)`;
+      const f = Math.round(t * 15) % 2;
+      op.style.display = f ? 'block' : 'none'; sh.style.display = f ? 'none' : 'block';
+    });
+    R.count(R.$('#tok'), ch, tk - ch, 200000, 0);
+    for (let t = ch; t < tk; t += 3 * R.F) R.sfx('tick', t, { vol: -6, layer: 'tokens' });
+    R.count(R.$('#tim'), an, ti - an, 0, 400, v => `+${Math.floor(v / 60)}h ${String(Math.round(v) % 60).padStart(2, '0')}m`);
+    R.show(R.$('#oot'), ti); R.flash(R.$('#oot'), ti, 2);
+    R.sfx('error', ti, { layer: 'tokens' });
+    R.done(END);
+  </script>
+</body>
+</html>

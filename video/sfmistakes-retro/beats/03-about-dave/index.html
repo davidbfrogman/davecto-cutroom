@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- 03 7.70–12.03 "By the way, I'm Dave. I built two seven figure software companies and I've made a lot
+     of these mistakes myself."
+     "About This Founder" (lavender) above the head, like an old About-This-Computer window:
+     a pixel portrait and "Dave 2.0" on "I'm Dave"; two memory-style bars count up to seven figures
+     on "two seven figure software companies"; then a Mistakes bar runs past 100% and out of the
+     window on "made a lot of these mistakes" and flashes on "myself". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03-about-dave</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #AB .win__body { background: var(--paper); display: flex; align-items: center; gap: calc(var(--u) * 2.4); padding: calc(var(--u) * 1.6); }
+    .bars { flex: 1; min-width: 0; }
+    .top { display: flex; align-items: center; gap: calc(var(--u) * 2.4); border-bottom: var(--hair) solid var(--ink); padding-bottom: calc(var(--u) * 1.4); }
+    .name { font: calc(var(--u) * 7.5)/.8 var(--f-pixel); }
+    .ver { font: calc(var(--u) * 3.4)/1 var(--f-pixel); color: var(--grey); }
+    .top .chip-inv { margin-left: auto; }
+    .bars { display: grid; grid-template-columns: calc(var(--u) * 13) 1fr calc(var(--u) * 14); align-items: center; gap: calc(var(--u) * 1.4) calc(var(--u) * 1.4);
+            font: calc(var(--u) * 3.6)/1 var(--f-pixel); white-space: nowrap; }
+    .trk { position: relative; height: calc(var(--u) * 3); border: var(--hair) solid var(--ink); }
+    .trk b { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--ink); }
+    .trk.m b { background: var(--accent); border-right: var(--hair) solid var(--ink); }
+    .v { text-align: right; }
+    #mv { position: relative; z-index: 1; justify-self: end; background: var(--ink); color: var(--accent); padding: calc(var(--u) * .3) calc(var(--u) * .8) calc(var(--u) * .5); }
+  </style>
+</head>
+<body data-world="lavender">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 7.70;
+    const FACE = R.pix([
+      '..kkkkkk..',
+      '.kkkkkkkk.',
+      '.kppppppk.',
+      'kkkkpkkkkk',
+      'kpkkpkpkkk',
+      'kkkkpkkkkk',
+      '.kppppppk.',
+      '.kpkkkkpk.',
+      '.kppppppk.',
+      '..kkkkkk..',
+    ], 1.35);
+    const AB = R.win({ title: 'About Dave 2.0', right: 'Built: <span id="bn">0</span>', x: 6, y: 20.5, w: 76, h: 25,
+      body: `${FACE}
+        <div class="bars">
+          <span>Company.1</span><div class="trk"><b id="b1"></b></div><span class="v" id="v1">$0</span>
+          <span>Company.2</span><div class="trk"><b id="b2"></b></div><span class="v" id="v2">$0</span>
+          <span id="ml" class="h">Mistakes</span><div class="trk m h" id="mt"><b id="b3"></b></div><span class="v h" id="mv">0%</span>
+        </div>` });
+    AB.id = 'AB';
+    R.open(AB, R.w("I'm"), { from: { x: 52, y: 66 } });
+
+    // "two seven figure software companies": both bars count to seven figures.
+    const two = R.w('two'), sv = R.w('seven'), co = R.we('companies');
+    R.text(AB.querySelector('.win__bar .r'), two, 'Built: 2'); R.sfx('tick', two);
+    const usd = v => '$' + Math.round(v).toLocaleString('en-US');
+    [['b1', 'v1', 1000000, sv], ['b2', 'v2', 1000000, sv + 0.27]].forEach(([b, v, to, t]) => {
+      R.tl.fromTo(R.$('#' + b), { width: '0%' }, { width: '100%', duration: co - t - 0.1, ease: `steps(${Math.round((co - t) * 15)})` }, R.T(t));
+      R.count(R.$('#' + v), t, co - t - 0.1, 0, to, usd);
+    });
+    R.sfx('sweep', sv);
+    R.text(AB.querySelector('.win__bar .r'), co - 0.05, '7 figures ×2'); R.sfx('pop', co - 0.05);
+
+    // "made a lot of these mistakes": the bar overruns its track and the window.
+    const m = R.w('made'), my = R.w('myself');
+    ['#ml', '#mt', '#mv'].forEach(s => R.show(R.$(s), m));
+    R.tl.fromTo(R.$('#b3'), { width: '0%' }, { width: '210%', duration: my - m, ease: `steps(${Math.round((my - m) * 15)})` }, R.T(m));
+    R.count(R.$('#mv'), m, my - m, 0, 412, v => `${Math.round(v)}%`);
+    R.sfx('tick', m);
+    R.flash(R.$('#mv'), my, 3);
+    R.sfx('alert', my);
+    R.close(AB, 11.98, { sfx: false });
+    R.done(12.03);
+  </script>
+</body>
+</html>

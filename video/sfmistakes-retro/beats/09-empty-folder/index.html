@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- 09 35.27–37.96 "Third, they have absolutely no distribution strategy."
+     "Mistake 03" lands on "Third" (top left, above the head). Below the chest, a Finder-style folder
+     window (sky) "Distribution Strategy" opens on "distribution": 0 items, 0K in folder, an empty
+     dotted desk and a busy wristwatch cursor turning. On "absolutely no" the search line counts
+     0 found; "strategy" → "This folder is empty." flashes (error). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>09-empty-folder</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .lab { font: calc(var(--u) * 6.4)/1 var(--f-pixel); padding: calc(var(--u) * .4) calc(var(--u) * 1.6) calc(var(--u) * .9); }
+    #FD .win__body { background: var(--paper); display: flex; flex-direction: column; padding: 0; }
+    .info { display: flex; justify-content: space-between; font: calc(var(--u) * 3.4)/1 var(--f-pixel); padding: calc(var(--u) * .8) calc(var(--u) * 1.4) calc(var(--u) * 1.1);
+            border-bottom: var(--hair) solid var(--ink); box-shadow: 0 calc(var(--u) * .5) 0 var(--paper), 0 calc(var(--u) * .5 + 2px) 0 var(--ink); margin-bottom: calc(var(--u) * 1); }
+    .desk { position: relative; flex: 1; margin: calc(var(--u) * 1) calc(var(--u) * 1.4) calc(var(--u) * 1.4); }
+    .desk .dots { position: absolute; inset: 0; opacity: .25; }
+    #msg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font: calc(var(--u) * 4.4)/1 var(--f-pixel); background: var(--paper); padding: calc(var(--u) * .6) calc(var(--u) * 1.4) calc(var(--u) * .9); border: var(--hair) solid var(--ink); white-space: nowrap; }
+    #watch { position: absolute; width: calc(var(--u) * 6.6); height: calc(var(--u) * 6.6); image-rendering: pixelated; }
+    .find { display: flex; justify-content: space-between; font: calc(var(--u) * 3.2)/1 var(--f-mono); padding: 0 calc(var(--u) * 1.4) calc(var(--u) * 1.2); white-space: nowrap; }
+  </style>
+</head>
+<body data-world="sky">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 35.27;
+    const th = R.w('third');
+    const LB = R.box('chip-inv lab h', { x: 6, y: 21, layer: 'label', html: 'Mistake 03 / 03' });
+    R.show(LB, th); R.flash(LB, th, 2); R.sfx('pop', th, { layer: 'label' });
+
+    const FD = R.win({ title: 'Distribution Strategy', right: '▣', x: 6, y: 74, w: 76, h: 38,
+      body: `<div class="info"><span>0 items</span><span>0K in folder</span><span>∞K available</span></div>
+        <div class="desk"><div class="dots"></div><span id="msg" class="h">This folder is empty.</span>
+          <canvas id="watch" width="11" height="11" style="left:62%;top:22%"></canvas></div>
+        <div class="find"><span id="fq">Find: "strategy*"</span><span id="fn">searching…</span></div>` });
+    FD.id = 'FD';
+    R.flash(R.$('.info'), R.w('distribution'), 1);
+    R.open(FD, R.w('absolutely'), { from: { x: 45, y: 60 } });
+
+    // The busy watch: a pixel face, the hand stepping round on twos.
+    const cv = R.$('#watch'), g = cv.getContext('2d');
+    const RING = ['...kkkkk...', '..kpppppk..', '.kpppppppk.', 'kpppppppppk', 'kpppppppppk', 'kpppppppppk', 'kpppppppppk', 'kpppppppppk', '.kpppppppk.', '..kpppppk..', '...kkkkk...'];
+    R.every(R.w('absolutely'), 37.96, t => {
+      g.clearRect(0, 0, 11, 11);
+      RING.forEach((r, y) => [...r].forEach((c, x) => { if (c !== '.') { g.fillStyle = c === 'k' ? '#1E1E1E' : '#FEFEFE'; g.fillRect(x, y, 1, 1); } }));
+      const a = Math.floor((t - 35) * 15) % 8 * Math.PI / 4;
+      g.fillStyle = '#1E1E1E';
+      for (let r = 0; r <= 3; r++) g.fillRect(Math.round(5 + Math.sin(a) * r), Math.round(5 - Math.cos(a) * r), 1, 1);
+    });
+
+    const st = R.w('strategy');
+    R.text(R.$('#fn'), R.w('no'), '0 found'); R.sfx('tick', R.w('no'));
+    R.show(R.$('#msg'), st);
+    R.flash(R.$('#msg'), st, 2);
+    R.sfx('error', st);
+    R.done(37.96);
+  </script>
+</body>
+</html>

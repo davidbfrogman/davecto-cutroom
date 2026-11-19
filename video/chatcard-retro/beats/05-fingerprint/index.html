@@ -1,0 +1,96 @@
+<!doctype html>
+<!-- 05 17.40–22.33 "how your mouse moved or special strings in your browser."
+     Mouse.Trace (lavender) above the head: on "mouse moved" a pixel cursor wanders across a dot
+     grid, leaving a 1-bit trail; readouts fill in (Jitter 0.114px, Speed 193.6px/s) and it
+     decides Human 87%. "special strings" → navigator.txt opens below the chest and three
+     fingerprint lines type on; "browser" → ✓ Fingerprint 0x5A3F (success). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05 Fingerprint</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #MT .win__body { background: var(--paper); display: flex; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1.2); }
+    .pad { position: relative; flex: none; width: calc(var(--u) * 48); border: var(--hair) solid var(--ink); background: var(--accent); }
+    .pad .dots { position: absolute; inset: 0; opacity: .35; }
+    .pad canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+    .pad .cur { position: absolute; z-index: 3; visibility: hidden; }
+    .rd { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1); font: calc(var(--u) * 3.3)/1 var(--f-pixel); white-space: nowrap; }
+    .rd .row { display: flex; justify-content: space-between; visibility: hidden; }
+    .rd .micro { font-size: calc(var(--u) * 1.9); }
+    #hum { margin-top: auto; align-self: flex-start; font-size: calc(var(--u) * 4); }
+    #NV .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1.3); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.8);
+                     font: calc(var(--u) * 2.8)/1 var(--f-mono); color: var(--ink); }
+    #NV .k { color: var(--grey); display: inline-block; width: calc(var(--u) * 21); }
+    #NV .v { background: var(--accent); }
+    #fp { position: absolute; right: calc(var(--u) * 1.4); bottom: calc(var(--u) * 1.2); font-size: calc(var(--u) * 3.8); }
+  </style>
+</head>
+<body data-world="lavender">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="3"></div>
+  </div>
+  <script>
+    R.START = R.w('how your mouse', 0);
+    const arrow = R.pix(['k.......', 'kk......', 'kpk.....', 'kppk....', 'kpppk...', 'kppppk..', 'kpppppk.', 'kppppppk', 'kppppkkk', 'kpkkpk..', 'kk.kppk.', '....kk..'], 0.6);
+    const MT = R.win({ title: 'Mouse.Trace', right: '0 px', x: 5, y: 21, w: 80, h: 32,
+      body: `<div class="pad" id="pad"><div class="dots"></div><canvas id="cv" width="96" height="44"></canvas><div class="cur" id="cur">${arrow}</div></div>
+        <div class="rd"><span class="micro">Signals</span>
+          <div class="row" id="r0"><span>Jitter</span><span>0.114px</span></div>
+          <div class="row" id="r1"><span>Speed</span><span>193.6px/s</span></div>
+          <div class="row" id="r2"><span>Path</span><span>Wobbly</span></div>
+          <span class="chip-inv h" id="hum">Human 87%</span></div>` });
+    MT.id = 'MT';
+    R.open(MT, R.START + 0.04, { from: { x: 55, y: 66 } });
+
+    // A wobbly human path, precomputed (seeded), drawn as a 1-bit trail.
+    R.seed(19);
+    const P = [];
+    for (let i = 0; i < 70; i++) {
+      const s = i / 69;
+      P.push([5 + 86 * s + (R.rnd() - .5) * 2, 22 + 13 * Math.sin(s * Math.PI * 2.4) - 6 * s + (R.rnd() - .5) * 2.4]);
+    }
+    const cv = R.$('#cv'), ctx = cv.getContext('2d'), cur = R.$('#cur');
+    const a = R.w('mouse'), b = R.w('moved') + 0.3;
+    const draw = t => {
+      const n = Math.max(0, Math.min(P.length - 1, Math.floor((t - a) / (b - a) * (P.length - 1))));
+      ctx.clearRect(0, 0, 96, 44); ctx.fillStyle = '#1E1E1E';
+      for (let i = 1; i <= n; i++) {
+        const [x0, y0] = P[i - 1], [x1, y1] = P[i], m = Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)));
+        for (let j = 0; j <= m; j++) ctx.fillRect(Math.round(x0 + (x1 - x0) * j / m), Math.round(y0 + (y1 - y0) * j / m), 1, 1);
+      }
+      cur.style.left = `${P[n][0] / 96 * 100}%`; cur.style.top = `${P[n][1] / 44 * 100}%`;
+      MT.querySelector('.win__bar .r').textContent = `${Math.round(n * 13.7)} px`;
+    };
+    draw(a);
+    R.show(cur, a);
+    R.every(a, b, draw);
+    R.every(b, 22.33, () => draw(b));
+    [0, 1, 2].forEach(i => { R.show(R.$(`#r${i}`), a + 0.25 + i * 0.22); R.sfx('tick', a + 0.25 + i * 0.22); });
+    R.show(R.$('#hum'), R.w('moved'));
+    R.flash(R.$('#hum'), R.w('moved'), 1);
+    R.sfx('pop', R.w('moved'));
+
+    // "special strings": navigator.txt below the chest.
+    const NV = R.win({ layer: 'strings', title: 'navigator.txt', right: 'UA', variant: 'paper', x: 5, y: 115, w: 80, h: 23,
+      body: `<div><span class="k">userAgent</span><span class="type v" id="l0">Mozilla/5.0 (Macintosh)</span></div>
+        <div><span class="k">webdriver</span><span class="type" id="l1">false</span></div>
+        <div><span class="k">canvas.hash</span><span class="type" id="l2">9f3a1c07e2b4</span></div>
+        <span class="chip-inv h" id="fp">✓ Fingerprint 0x5A3F</span>` });
+    NV.id = 'NV';
+    const sp = R.w('special strings');
+    R.open(NV, sp, { from: { x: 45, y: 125 } });
+    R.type(R.$('#l0'), sp + 0.1, 40);
+    R.type(R.$('#l1'), sp + 0.72, 40, { sfx: false });
+    R.type(R.$('#l2'), sp + 0.9, 40);
+    const br = R.w('browser');
+    R.show(R.$('#fp'), br);
+    R.flash(R.$('#fp'), br, 2);
+    R.sfx('success', br, { layer: 'strings' });
+    R.done(22.33);
+  </script>
+</body>
+</html>

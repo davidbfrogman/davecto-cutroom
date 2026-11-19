@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- 03 8.87–11.87 "By the way, I'm Dave, your CTO, trying to help you build cool stuff with AI."
+     DaveCTO BIOS (lime) above the head: a boot screen. Memory test counts to 640K on "by the way",
+     DAVE.SYS loads OK on "Dave", ROLE ... YOUR CTO on "your CTO", MISSION ... HELP_YOU.EXE on "help
+     you", then "> build cool_stuff --with AI" types itself and READY ✓ lands on "AI". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03-boot</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #BT .win__body { background: var(--ink); color: var(--accent); display: flex; flex-direction: column; gap: calc(var(--u) * .7); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.8);
+                     font: calc(var(--u) * 3.8)/1 var(--f-pixel); white-space: pre; }
+    #BT .win__body > div { visibility: hidden; display: flex; justify-content: space-between; }
+    #BT .win__body > div.v { visibility: visible; }
+    .ok { color: var(--paper); }
+    .lg { display: flex; align-items: center; gap: calc(var(--u) * 1.6); color: var(--paper); }
+    .lg .pix i.k { background: var(--paper); }
+    #cmd { color: var(--paper); }
+    #cur { display: inline-block; width: calc(var(--u) * 2); height: calc(var(--u) * 3.4); background: var(--accent); vertical-align: bottom; }
+    #rd { margin-left: auto; }
+  </style>
+</head>
+<body data-world="lime">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 8.87;
+    const END = 11.87, W = p => R.w(p, R.START - 0.1);
+    const logo = R.pix(['nnn.n.n', 'n.n.n.n', 'n.n.n.n', 'n.n.n.n', 'nnn..n.'], .8);
+    const BT = R.win({ title: 'DaveCTO BIOS', right: 'v2.0', x: 4, y: 20.5, w: 78, h: 34,
+      body: `<div class="v lg">${logo}<span>DAVECTO BIOS v2.0  (C)1984</span></div>
+        <div id="l1"><span>MEM TEST</span><span><span id="mem">000K</span> <span class="ok h" id="o1">OK</span></span></div>
+        <div id="l2"><span>LOADING DAVE.SYS</span><span class="ok h" id="o2">OK</span></div>
+        <div id="l3"><span>ROLE</span><span class="ok h" id="o3">YOUR CTO</span></div>
+        <div id="l4"><span>MISSION</span><span class="ok h" id="o4">HELP_YOU.EXE</span></div>
+        <div id="l5"><span><span class="type" id="cmd">&gt; build cool_stuff --with AI</span><i id="cur"></i></span><span class="chip h" id="rd">READY ✓</span></div>` });
+    BT.id = 'BT';
+    R.open(BT, W('by'), { from: { x: 60, y: 70 }, sfx: 'boot' });
+
+    // memory test
+    const m = W('the way');
+    R.show(R.$('#l1'), m);
+    R.count(R.$('#mem'), m, W("I'm") - m, 0, 640, v => `${String(Math.round(v / 16) * 16).padStart(3, '0')}K`);
+    R.show(R.$('#o1'), W("I'm")); R.sfx('tick', W("I'm"));
+    R.show(R.$('#l2'), W("I'm"));
+    R.show(R.$('#o2'), W('dave')); R.sfx('tick', W('dave'));
+    R.show(R.$('#l3'), W('your'));
+    R.show(R.$('#o3'), W('cto')); R.sfx('pop', W('cto'));
+    R.show(R.$('#l4'), W('trying'));
+    R.show(R.$('#o4'), W('help')); R.sfx('tick', W('help'));
+
+    // the prompt types itself
+    const bu = W('build');
+    R.show(R.$('#l5'), W('you build'));
+    R.type(R.$('#cmd'), bu, 32);
+    R.blink(R.$('#cur'), W('you build'), END, 0.4);
+    const ai = W('ai');
+    R.show(R.$('#rd'), ai);
+    R.tl.set(R.$('#rd'), { backgroundColor: 'var(--accent)' }, R.T(ai));
+    R.sfx('success', ai);
+    R.done(END);
+  </script>
+</body>
+</html>

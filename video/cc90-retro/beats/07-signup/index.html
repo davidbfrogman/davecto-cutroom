@@ -1,0 +1,120 @@
+<!doctype html>
+<!-- 07 21.27–30.47 "First up, make your AI test the whole product. If it builds a signup form, make
+     sure it opens the website, fills out the form, and proves to you that what it built actually
+     works."
+     Teal. Header above the head; the face climbs to y54 mid-scene, so the browser and proof.png sit below the chest. Step 1 of 3 header: "1 ·" on "first up", "Test the whole product." on
+     "test" (pop). WebSurfer 1.0 opens on "builds a signup form" with a build bar (ticks) and
+     signup_form.jsx ✓ on "form". On "opens the website" the address bar types localhost:3000/signup
+     and the form loads (tick). The AI's cursor fills it on "fills out the form" (type), clicks Sign up
+     on "and" (thunk) and the page says ✓ Welcome, bot!. proof.png (own layer) pops out on "proves to
+     you" and IT WORKS ✓ stamps on "actually works" (success). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-signup</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #HD .win__body { background: var(--accent); display: flex; align-items: center; padding-bottom: calc(var(--u) * .6) !important; gap: calc(var(--u) * 2); padding: 0 calc(var(--u) * 2); }
+    #HD .disp { font-size: calc(var(--u) * 5.2); line-height: 1; }
+    #h2 { visibility: hidden; }
+    #BR .win__body { background: var(--win-2); display: flex; flex-direction: column; gap: calc(var(--u) * .8); padding: calc(var(--u) * .9); }
+    .ad { display: flex; align-items: center; gap: calc(var(--u) * 1); background: var(--paper); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .6) calc(var(--u) * 1);
+          font: 700 calc(var(--u) * 2.8)/1 var(--f-mono); }
+    .pg { position: relative; flex: 1; background: var(--paper); border: var(--hair) solid var(--ink); overflow: hidden; }
+    .ab { position: absolute; }
+    .bld { left: calc(var(--u) * 4); top: calc(var(--u) * 5); width: calc(var(--u) * 66); display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .bld .seg i { height: calc(var(--u) * 3); }
+    #fm { inset: 0; visibility: hidden; font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    .fd { position: absolute; left: calc(var(--u) * 20); width: calc(var(--u) * 40); height: calc(var(--u) * 4.4); border: var(--hair) solid var(--ink); background: var(--paper);
+          display: flex; align-items: center; padding-left: calc(var(--u) * 1); font: 700 calc(var(--u) * 2.8)/1 var(--f-mono); }
+    .lb { position: absolute; left: calc(var(--u) * 4); }
+    #bt { position: absolute; left: calc(var(--u) * 20); top: calc(var(--u) * 15.2); padding: calc(var(--u) * .7) calc(var(--u) * 2.2) calc(var(--u) * 1); background: var(--accent); border: var(--hair) solid var(--ink);
+          box-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 var(--ink); }
+    #ok { inset: 0; visibility: hidden; display: flex; flex-direction: column; align-items: flex-start; padding-left: calc(var(--u) * 4); justify-content: center; gap: calc(var(--u) * 1.4); background: var(--paper); font: calc(var(--u) * 4.4)/1 var(--f-pixel); }
+    #cu { position: absolute; visibility: hidden; z-index: 3; }
+    #cu .chip-inv { position: absolute; left: calc(var(--u) * 3.6); top: calc(var(--u) * 4.4); font-size: calc(var(--u) * 2.6); }
+    #PF .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * .8); padding: calc(var(--u) * 1); }
+    .shot { position: relative; flex: 1; border: var(--hair) solid var(--ink); background: var(--win); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * .8);
+            font: calc(var(--u) * 3)/1 var(--f-pixel); }
+    .shot i { display: block; width: 70%; height: calc(var(--u) * 1.2); background: var(--ink-55); }
+    .meta { display: flex; justify-content: space-between; font: calc(var(--u) * 2.6)/1 var(--f-pixel); }
+    #wk { position: absolute; right: calc(var(--u) * 1); top: calc(var(--u) * 1); transform: rotate(-6deg); font-size: calc(var(--u) * 4); visibility: hidden; }
+  </style>
+</head>
+<body data-world="teal">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 21.27;
+    const END = 30.47, W = p => R.w(p, R.START - 0.1);
+
+    // Step 1 of 3
+    const HD = R.win({ title: 'Step 1 of 3', right: '✣ steal this', layer: 'head', x: 4, y: 20.5, w: 82, h: 12.5,
+      body: `<span class="disp">1 ·</span><span class="disp" id="h2">Test the whole product.</span>` });
+    HD.id = 'HD';
+    R.open(HD, Math.max(W('first up'), R.START + 4 * R.F));   // room for the zoom trail inside the beat (it lives in the head layer, so it moves with it)
+    R.show(R.$('#h2'), W('test')); R.sfx('pop', W('test'), { layer: 'head' });
+
+    // WebSurfer 1.0
+    const cursor = R.pix(['k......', 'kk.....', 'knk....', 'knnk...', 'knnnk..', 'knnnnk.', 'knnnnnk', 'knnkkkk', 'kkk....'], .6);
+    const BR = R.win({ title: 'WebSurfer 1.0', right: '<span id="ld">idle</span>', x: 4, y: 97, w: 82, h: 34,
+      body: `<div class="ad"><span>⟳</span><span class="type" id="url">localhost:3000/signup</span></div>
+        <div class="pg">
+          <div class="ab bld" id="bd"><span>building signup_form.jsx</span>${R.seg(12)}<span class="chip chip--green" id="bok" style="visibility:hidden;align-self:flex-start">signup_form.jsx ✓ built</span></div>
+          <div class="ab" id="fm">
+            <span class="lb" style="top:calc(var(--u) * 1.4);font-size:calc(var(--u) * 4)">Create account</span>
+            <span class="lb" style="top:calc(var(--u) * 7)">Email</span><div class="fd" style="top:calc(var(--u) * 6)"><span class="type" id="em">bot@test.dev</span></div>
+            <span class="lb" style="top:calc(var(--u) * 12)">Password</span><div class="fd" style="top:calc(var(--u) * 11)"><span class="type" id="pw">••••••••••</span></div>
+            <span id="bt">Sign up</span>
+          </div>
+          <div class="ab" id="ok"><span class="chip chip--green" style="font-size:calc(var(--u) * 4.4)">✓ Welcome, bot!</span><span>account #1 created · 201</span></div>
+          <div id="cu">${cursor}<span class="chip-inv">AI</span></div>
+        </div>` });
+    BR.id = 'BR';
+    const bu = W('builds'), fo = W('form'), op = W('opens'), fi = W('fills'), pa = W('the form', fi + 0.1), an = W('and', pa), pv = W('proves');
+    R.open(BR, bu);
+    const segs = BR.querySelectorAll('.bld .seg i');
+    segs.forEach((c, i) => { const t = bu + 0.1 + (fo + 0.3 - bu - 0.1) * i / 11; R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(t)); if (i % 3 === 0) R.sfx('tick', t, { vol: -6 }); });
+    R.show(R.$('#bok'), fo + 0.35); R.sfx('pop', fo + 0.35, { vol: -3 });
+
+    // opens the website
+    R.type(R.$('#url'), op, 34);
+    R.text(R.$('#ld'), op, 'loading…');
+    const ld = op + 21 / 34;
+    R.hide(R.$('#bd'), ld); R.show(R.$('#fm'), ld); R.sfx('tick', ld);
+    R.text(R.$('#ld'), ld, '200 OK');
+
+    // the AI's cursor fills the form and clicks
+    const cu = R.$('#cu');
+    const path = [[ld + 0.2, 70, 20], [fi - 0.1, 42, 9.4], [pa - 0.05, 42, 14.4], [an, 26, 18], [an + 0.3, 26, 18]];
+    R.every(ld + 0.2, END, t => {
+      let i = 0; while (i < path.length - 2 && t >= path[i + 1][0]) i++;
+      const [a, x0, y0] = path[i], [b, x1, y1] = path[i + 1], k = Math.max(0, Math.min(1, (t - a) / Math.max(R.F, Math.min(0.27, b - a))));
+      cu.style.left = R.u((x0 + (x1 - x0) * k).toFixed(1)); cu.style.top = R.u((y0 + (y1 - y0) * k).toFixed(1));
+    });
+    R.show(cu, ld + 0.2);
+    R.type(R.$('#em'), fi, 26);
+    R.type(R.$('#pw'), pa, 30);
+    const ck = an + 0.27, bt = R.$('#bt');
+    R.tl.set(bt, { x: R.u(.5), y: R.u(.5), boxShadow: 'none' }, R.T(ck));
+    R.tl.set(bt, { x: 0, y: 0, boxShadow: `${R.u(.5)} ${R.u(.5)} 0 var(--ink)` }, R.T(ck) + 2 * R.F);
+    R.sfx('thunk', ck);
+    const wl = ck + 3 * R.F;
+    R.show(R.$('#ok'), wl); R.hide(cu, wl); R.sfx('pop', wl, { vol: -4 });
+
+    // proof.png
+    const PF = R.win({ title: 'proof.png', right: '1 of 1', layer: 'proof', x: 48, y: 113.5, w: 38, h: 26,
+      body: `<div class="shot"><span class="chip chip--green">✓ Welcome, bot!</span><i></i><i style="width:50%"></i><span class="chip chip--green" id="wk">IT WORKS ✓</span></div>
+        <div class="meta"><span>screenshot · 201</span><span>0.84s</span></div>` });
+    PF.id = 'PF';
+    R.open(PF, pv);
+    const aw = W('actually');
+    R.show(R.$('#wk'), aw); R.flash(R.$('#wk'), aw, 2); R.sfx('success', aw, { layer: 'proof' });
+    R.done(END);
+  </script>
+</body>
+</html>

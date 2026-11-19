@@ -1,0 +1,106 @@
+<!doctype html>
+<!-- 04 13.3–17.40 "…is hilarious because we've spent the last decade trying to figure out whether
+     you are a robot or a human based on"
+     Captcha.exe (sky) above the head: a 4×4 grid of tiny pixel bots and people, "Select All Bots".
+     "spent the last decade" → Decade.log opens beside it and the year ticks 2016 → 2026 while a
+     10-cell bar fills. "trying" → tiles get picked and unpicked frantically. "figure out" → the
+     I'm Not A Robot box spins. "robot" → the meter slams to ROBOT, "human" → to HUMAN, then it
+     can't decide: Unsure · 50.0%. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>04 Captcha</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #CA .win__body { background: var(--paper); display: flex; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1.4); }
+    .grid { flex: none; display: grid; grid-template-columns: repeat(4, calc(var(--u) * 5.4)); grid-auto-rows: calc(var(--u) * 5.4); gap: calc(var(--u) * .5); align-content: start; }
+    .grid i { position: relative; display: flex; align-items: center; justify-content: center; border: var(--hair) solid var(--ink); background: var(--accent); }
+    .grid i b { position: absolute; inset: 0; border: calc(var(--u) * .6) solid var(--ink); visibility: hidden; }
+    .side { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1.1); font: calc(var(--u) * 3.3)/1 var(--f-pixel); white-space: nowrap; }
+    .ask { background: var(--accent); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .8) calc(var(--u) * 1) calc(var(--u) * 1); }
+    .ask .disp { font-size: calc(var(--u) * 3.6); display: block; }
+    .nr { display: flex; align-items: center; gap: calc(var(--u) * 1.2); }
+    .box { width: calc(var(--u) * 3.6); height: calc(var(--u) * 3.6); border: var(--hair) solid var(--ink); display: flex; align-items: center; justify-content: center; font-size: calc(var(--u) * 3.6); }
+    .meter { position: relative; height: calc(var(--u) * 3); border: var(--hair) solid var(--ink); margin-top: calc(var(--u) * .4);
+             background-image: repeating-linear-gradient(90deg, var(--ink) 0 var(--hair), transparent var(--hair) 10%); }
+    .meter .ndl { position: absolute; top: calc(var(--u) * -1); bottom: calc(var(--u) * -1); width: calc(var(--u) * 1.2); left: 50%; margin-left: calc(var(--u) * -.6); background: var(--ink); }
+    .ends { display: flex; justify-content: space-between; font-size: calc(var(--u) * 2.9); }
+    #verdict { align-self: flex-start; font-size: calc(var(--u) * 3.4); margin-top: calc(var(--u) * .4); }
+    #DL .win__body { background: var(--ink); color: var(--yellow); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.4); }
+    #DL .micro { color: var(--paper); font-size: calc(var(--u) * 1.9); }
+    #yr { font: calc(var(--u) * 11)/.8 var(--f-pixel); }
+    #DL .seg { gap: calc(var(--u) * .3); }
+    #DL .seg i { height: calc(var(--u) * 2); border-color: var(--yellow); }
+  </style>
+</head>
+<body data-world="sky">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="7"></div>
+  </div>
+  <script>
+    R.START = 13.3;
+    const END = R.w('how your mouse');
+    const BOT = R.pix(['.k..k.', 'kkkkkk', 'kpkkpk', 'kkkkkk', 'k.kk.k', '.k..k.'], 0.68);
+    const HUM = R.pix(['..kk..', '..kk..', '.kkkk.', 'k.kk.k', '..kk..', '.k..k.'], 0.68);
+    const kinds = 'bhbhhbhbbhhbhbhb'.split('');
+    const CA = R.win({ title: 'Captcha.exe', right: 'v2016', x: 5, y: 21, w: 54, h: 34,
+      body: `<div class="grid">${kinds.map((k, i) => `<i>${k === 'b' ? BOT : HUM}<b id="s${i}"></b></i>`).join('')}</div>
+        <div class="side"><div class="ask"><span class="disp">Select All Bots</span></div>
+          <div class="nr"><span class="box" id="chk"> </span><span>I'm Not A Robot</span></div>
+          <div><div class="meter"><i class="ndl" id="ndl"></i></div><div class="ends"><span>Robot</span><span>Human</span></div></div>
+          <span class="chip-inv h" id="verdict">Robot</span></div>` });
+    CA.id = 'CA';
+    R.open(CA, 13.38, { from: { x: 55, y: 66 } });
+
+    // "spent the last decade": the year ticks.
+    const DL = R.win({ layer: 'decade', title: 'Decade.log', right: '▶', x: 62, y: 21, w: 23, h: 26,
+      body: `<span class="micro">Years Spent</span><span id="yr">2016</span>${R.seg(10)}<span class="micro" id="yc">Year 01/10</span>` });
+    DL.id = 'DL';
+    const spent = R.w('spent');
+    R.open(DL, spent, { from: { x: 40, y: 38 } });
+    const decade = R.w('decade'), yrs = 10, step = (R.w('trying') - spent) / yrs;
+    for (let k = 1; k <= yrs; k++) {
+      const t = spent + k * step;
+      R.text(R.$('#yr'), t, String(2016 + k));
+      R.text(R.$('#yc'), t, `Year ${String(Math.min(k + 1, 10)).padStart(2, '0')}/10`);
+      R.tl.set(DL.querySelectorAll('.seg i')[k - 1], { backgroundColor: '#E8B53E' }, R.T(t));
+      R.sfx('tick', t, { vol: -2, layer: 'decade' });
+    }
+    R.text(CA.querySelector('.win__bar .r'), decade, 'v2026');
+
+    // "trying": frantic picking (state is a pure function of the frame, so seeking works).
+    const sel = [...Array(16)].map((_, i) => R.$(`#s${i}`));
+    const tryA = R.w('trying'), tryB = R.w('robot');
+    R.every(tryA, tryB, t => {
+      const k = Math.round((t - tryA) * 15);
+      sel.forEach((el, i) => { el.style.visibility = ((i * 7 + k * 5 + (k >> 1) * i) % 5 === 0) ? 'visible' : 'hidden'; });
+    });
+    const clear = () => sel.forEach(el => { el.style.visibility = 'hidden'; });
+    R.every(R.START, tryA, clear);
+    R.every(tryB, END, clear);
+    [0, 4, 9].forEach(k => R.sfx('tick', tryA + k * 0.13, { vol: -4 }));
+
+    // "figure out": the checkbox spins.
+    const fig = R.w('figure out');
+    ['|', '/', '–', '\\', '|', '/', '–', '\\', '|', '/', '–', '\\'].forEach((c, i) => R.text(R.$('#chk'), fig + i * R.F, c));
+    R.text(R.$('#chk'), fig + 12 * R.F, '?');
+
+    // "robot" / "human": the meter slams, then dithers.
+    const ndl = R.$('#ndl'), rob = R.w('robot'), hum = R.w('human');
+    R.tl.set(ndl, { left: '6%' }, R.T(rob));
+    R.show(R.$('#verdict'), rob);
+    R.sfx('blip', rob, { freq: 300 });
+    R.tl.set(ndl, { left: '94%' }, R.T(hum));
+    R.text(R.$('#verdict'), hum, 'Human');
+    R.sfx('blip', hum, { freq: 900 });
+    [[hum + 0.13, '30%'], [hum + 0.2, '68%'], [hum + 0.33, '41%'], [hum + 0.47, '50%']].forEach(([t, l]) => R.tl.set(ndl, { left: l }, R.T(t)));
+    R.text(R.$('#verdict'), hum + 0.47, 'Unsure · 50.0%');
+    R.flash(R.$('#verdict'), hum + 0.47, 1);
+    R.sfx('error', hum + 0.47);
+    R.done(END);
+  </script>
+</body>
+</html>

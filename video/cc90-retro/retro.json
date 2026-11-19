@@ -1,0 +1,117 @@
+{
+  "video": "../cc90.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-prompts": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          24
+        ]
+      }
+    },
+    "02-scale": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -7.5
+        ]
+      }
+    },
+    "03-tweet": {
+      "on": true
+    },
+    "04-shipping": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -0.5
+        ]
+      }
+    },
+    "05-badge": {
+      "on": true
+    },
+    "06-claw": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -7
+        ],
+        "meter": [
+          5,
+          79.5
+        ]
+      }
+    },
+    "07-signup": {
+      "on": true,
+      "move": {
+        "head": [
+          5,
+          -0.5
+        ],
+        "proof": [
+          -39,
+          -80
+        ],
+        "main": [
+          5,
+          30.5
+        ]
+      }
+    },
+    "08-whack": {
+      "on": true,
+      "move": {
+        "head": [
+          5,
+          -4.5
+        ],
+        "test": [
+          5,
+          46
+        ],
+        "whack": [
+          12,
+          5.5
+        ]
+      }
+    },
+    "09-second": {
+      "on": true,
+      "move": {
+        "head": [
+          5,
+          -0.5
+        ],
+        "agents": [
+          4.5,
+          0.5
+        ],
+        "code": [
+          5,
+          0.5
+        ]
+      }
+    },
+    "10-checklist": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -11.5
+        ],
+        "pager": [
+          5,
+          71
+        ]
+      }
+    }
+  }
+}

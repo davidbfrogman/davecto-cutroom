@@ -4,26 +4,35 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { basename, extname, join } from 'node:path';
 import { faceAt, noGo } from './faces.mjs';
+import { bar, run, secs } from './progress.mjs';
 import { duration, HF, sh } from './project.mjs';
 import { mix, wav } from './synth.mjs';
 
-/** Render the overlay .mov for each beat that's stale. Returns { id: movPath }. */
-export function renderOverlays(project, ids, size = project.size) {
-  const dir = project.overlayDir(size), res = {};
+/** Render the overlay .mov for each beat that's stale. Returns { id: movPath }.
+    Shows HyperFrames' own progress (compile → capturing frame n/N → encode) on one line per beat. */
+export async function renderOverlays(project, ids, size = project.size) {
+  const dir = project.overlayDir(size);
   mkdirSync(dir, { recursive: true });
-  for (const id of ids) {
+  const jobs = ids.map(id => {
     const { work, key } = project.stage(id, size);
     const mov = join(dir, `${id}.mov`), stamp = join(dir, `.${id}.key`);
-    if (!(existsSync(mov) && existsSync(stamp) && readFileSync(stamp, 'utf8') === key)) {
-      const t = Date.now();
-      process.stdout.write(`… render ${id} `);
-      sh(process.execPath, [HF, 'render', work, '--format', 'mov', '-o', mov, '--fps', '30', '--workers', '2', '--quiet']);
-      writeFileSync(stamp, key);
-      console.log(`${((Date.now() - t) / 1000).toFixed(1)}s`);
-    }
-    res[id] = mov;
+    return { id, work, key, mov, stamp, cached: existsSync(mov) && existsSync(stamp) && readFileSync(stamp, 'utf8') === key };
+  });
+  const todo = jobs.filter(j => !j.cached);
+  if (jobs.length) console.log(`… overlays: ${todo.length ? `${todo.length} to render` : 'all cached'}${todo.length && todo.length < jobs.length ? `, ${jobs.length - todo.length} cached` : ''}`);
+  const t0 = Date.now();
+  for (const [i, j] of todo.entries()) {
+    const b = bar(`[${String(i + 1).padStart(String(todo.length).length)}/${todo.length}] ${j.id}`, { pipeEvery: 0 });
+    b.update(0, 'starting');
+    await run(process.execPath, [HF, 'render', j.work, '--format', 'mov', '-o', j.mov, '--fps', '30', '--workers', '2'], line => {
+      const m = /[█░]+\s+(\d+)%\s+(.+)$/.exec(line);   // "████░░░  45%  Capturing frame 38/87 (2 workers)"
+      if (m) b.update(+m[1] / 100, `${m[2].replace(/\s*\(\d+ workers?\)/, '').trim()} · ${secs(b.elapsed())}`);
+    });
+    writeFileSync(j.stamp, j.key);
+    b.done(`  ✓ ${j.id} ${secs(b.elapsed())}`);
   }
-  return res;
+  if (todo.length > 1) console.log(`  overlays done in ${secs((Date.now() - t0) / 1000)}`);
+  return Object.fromEntries(jobs.map(j => [j.id, j.mov]));
 }
 
 /** The cues of the beats that are on and not muted, with per-beat gain applied. */
@@ -45,8 +54,9 @@ export function writeSfx(project, probes, len) {
   return { file: f, count: cues.length };
 }
 
-/** Composite the beats that are on over the video and mix the SFX under the voice. */
-export function exportVideo(project, probes, movs, { video = project.video, size = project.size, sfx = true, draft = false } = {}) {
+/** Composite the beats that are on over the video and mix the SFX under the voice.
+    ffmpeg reports how far through the video it is (-progress), shown as a bar with time left. */
+export async function exportVideo(project, probes, movs, { video = project.video, size = project.size, sfx = true, draft = false } = {}) {
   const [W, H] = size, ids = Object.keys(movs).filter(id => project.on(id));
   const len = duration(video);
   const s = sfx ? writeSfx(project, probes, len) : null;
@@ -65,11 +75,21 @@ export function exportVideo(project, probes, movs, { video = project.video, size
   const name = basename(video, extname(video));
   const out = join(project.out, `${name}-retro${draft ? '-draft' : ''}.mp4`);
   const enc = draft ? ['-crf', '24', '-preset', 'veryfast'] : ['-crf', '18', '-preset', 'medium'];
-  const t = Date.now();
-  process.stdout.write(`… export ${W}x${H}${s ? `, ${s.count} sound cues` : ''} `);
-  sh('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', chain.join(';'), '-map', '[vout]', ...amap,
-    '-c:v', 'libx264', ...enc, '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out]);
-  console.log(`${((Date.now() - t) / 1000).toFixed(1)}s`);
+  console.log(`… export ${W}x${H}${draft ? ' draft' : ''}, ${ids.length} overlays${s ? `, ${s.count} sound cues` : ''} → ${basename(out)}`);
+  const b = bar('export', { pipeEvery: 10 });
+  let speed = '';
+  b.update(0, 'starting');
+  await run('ffmpeg', ['-v', 'error', '-nostats', '-progress', 'pipe:1', '-y', ...inputs, '-filter_complex', chain.join(';'), '-map', '[vout]', ...amap,
+    '-c:v', 'libx264', ...enc, '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out], line => {
+    const sp = /^speed=\s*([\d.]+x)/.exec(line);
+    if (sp) speed = sp[1];
+    const m = /^out_time_us=(\d+)/.exec(line);
+    if (!m) return;
+    const done = Math.min(len, +m[1] / 1e6), frac = done / len, el = b.elapsed();
+    const left = frac > 0.03 ? ` · ~${secs(el / frac - el)} left` : '';
+    b.update(frac, `${done.toFixed(1)} / ${len.toFixed(1)}s of video${speed ? ` · ${speed}` : ''}${left}`);
+  });
+  b.done(`  ✓ export ${secs(b.elapsed())}`);
   writeFileSync(join(project.out, 'placements.csv'), 'beat,start_s,end_s,start_tc,file\n' + ids.map(id => {
     const p = probes[id], f = Math.round(p.start * 30), tc = `00:00:${String(Math.floor(f / 30)).padStart(2, '0')}:${String(f % 30).padStart(2, '0')}`;
     return `${id},${p.start.toFixed(3)},${p.end.toFixed(3)},${tc},${basename(project.overlayDir(size))}/${id}.mov`;

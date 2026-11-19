@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- 07 25.64–29.14 "We'll put a special signature in the request so you can trust us, which sounds
+     great, except all you've…"
+     Request.http (magenta) below the chest: an HTTP request; "special signature" types the
+     Signature-Agent line, "in the request" the Signature line (its base-64 decodes to TRUST ME BRO),
+     "request" highlights both. "trust us" → a pixel padlock snaps shut and ✓ Verified Agent lands
+     (lock). To the right of the head, Note.txt: "sounds great" → Sounds Great. in display type;
+     "Except" → it's struck through (strike) and an Except… chip drops in. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07 Signature</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #RQ .win__body { background: var(--paper); padding: calc(var(--u) * 1.6) calc(var(--u) * 1.8); font: calc(var(--u) * 2.75)/1 var(--f-mono); color: var(--ink); }
+    #RQ .ln { height: calc(var(--u) * 4.1); display: flex; align-items: center; gap: calc(var(--u) * 1.2); }
+    #RQ .g { color: var(--grey); }
+    #RQ .b64 { font: calc(var(--u) * 1.8)/1 var(--f-mono); color: var(--grey); visibility: hidden; }
+    .lock { position: absolute; right: calc(var(--u) * 2.4); bottom: calc(var(--u) * 2); display: flex; flex-direction: column; align-items: flex-end; gap: calc(var(--u) * 1.2); }
+    .lock .pad { position: relative; width: calc(var(--u) * 9); height: calc(var(--u) * 11); }
+    .lock .pad > div { position: absolute; left: 0; bottom: 0; }
+    #ok { font-size: calc(var(--u) * 3.8); visibility: hidden; }
+    #NT .win__body { background: var(--paper); padding: calc(var(--u) * 1.2); display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); }
+    #NT .q { position: relative; padding: calc(var(--u) * 1.6) calc(var(--u) * 1.2); visibility: hidden; }
+    #NT .disp { font-size: calc(var(--u) * 4.4); line-height: .86; color: var(--ink-86); }
+    #NT .crop { inset: 0; color: var(--ink); }
+    #NT .sk { position: absolute; left: calc(var(--u) * .4); right: calc(var(--u) * .4); top: 49%; height: calc(var(--u) * .9); background: var(--coral); visibility: hidden; }
+    #ex { align-self: flex-start; visibility: hidden; font-size: calc(var(--u) * 3.8); }
+  </style>
+</head>
+<body data-world="magenta">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="6"></div>
+  </div>
+  <script>
+    R.START = 25.64;
+    const open_ = R.pix(['..kkkkk..', '.kpppppk.', '.kp...pk.', '.kp......', '.kp......', 'kkkkkkkkk', 'knnnnnnnk', 'knnnknnnk', 'knnnknnnk', 'knnnnnnnk', 'kkkkkkkkk'], 1);
+    const shut = R.pix(['.........', '..kkkkk..', '.kpppppk.', '.kp...pk.', '.kp...pk.', 'kkkkkkkkk', 'knnnnnnnk', 'knnnknnnk', 'knnnknnnk', 'knnnnnnnk', 'kkkkkkkkk'], 1);
+    const RQ = R.win({ title: 'Request.http', right: '→ shop.example', x: 5, y: 99, w: 80, h: 37,
+      body: `<div class="ln">POST /checkout HTTP/1.1</div>
+        <div class="ln"><span class="g">Host:</span> shop.example</div>
+        <div class="ln"><span class="type" id="l2">Signature-Agent: "chatgpt.com"</span></div>
+        <div class="ln"><span class="type" id="l3">Signature: sig1=:VFJVU1QgTUUgQlJP:</span><span class="b64" id="b64">[B.64]</span></div>
+        <div class="ln h" id="l4"><span class="g">Content-Type:</span> application/json</div>
+        <div class="lock"><div class="pad"><div id="po">${open_}</div><div class="h" id="ps">${shut}</div></div><span class="chip-inv" id="ok">✓ Verified Agent</span></div>` });
+    RQ.id = 'RQ';
+    R.open(RQ, R.w("We'll"), { from: { x: 44, y: 90 } });
+    R.type(R.$('#l2'), R.w('special'), 44);
+    R.type(R.$('#l3'), R.w('in the request'), 44);
+    R.show(R.$('#b64'), R.w('in the request') + 0.8);
+    R.show(R.$('#l4'), R.w('so you'));
+    const rq = R.w('request');
+    ['#l2', '#l3'].forEach(s => { R.tl.set(s, { backgroundColor: '#D45BB6' }, R.T(rq + 0.4)); });
+    R.flash(R.$('#l3'), rq + 0.4, 1);
+    // "trust us": the padlock snaps shut.
+    const tr = R.w('trust');
+    R.hide(R.$('#po'), tr); R.show(R.$('#ps'), tr);
+    R.show(R.$('#ok'), tr + R.F);
+    R.flash(R.$('#ok'), tr + R.F, 1);
+    R.sfx('lock', tr);
+
+    // Note.txt to the right of the head.
+    const NT = R.win({ layer: 'note', title: 'Note.txt', right: '✣', x: 68, y: 24, w: 18, h: 26,
+      body: `<div class="q" id="q"><div class="crop"><b></b><b></b><b></b><b></b></div><div class="disp">Sounds<br>Great.</div><i class="sk" id="sk"></i></div>
+        <span class="chip-inv" id="ex">Except…</span>` });
+    NT.id = 'NT';
+    const sg = R.w('sounds great'), ex = R.w('Except');
+    R.open(NT, sg - 0.05, { from: { x: 70, y: 70 }, sfx: false });
+    R.show(R.$('#q'), sg);
+    R.sfx('sparkle', sg, { layer: 'note' });
+    R.show(R.$('#sk'), ex);
+    R.tl.fromTo('#sk', { width: '0%' }, { width: '93%', duration: 0.2, ease: 'steps(3)' }, R.T(ex));
+    R.sfx('strike', ex, { layer: 'note' });
+    R.show(R.$('#ex'), ex + 0.27);
+    R.flash(R.$('#ex'), ex + 0.27, 2);
+    R.done(R.w('done is'));
+  </script>
+</body>
+</html>

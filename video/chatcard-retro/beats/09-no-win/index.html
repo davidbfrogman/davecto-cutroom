@@ -1,0 +1,85 @@
+<!doctype html>
+<!-- 09 40.33–43.30 "So now the fraud department at your favorite online store is in a fairly no-win scenario."
+     Fraud.Dept (orange) above the head plays tic-tac-toe against itself, X = Approve, O = Decline,
+     one move per word (tick). The game ends in a draw on "store"; "no-win" → DRAW flashes (error)
+     and it starts replaying at full speed while Score.log counts the games up to 1,024 with Wins
+     stuck at 0000. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>09 No-win</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #TT .win__body { background: var(--win); display: flex; gap: calc(var(--u) * 2.4); padding: calc(var(--u) * 1.2); }
+    .board { position: relative; flex: none; align-self: flex-start; display: grid; grid-template-columns: repeat(3, calc(var(--u) * 6.4)); grid-auto-rows: calc(var(--u) * 6.4);
+             gap: calc(var(--u) * .5); background: var(--ink); border: calc(var(--u) * .5) solid var(--ink); }
+    .board > i { position: relative; background: var(--paper); display: flex; align-items: center; justify-content: center; }
+    .board > i > div { position: absolute; visibility: hidden; }
+    .side { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1); font: calc(var(--u) * 3.4)/1 var(--f-pixel); white-space: nowrap; }
+    .side .lg { display: flex; align-items: center; gap: calc(var(--u) * 1); }
+    #res { margin-top: auto; align-self: flex-start; font-size: calc(var(--u) * 4.6); padding: calc(var(--u) * .3) calc(var(--u) * 1.4) calc(var(--u) * .6); }
+    #SC .win__body { background: var(--ink); color: var(--accent); display: flex; flex-direction: column; gap: calc(var(--u) * 1.1); padding: calc(var(--u) * 1.4); font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    #SC .r { display: flex; justify-content: space-between; }
+    #SC .r span:first-child { color: var(--paper); }
+    #SC .big { font-size: calc(var(--u) * 6); }
+  </style>
+</head>
+<body data-world="orange">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="6"></div>
+  </div>
+  <script>
+    R.START = 40.33;
+    const X = R.pix(['kk...kk', 'kkk.kkk', '.kkkkk.', '..kkk..', '.kkkkk.', 'kkk.kkk', 'kk...kk'], 0.8);
+    const O = R.pix(['.nnnnn.', 'nnnnnnn', 'nn...nn', 'nn...nn', 'nn...nn', 'nnnnnnn', '.nnnnn.'], 0.8);
+    const board = id => `<div class="board" id="${id}">${[...Array(9)].map((_, i) => `<i><div id="${id}x${i}">${X}</div><div id="${id}o${i}">${O}</div></i>`).join('')}</div>`;
+    const TT = R.win({ title: 'Fraud.Dept', right: 'Sim 01', x: 5, y: 20.5, w: 56, h: 32,
+      body: `${board('g')}${board('r').replace('class="board"', 'class="board h" style="position:absolute;left:calc(var(--u) * 1.2);top:calc(var(--u) * 1.2)"')}
+        <div class="side"><span class="micro">Your Move</span>
+          <span class="lg">${R.pix(['kk.kk', '.kkk.', 'kk.kk'], 0.7)} Approve</span>
+          <span class="lg">${R.pix(['.nnn.', 'nn.nn', '.nnn.'], 0.7)} Decline</span>
+          <span id="mv">Move 0/9</span>
+          <span class="chip-inv h" id="res">Draw</span></div>` });
+    TT.id = 'TT';
+    R.open(TT, 40.46, { from: { x: 50, y: 68 } });
+
+    // A real game that can only end in a draw, one move per word.
+    const moves = [4, 0, 2, 6, 3, 5, 7, 1, 8];
+    const at = ['the fraud', 'fraud', 'department', 'at your', 'your favorite', 'favorite', 'online', 'store', 'is in'].map(p => R.w(p));
+    moves.forEach((c, k) => {
+      R.show(R.$(`#g${k % 2 ? 'o' : 'x'}${c}`), at[k]);
+      R.text(R.$('#mv'), at[k], `Move ${k + 1}/9`);
+      R.sfx('tick', at[k]);
+    });
+    // "no-win"
+    const nw = R.w('no -win');
+    R.show(R.$('#res'), nw);
+    R.flash(R.$('#res'), nw, 3);
+    R.sfx('error', nw);
+
+    // Score.log, then the frantic replays.
+    const SC = R.win({ layer: 'score', title: 'Score.log', right: '▶', x: 64, y: 22, w: 21, h: 30,
+      body: `<div class="r"><span>Games</span></div><div class="big" id="gm">0001</div><div class="r"><span>Wins</span><span>0000</span></div><div class="r"><span>Draws</span><span id="dr">0001</span></div>` });
+    SC.id = 'SC';
+    R.open(SC, R.w('scenario'), { from: { x: 40, y: 40 } });
+    const rp = R.w('scenario') + 0.2, pad = v => String(Math.round(v)).padStart(4, '0');
+    R.count(R.$("#gm"), rp, 45.16 - rp, 1, 1024, pad);
+    R.count(R.$("#dr"), rp, 45.16 - rp, 1, 1024, pad);
+    R.hide(R.$('#g'), rp); R.show(R.$('#r'), rp);
+    R.text(TT.querySelector('.win__bar .r'), rp, 'Replay ▶▶');
+    const cells = [...Array(9)].map((_, i) => [R.$(`#rx${i}`), R.$(`#ro${i}`)]);
+    R.every(rp, 45.26, t => {
+      const k = Math.round((t - rp) * 15), n = k % 9 + 1;
+      cells.forEach(([x, o], i) => {
+        const j = moves.indexOf((i + k * 2) % 9);
+        x.style.visibility = j >= 0 && j < n && j % 2 === 0 ? 'visible' : 'hidden';
+        o.style.visibility = j >= 0 && j < n && j % 2 === 1 ? 'visible' : 'hidden';
+      });
+    });
+    R.done(45.26);
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- 12 47.50–50.13 "Try to find customers before you've launched your app."
+     Pre-launch.timeline (green) below the chest: a day axis from T-30 to LAUNCH with a flag. A scan
+     line sweeps toward the flag from "find" to "launched" and customers pop in as dots behind it,
+     the counter climbing to 37 (ticks every few). On "launched your app" the flag flashes:
+     LAUNCH · 37 customers waiting (success). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>12-pre-launch</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #TL .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.4); }
+    .hd { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    #n { font-size: calc(var(--u) * 6); }
+    .plot { position: relative; flex: 1; border-left: var(--hair) solid var(--ink); border-bottom: var(--hair) solid var(--ink); }
+    .plot .dt { position: absolute; width: calc(var(--u) * 1.6); height: calc(var(--u) * 1.6); background: var(--accent); outline: var(--hair) solid var(--ink); visibility: hidden; }
+    #scan { position: absolute; top: 0; bottom: 0; width: 0; border-left: var(--hair) dashed var(--ink); }
+    #flag { position: absolute; right: calc(var(--u) * 2); top: 0; bottom: 0; border-left: calc(var(--u) * .5) solid var(--ink); }
+    #flag span { position: absolute; right: calc(var(--u) * .6); top: 0; }
+    .ax { display: flex; justify-content: space-between; font: calc(var(--u) * 2.8)/1 var(--f-mono); }
+  </style>
+</head>
+<body data-world="green">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 47.50;
+    const TL = R.win({ title: 'Pre-launch.timeline', right: 'T-30', x: 6, y: 72, w: 76, h: 36,
+      body: `<div class="hd"><span>Customers before launch</span><span id="n">00</span></div>
+        <div class="plot"><i id="scan"></i><div id="flag"><span class="chip-inv" id="fl">LAUNCH</span></div></div>
+        <div class="ax"><span>T-30d</span><span>T-20d</span><span>T-10d</span><span>Day 0</span></div>` });
+    TL.id = 'TL';
+    R.open(TL, R.w('try'), { from: { x: 45, y: 60 } });
+
+    // 37 customers scattered over the 30 days before the flag (x 2–84% of the plot).
+    R.seed(7);
+    const N = 37, plot = R.$('.plot'), dots = [];
+    for (let i = 0; i < N; i++) {
+      const x = 2 + 80 * (i + R.rnd() * 0.8) / N, y = 30 + R.rnd() * 55;
+      dots.push([x, R.box('dt', { parent: plot, style: { left: `${x}%`, top: `${y}%` } })]);
+    }
+    const a = R.w('find'), b = R.w('launched'), scan = R.$('#scan');
+    R.every(a, b, t => {
+      const p = Math.min(1, (t - a) / (b - a)) * 86;
+      scan.style.left = `${p}%`;
+      let n = 0;
+      dots.forEach(([x, el]) => { const v = x <= p; el.style.visibility = v ? 'visible' : 'hidden'; n += v; });
+      R.$('#n').textContent = String(n).padStart(2, '0');
+      TL.querySelector('.win__bar .r').textContent = `T-${Math.max(0, Math.round(30 - 30 * p / 86))}`;
+    });
+    for (let i = 0; i < 6; i++) R.sfx('blip', a + (b - a) * i / 6, { freq: 500 * 2 ** (i * 2 / 16), vol: -6 });
+    R.tl.set(scan, { autoAlpha: 0 }, R.T(b + 0.07));
+    R.text(R.$('#fl'), b, 'LAUNCH · 37 waiting');
+    R.flash(R.$('#fl'), b, 3);
+    R.sfx('success', b);
+    R.done(50.13);
+  </script>
+</body>
+</html>

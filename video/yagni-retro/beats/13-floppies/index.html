@@ -1,0 +1,62 @@
+<!doctype html>
+<!-- 13 54.78–58.44 "If you want five more principles that I think every vibe coder should know."
+     Principles 4–8 (lavender) above the head: five pixel floppies drop into the box one per beat
+     of "five more principles" (ticks), then padlocks snap onto all five (lock). REQUIRED · every vibe
+     coder stamps on "every vibe coder" (pop); "comment GUIDE to unlock ▶▶▶" runs on "should know"
+     (notify). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>13-floppies</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #FP .win__body { background: var(--win-2); display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1.6); }
+    .row { display: flex; justify-content: space-between; }
+    .fd { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .8); visibility: hidden; }
+    .fd span { font: calc(var(--u) * 3)/1 var(--f-pixel); background: var(--paper); border: var(--hair) solid var(--ink); padding: 0 calc(var(--u) * .5) calc(var(--u) * .2); }
+    .lk { position: absolute; left: 50%; top: calc(var(--u) * 6); transform: translateX(-50%); visibility: hidden; }
+    .ft { display: flex; justify-content: space-between; align-items: center; gap: calc(var(--u) * 1.4); font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .ft2 { justify-content: flex-end; }
+    #rq { visibility: hidden; transform: rotate(-3deg); font-size: calc(var(--u) * 3.6); }
+    #un { visibility: hidden; }
+  </style>
+</head>
+<body data-world="lavender">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 54.78;
+    const END = 58.44, W = p => R.w(p, R.START - 0.1);
+    const disk = R.pix(['kkkkkkkkkkk.', 'knnwwwwwwnkk', 'knnwwkkwwnnk', 'knnwwkkwwnnk', 'knnwwwwwwnnk', 'knnnnnnnnnnk', 'knppppppppnk', 'knpkkkkkppnk', 'knppppppppnk', 'knpkkkkpppnk', 'knppppppppnk', 'kkkkkkkkkkkk'], 1.1);
+    const lock = R.pix(['..kkk..', '.k...k.', '.k...k.', 'kkkkkkk', 'kpppppk', 'kppkppk', 'kppkppk', 'kkkkkkk'], .9);
+    const FP = R.win({ title: 'Principles 4–8', right: '5 disks', x: 4, y: 22, w: 82, h: 39,
+      body: `<div class="row">${[4, 5, 6, 7, 8].map(n => `<div class="fd" id="f${n}">${disk}<span>0${n} ????</span><div class="lk">${lock}</div></div>`).join('')}</div>
+        <div class="ft"><span class="chip-inv" id="rq">REQUIRED · every vibe coder</span></div><div class="ft ft2"><span id="un">comment GUIDE to unlock <span id="ch">▶▷▷</span></span></div>` });
+    FP.id = 'FP';
+    R.open(FP, W('if'), { from: { x: 48, y: 78 } });
+
+    const a = W('five'), b = W('principles');
+    [4, 5, 6, 7, 8].forEach((n, i) => {
+      const t = a + (b - a) * i / 4, el = R.$('#f' + n);
+      R.show(el, t);
+      R.tl.set(el, { y: R.u(-2.4) }, R.T(t)); R.tl.set(el, { y: 0 }, R.T(t) + R.F);
+      R.sfx('tick', t);
+    });
+    const th = W('that');
+    R.$$('.lk').forEach((l, i) => R.show(l, th + i * R.F));
+    R.text(FP.querySelector('.win__bar .r'), th, '5 disks · locked');
+    R.sfx('lock', th);
+
+    R.show(R.$('#rq'), W('every')); R.sfx('pop', W('every'));
+    const kn = W('should');
+    R.show(R.$('#un'), kn); R.sfx('notify', kn);
+    const ch = R.$('#ch');
+    R.every(kn, END, t => { ch.textContent = ['▶▷▷', '▷▶▷', '▷▷▶'][Math.floor((t - kn) * 7.5) % 3]; });
+    R.done(END);
+  </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- 01 0.00–2.90 "OpenAI is giving your AI agent a credit card."
+     Wide shot, lots of air above the head. Wallet.app opens with a big yellow pixel credit card:
+     the number types on, "Cardholder: You" is overwritten by "AI.Agent" on "your AI agent" and a
+     pixel robot takes the photo slot; on "credit card" the card flashes and a ✣ Linked To Agent
+     chip stamps over its corner (lock). The contactless mark pulses the whole time. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01 Card linked</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #W .win__body { background: var(--paper); padding: 0; }
+    #W .bg { position: absolute; inset: 0; }
+    .card { position: absolute; left: calc(var(--u) * 7.5); top: calc(var(--u) * 2.4); width: calc(var(--u) * 53); height: calc(var(--u) * 33.4);
+            background: var(--accent); border: var(--hair) solid var(--ink); box-shadow: calc(var(--u) * .7) calc(var(--u) * .7) 0 var(--ink); color: var(--ink); }
+    .card .top { position: absolute; left: calc(var(--u) * 2.6); right: calc(var(--u) * 2.6); top: calc(var(--u) * 2.2); display: flex; justify-content: space-between; align-items: center; }
+    .card .brand { background: var(--ink); color: var(--accent); font: calc(var(--u) * 3.6)/1 var(--f-pixel); padding: calc(var(--u) * .3) calc(var(--u) * .9) calc(var(--u) * .5); }
+    .card .nfc { font: calc(var(--u) * 5)/1 var(--f-pixel); letter-spacing: -.12em; }
+    .card .emv { position: absolute; left: calc(var(--u) * 2.6); top: calc(var(--u) * 8.4); }
+    .card .num { position: absolute; left: calc(var(--u) * 2.6); top: calc(var(--u) * 17); font: calc(var(--u) * 6)/1 var(--f-pixel); }
+    .card .who { position: absolute; left: calc(var(--u) * 2.6); bottom: calc(var(--u) * 2.2); display: flex; gap: calc(var(--u) * 6); font: calc(var(--u) * 4.4)/1 var(--f-pixel); }
+    .card .who .micro { display: block; font-size: calc(var(--u) * 1.9); margin-bottom: calc(var(--u) * .6); }
+    .card .bot { position: absolute; right: calc(var(--u) * 2.6); bottom: calc(var(--u) * 2.2); }
+    #holder { display: inline-block; }
+    #linked { position: absolute; right: calc(var(--u) * 1.4); bottom: calc(var(--u) * 1.4); font-size: calc(var(--u) * 4.4); }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="3"></div>
+  </div>
+  <script>
+    R.START = 0;
+    const chip = R.pix(['kkkkkkkk', 'kwwkkwwk', 'kkwwwwkk', 'kwwkkwwk', 'kkwwwwkk', 'kwwkkwwk', 'kkkkkkkk'], 0.9);
+    const bot = R.pix(['..k..k..', '..k..k..', 'kkkkkkkk', 'kppppppk', 'kpkppkpk', 'kppppppk', 'kpkkkkpk', 'kppppppk', 'kkkkkkkk'], 1.05);
+    const W = R.win({ title: 'Wallet.app', right: '00:00:00', x: 8, y: 22, w: 70, h: 45,
+      body: `<div class="bg dots"></div>
+        <div class="card" id="card">
+          <div class="top"><span class="brand">Agent·Pay</span><span class="nfc" id="nfc">)))</span></div>
+          <div class="emv">${chip}</div>
+          <div class="num"><span class="type" id="num">4929 0371 8842 0042</span></div>
+          <div class="who"><div><span class="micro">Cardholder</span><span id="holder">You</span></div><div><span class="micro">Valid Thru</span>12/29</div></div>
+          <div class="bot h" id="bot">${bot}</div>
+        </div>
+        <span class="chip-inv h" id="linked">✣ Linked To Agent</span>` });
+    W.id = 'W';
+    R.open(W, 0.2, { from: { x: 44, y: 82 } });
+    const clock = W.querySelector('.win__bar .r');
+    for (let f = 1; f * 0.2 < 2.7; f++) R.text(clock, 0.2 + f * 0.2, `00:00:${String(f * 6).padStart(2, '0')}`);
+    R.blink(R.$('#nfc'), 0.2, 2.9, 0.4);
+    // Number types on.
+    R.type(R.$('#num'), 0.44, 26);
+    // "your AI agent": the cardholder is overwritten.
+    R.flash(R.$('#holder'), 1.32, 2);
+    R.text(R.$('#holder'), 1.46, 'AI.Agent');
+    R.show(R.$('#bot'), 1.76);
+    R.flash(R.$('#bot'), 1.76, 1);
+    R.sfx('pop', 1.76);
+    // "credit card": stamp.
+    R.flash(R.$('#card'), 2.42, 1);
+    R.show(R.$('#linked'), 2.5);
+    R.sfx('lock', 2.46);
+    R.done(2.9);
+  </script>
+</body>
+</html>

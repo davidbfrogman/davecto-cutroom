@@ -1,0 +1,76 @@
+<!doctype html>
+<!-- 14 54.90–59.40 "comment breakdown below and I'll send it to you for free and follow along for more
+     tips on building with AI."
+     Three small windows above the head. Comment (magenta): BREAKDOWN types into the box on
+     "comment breakdown", chevrons ▼▼▼ step down on "below" and Post presses (thunk). Outbox: the
+     breakdown sends to you on "send it to you", $0.00 on "free" (pop). Follow: the toggle flips on
+     "follow along" (success), then the tips counter runs to 128 on "more tips on building with AI". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>14-comment</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .win__body { background: var(--paper); font: calc(var(--u) * 3.6)/1 var(--f-pixel); white-space: nowrap; }
+    #CM .win__body { display: flex; align-items: center; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1.2); }
+    .field { flex: 1; border: var(--hair) solid var(--ink); padding: calc(var(--u) * .6) calc(var(--u) * 1) calc(var(--u) * .9); font: calc(var(--u) * 4.6)/1 var(--f-mono); font-weight: 700; display: flex; align-items: center; }
+    .cur { display: inline-block; width: calc(var(--u) * 2.2); height: calc(var(--u) * 4); background: var(--ink); margin-left: calc(var(--u) * .3); }
+    .btn { border: var(--hair) solid var(--ink); background: var(--accent); padding: calc(var(--u) * .5) calc(var(--u) * 1.6) calc(var(--u) * .8); }
+    .chev { font-size: calc(var(--u) * 4.6); color: var(--ink); }
+    #OB .win__body, #FL .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.2); }
+    .rw { display: flex; justify-content: space-between; align-items: center; gap: calc(var(--u) * 1); }
+    .tog { display: inline-flex; width: calc(var(--u) * 9); height: calc(var(--u) * 4); border: var(--hair) solid var(--ink); background: var(--win-2); }
+    .tog i { width: 50%; background: var(--ink); }
+    #tips { font-size: calc(var(--u) * 5); }
+  </style>
+</head>
+<body data-world="magenta">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 54.90;
+    const CM = R.win({ title: 'Comment', right: '1 new', x: 5, y: 20.5, w: 78, h: 12,
+      body: `<div class="field"><span class="type h" id="tx">BREAKDOWN</span><i class="cur" id="cur"></i></div>
+        <span class="chev h" id="ch">▼▼▼</span><span class="btn" id="post">Post</span>` });
+    CM.id = 'CM';
+    R.open(CM, R.w('comment'), { from: { x: 50, y: 52 } });
+    R.type(R.$('#tx'), R.w('breakdown'), 24);
+    R.blink(R.$('#cur'), R.w('comment'), 59.4, 0.4);
+
+    const bl = R.w('below'), ch = R.$('#ch');
+    R.show(ch, bl);
+    R.every(bl, R.w('send'), t => { const k = Math.floor((t - bl) * 7.5) % 3; ch.textContent = ['▼▽▽', '▽▼▽', '▽▽▼'][k]; });
+    const ps = R.we('below');
+    R.flash(R.$('#post'), ps, 1); R.sfx('thunk', ps);
+    R.text(R.$('#post'), ps + 0.1, 'Posted ✓');
+
+    // Outbox
+    const OB = R.win({ layer: 'outbox', title: 'Outbox', right: '✉', x: 5, y: 34.5, w: 40, h: 13,
+      body: `<div class="rw"><span>breakdown.pdf → you</span></div>${R.seg(8)}<div class="rw"><span id="os">queued</span><span class="chip-inv h" id="fr">$0.00</span></div>` });
+    OB.id = 'OB';
+    const se = R.w('send'), fe = R.w('free', se);
+    R.open(OB, se, { from: { x: 30, y: 30 } });
+    R.$$('#OB .seg i').forEach((c, i) => R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(se + (fe - se) * (i + 1) / 8)));
+    R.text(R.$('#os'), fe, 'sent ✓');
+    R.show(R.$('#fr'), fe); R.sfx('pop', fe);
+
+    // Follow
+    const FL = R.win({ layer: 'follow', title: 'Follow', right: '', x: 48, y: 34.5, w: 35, h: 13,
+      body: `<div class="rw"><span id="fs">Follow</span><span class="tog" id="tog"><i></i></span></div><div class="rw"><span>Tips</span><span id="tips">000</span></div>` });
+    FL.id = 'FL';
+    const fo = R.w('follow');
+    R.open(FL, fo - 0.15, { from: { x: 60, y: 30 }, sfx: false });
+    R.tl.set(R.$('#tog'), { justifyContent: 'flex-end', backgroundColor: 'var(--accent)' }, R.T(fo + 0.1));
+    R.text(R.$('#fs'), fo + 0.1, 'Following ✓');
+    R.sfx('success', fo + 0.1, { layer: 'follow' });
+    const mo = R.w('more');
+    R.count(R.$('#tips'), mo, R.we('AI') - mo, 0, 128, v => String(Math.round(v)).padStart(3, '0'));
+    R.sfx('sweep', mo, { layer: 'follow' });
+    R.done(59.4);
+  </script>
+</body>
+</html>

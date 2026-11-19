@@ -1,0 +1,108 @@
+<!doctype html>
+<!-- 03 6.67–10.43 "Anthropics says that Claude writes and reviews about 90% of their code."
+     Plays over the tweet picture (coral). The tweet is a flat graphic pinned at x14.8–85.1u,
+     y20.9–47.1u from 7.933s (frame 238) to the cut at 10.43s, so this beat is drawn to that box.
+     Before it lands, Incoming.wire sits in the tweet's exact spot: dials anthropic.com on
+     "Anthropics", "1 new post · @ClaudeDevs" on "says" and a receive bar fills (ticks); it vanishes
+     on the frame the tweet cuts in. Crop marks then lock onto the tweet (lock). "✣ + reviews it"
+     tab on "reviews" (pop). Commits.log under the tweet: nine pixel Claudes line up from "writes"
+     (ticks) as the share counts to 90%; on "90" a target box draws itself around the tweet's 90%
+     (lock), on "%" the one human shows up: you 10% (pop). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03-tweet</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #WI .win__body { background: var(--paper); display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u) * 1.6); padding: calc(var(--u) * 2) calc(var(--u) * 2.4); }
+    .ln { font: 700 calc(var(--u) * 3.3)/1 var(--f-mono); }
+    .rcv { display: flex; align-items: center; gap: calc(var(--u) * 1.4); font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .rcv .seg { flex: 1; }
+    .rcv .seg i { height: calc(var(--u) * 3); }
+    #cr { --hair: calc(var(--u) * .7); color: var(--accent); visibility: hidden; }
+    #cr b { width: calc(var(--u) * 4.2); height: calc(var(--u) * 4.2); }
+    .tg { position: absolute; background: var(--accent); visibility: hidden; }
+    #rv { visibility: hidden; font-size: calc(var(--u) * 3.4); }
+    #CM .win__body { background: var(--paper); display: flex; align-items: center; justify-content: space-between; padding: calc(var(--u) * .8) calc(var(--u) * 1.6); }
+    .ppl { display: flex; gap: calc(var(--u) * .8); align-items: flex-end; }
+    .ppl > div { visibility: hidden; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .5); }
+    .ppl span { font: calc(var(--u) * 2.4)/1 var(--f-pixel); }
+    #pc { font: calc(var(--u) * 8.4)/.8 var(--f-pixel); }
+  </style>
+</head>
+<body data-world="coral">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 200 / 30;                                   // 6.667, the scene cut
+    const END = 10.43, W = p => R.w(p, R.START - 0.1);
+    const TW = { x: 14.8, y: 20.9, w: 70.3, h: 26.2 };    // the tweet picture, in u
+    const IN = 238 / 30;                                  // the frame the tweet cuts in
+
+    // Incoming.wire, exactly where the tweet will be
+    const WI = R.win({ title: 'Incoming.wire', right: '● RX', layer: 'tweet', ...TW,
+      body: `<div class="ln"><span class="type" id="l1">&gt; dialing anthropic.com…</span></div>
+        <div class="ln"><span class="type" id="l2">&gt; 1 new post · @ClaudeDevs</span></div>
+        <div class="rcv"><span>receiving</span>${R.seg(10)}</div>` });
+    WI.id = 'WI';
+    const an = W('anthropics'), sa = W('says');
+    const wo = Math.max(an - 0.05, R.START + 4 * R.F);         // room for the zoom trail inside the beat
+    R.open(WI, wo);
+    R.type(R.$('#l1'), wo, 40);
+    R.type(R.$('#l2'), sa, 40);
+    const rc = WI.querySelectorAll('.rcv .seg i');
+    rc.forEach((c, i) => {
+      const t = sa + 0.1 + (IN - 0.1 - sa - 0.1) * i / 9;
+      R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(t));
+      if (i % 3 === 0) R.sfx('tick', t, { vol: -6 });
+    });
+    R.blink(WI.querySelector('.win__bar .r'), an, IN, 0.4);
+    R.hide(WI, IN);
+
+    // crop marks lock onto the tweet
+    const CR = R.box('crop', { id: 'cr', layer: 'tweet', html: '<b></b><b></b><b></b><b></b>' });
+    [3, 1.5, 0.7].forEach((m, i) => R.tl.set(CR, { left: R.u(TW.x - m), top: R.u(Math.max(20.05, TW.y - m)), width: R.u(Math.min(85.9, TW.x + TW.w + m) - TW.x + m), height: R.u(TW.h + 2 * m), autoAlpha: 1 }, R.T(IN) + i * R.F));
+    R.sfx('lock', IN + 2 * R.F);
+
+    // "+ reviews it" tab in the tweet's empty bottom strip
+    const rv = R.box('chip chip--world', { id: 'rv', layer: 'tweet', x: 61.5, y: 42.4, html: '✣ + reviews it' });
+    const re = W('reviews');
+    R.show(rv, re); R.sfx('pop', re);
+
+    // a target box draws itself around the tweet's 90%
+    const T90 = { x: 44.5, y: 34.5, w: 8.4, h: 5.4 }, th = 0.6;
+    const edges = [
+      { x: T90.x, y: T90.y, w: T90.w, h: th }, { x: T90.x + T90.w - th, y: T90.y, w: th, h: T90.h },
+      { x: T90.x, y: T90.y + T90.h - th, w: T90.w, h: th }, { x: T90.x, y: T90.y, w: th, h: T90.h },
+    ].map(g => R.box('tg', { layer: 'tweet', ...g }));
+    const n9 = W('90');
+    edges.forEach((e, i) => R.show(e, n9 + i * R.F));
+    R.sfx('lock', n9 + 3 * R.F, { layer: 'tweet' });
+
+    // Commits.log under the tweet: who wrote the code
+    const bot = R.pix(['...k...', 'kkkkkkk', 'knnnnnk', 'knknknk', 'knnnnnk', 'kkkkkkk', '.k...k.'], .62);
+    const hum = R.pix(['..kkk..', '..kpk..', '..kkk..', '.kkkkk.', 'k.kkk.k', '..k.k..', '.kk.kk.'], .62);
+    const CM = R.win({ title: 'Commits.log', right: 'by author', layer: 'log', x: TW.x, y: 49, w: TW.w, h: 13.5,
+      body: `<div class="ppl">${[...Array(9)].map((_, i) => `<div id="p${i}">${bot}</div>`).join('')}<div id="p9">${hum}<span>you</span></div></div>
+        <span id="pc">0%</span>` });
+    CM.id = 'CM';
+    const wr = W('writes'), op = IN + 2 * R.F;
+    R.open(CM, op);
+    const pe = n9;
+    for (let i = 0; i < 9; i++) {
+      const t = op + 0.15 + (pe - op - 0.15) * i / 8;
+      R.show(R.$('#p' + i), t);
+      if (i % 2 === 0) R.sfx('tick', t, { vol: -5, layer: 'log' });
+    }
+    R.count(R.$('#pc'), op + 0.15, pe - op - 0.15, 0, 90, v => `${Math.round(v)}%`);
+    const pct = R.find('90 %', R.START)[1].t;          // "%" alone would match any word
+    R.show(R.$('#p9'), pct); R.sfx('pop', pct, { layer: 'log' });
+    R.text(CM.querySelector('.win__bar .r'), pct, 'Claude 90 · you 10');
+    R.done(END);
+  </script>
+</body>
+</html>

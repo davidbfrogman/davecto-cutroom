@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- 07 26.50–30.10 "Two, they'll ask for opinions from people who will tell them what they want to hear,"
+     "Mistake 02" lands on "Two"; Yes-o-matic 3000 (magenta), a slot machine above the head. The
+     question types in on "ask for opinions", the lever pulls (thunk) and the three reels spin
+     through NO / MEH / $$ / ?? / YES; they stop one per word on "tell them what they want" and all
+     land on YES; "hear" → JACKPOT, 100% agree, truth paid out: 0. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-yes-machine</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .lab { font: calc(var(--u) * 6.4)/1 var(--f-pixel); padding: calc(var(--u) * .4) calc(var(--u) * 1.6) calc(var(--u) * .9); }
+    #YM .win__body { background: var(--accent); display: flex; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1.6); }
+    .main { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); min-width: 0; }
+    .q { background: var(--paper); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .7) calc(var(--u) * 1.2) calc(var(--u) * 1); font: calc(var(--u) * 3.6)/1 var(--f-mono); white-space: nowrap; }
+    .reels { display: flex; gap: calc(var(--u) * 1.2); background: var(--ink); padding: calc(var(--u) * 1.2); }
+    .reels > div { flex: 1; background: var(--paper); text-align: center; font: calc(var(--u) * 9)/1 var(--f-pixel); padding: calc(var(--u) * 1) 0 calc(var(--u) * 1.6);
+                   border-top: calc(var(--u) * 1.2) solid var(--win-2); border-bottom: calc(var(--u) * 1.2) solid var(--win-2); }
+    .reels > div.won { background: var(--paper); color: var(--ink); outline: calc(var(--u) * .5) solid var(--accent); outline-offset: calc(var(--u) * -.9); }
+    .st { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); white-space: nowrap; }
+    .lever { position: relative; flex: none; width: calc(var(--u) * 5); }
+    .lever .rod { position: absolute; left: calc(var(--u) * 1.6); width: calc(var(--u) * 1.6); background: var(--ink); top: calc(var(--u) * 4); bottom: calc(var(--u) * 6); }
+    .lever .ball { position: absolute; left: 0; width: calc(var(--u) * 4.8); height: calc(var(--u) * 4.8); background: var(--paper); border: calc(var(--u) * .6) solid var(--ink); top: 0; }
+    .lever .foot { position: absolute; left: 0; bottom: 0; width: calc(var(--u) * 4.8); height: calc(var(--u) * 6); background: var(--ink); }
+  </style>
+</head>
+<body data-world="magenta">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 26.50;
+    const two = R.w('two');
+    const LB = R.box('chip-inv lab h', { x: 6, y: 21, layer: 'label', html: 'Mistake 02 / 03' });
+    R.show(LB, two); R.flash(LB, two, 2); R.sfx('pop', two, { layer: 'label' });
+
+    const YM = R.win({ title: 'Yes-o-matic 3000', right: '1 opinion = 1 coin', x: 6, y: 29, w: 76, h: 34,
+      body: `<div class="main">
+          <div class="q"><span class="type h" id="ask">&gt; is my app idea good?</span></div>
+          <div class="reels"><div id="r0">NO</div><div id="r1">MEH</div><div id="r2">??</div></div>
+          <div class="st"><span id="st">Insert opinion</span><span class="chip-inv h" id="jp">Jackpot · 100% agree</span></div>
+        </div>
+        <div class="lever"><i class="rod"></i><i class="ball" id="ball"></i><i class="foot"></i></div>` });
+    YM.id = 'YM';
+    R.open(YM, R.w("they'll"), { from: { x: 50, y: 70 } });
+
+    const ask = R.w('ask');
+    R.type(R.$('#ask'), ask, 34);
+
+    // Lever pull on "opinions".
+    const op = R.w('opinions'), ball = R.$('#ball');
+    [3, 7, 11, 7, 3, 0].forEach((d, i) => R.tl.set(ball, { top: R.u(d) }, R.T(op + i * R.F)));
+    R.sfx('thunk', op);
+    R.text(R.$('#st'), op, 'Spinning…');
+
+    // Reels spin, then stop one per word, all on YES.
+    const SYM = ['NO', 'MEH', '$$', '??', 'YES', 'NAH', ':(', 'HMM'];
+    const reels = R.$$('.reels > div');
+    const stops = [R.w('tell'), R.w('what'), R.w('want')];
+    R.every(op + 0.1, stops[2] + 0.05, t => {
+      const k = Math.floor((t - op) * 15);
+      reels.forEach((r, i) => { r.textContent = t >= stops[i] ? 'YES' : SYM[(k + i * 3) % SYM.length]; });
+    });
+    stops.forEach((t, i) => { R.flash(reels[i], t, 1); R.sfx('tick', t); });
+    reels.forEach((r, i) => R.tl.set(r, { outline: 'calc(var(--u) * .6) solid var(--ink)' }, R.T(stops[i])));
+
+    const hear = R.w('hear');
+    R.show(R.$('#jp'), hear);
+    R.flash(R.$('.reels'), hear, 3);
+    R.text(R.$('#st'), hear, 'Truth paid: 0');
+    R.sfx('sparkle', hear);
+    R.done(30.1);
+  </script>
+</body>
+</html>

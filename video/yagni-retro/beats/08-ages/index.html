@@ -1,0 +1,86 @@
+<!doctype html>
+<!-- 08 30.13–35.90 "Three, and this one's especially important in the age of AI, kiss, keep it simple, stupid."
+     Above the head. Principle 3 / 3 opens on "three" as a timeline of ages: Stone, Bronze, Iron,
+     Steam, Dot-com, AI; the YOU ARE HERE marker steps age to age and lands on AI on "age of AI"
+     (ticks, pop). On "kiss" it closes and K.I.S.S. (pink) opens: big pixel lips puckering, and
+     stickers slap on at angles for "keep", "it", "simple"; STUPID. stamps last (thunk). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08-ages</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #AG .win__body { background: var(--paper); display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u) * 1.2); padding: calc(var(--u) * 1.4) calc(var(--u) * 2.4); }
+    .trk { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * 1.4); }
+    .trk span { font: calc(var(--u) * 3.2)/1 var(--f-pixel); text-align: center; position: relative; white-space: nowrap; }
+    .trk span::before { content: ''; position: absolute; left: 50%; top: calc(var(--u) * -2.2); width: calc(var(--u) * 1.4); height: calc(var(--u) * 1.4); margin-left: calc(var(--u) * -.7); background: var(--ink); }
+    .trk small { display: block; font: calc(var(--u) * 2)/1.3 var(--f-mono); color: var(--grey); }
+    #mk { position: absolute; top: calc(var(--u) * -6.6); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+    #mk b { font: calc(var(--u) * 2.6)/1 var(--f-pixel); font-weight: normal; background: var(--ink); color: var(--accent); padding: 0 calc(var(--u) * .5) calc(var(--u) * .2); white-space: nowrap; }
+    #mk i { width: 0; height: 0; border-left: calc(var(--u) * 1.2) solid transparent; border-right: calc(var(--u) * 1.2) solid transparent; border-top: calc(var(--u) * 1.4) solid var(--ink); }
+    #a5 { visibility: visible; }
+    #KS { color: var(--ink); }
+    #KS .win__body { background: var(--paper); padding: 0; }
+    .lips { position: absolute; left: calc(var(--u) * 2.4); top: calc(var(--u) * 4); }
+    .lips .b { display: none; }
+    .st { position: absolute; font-family: var(--f-display); font-weight: 600; letter-spacing: -.04em; line-height: .9; border: var(--hair) solid var(--ink);
+          background: var(--paper); padding: calc(var(--u) * .4) calc(var(--u) * 1.2) calc(var(--u) * .9); box-shadow: calc(var(--u) * .45) calc(var(--u) * .45) 0 var(--ink); visibility: hidden; }
+    .sp { position: absolute; font: calc(var(--u) * 4)/1 var(--f-pixel); visibility: hidden; }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 30.13;
+    const END = 35.90, W = p => R.w(p, R.START - 0.1);
+    const AGES = [['Stone', '3300 BC'], ['Bronze', '1200 BC'], ['Iron', '500 BC'], ['Steam', '1712'], ['Dot-com', '1995'], ['AI', 'now']];
+    const AG = R.win({ title: 'Ages.timeline', right: 'Principle 3 / 3', x: 4, y: 26, w: 82, h: 22,
+      body: `<div style="height:calc(var(--u)*5)"></div><div class="trk">${AGES.map(([n, y], i) => `<span id="a${i}">${n}<small>${y}</small></span>`).join('')}
+        <div id="mk"><b>YOU ARE HERE</b><i></i></div></div>` });
+    AG.id = 'AG';
+    AG.setAttribute('data-world', 'lime');
+    R.open(AG, W('three'), { from: { x: 50, y: 66 } });
+    const mk = R.$('#mk');
+    const steps = ['three', 'this', 'especially', 'important', 'the age', 'ai'].map(w => W(w));
+    steps.forEach((t, i) => {
+      R.tl.set(mk, { left: `${(i + .5) * 100 / 6}%` }, R.T(t));
+      if (i < 5) R.sfx('tick', t, { vol: -4 });
+    });
+    const ai = W('ai');
+    R.tl.set(R.$('#a5'), { backgroundColor: 'var(--accent)' }, R.T(ai));
+    R.flash(mk, ai, 2); R.sfx('pop', ai);
+
+    // K.I.S.S.
+    const kiss = W('kiss');
+    R.close(AG, kiss - 0.1, { sfx: false });
+    const L = r => R.pix(r, 1.5);
+    const lipA = L(['.....kkk..kkk.....', '...kknnnkknnnkk...', '..knnnnnnnnnnnnk..', '.knnnnnnnnnnnnnnk.', 'kkkkkkkkkkkkkkkkkk', '.knnnnnnnnnnnnnnk.', '..knnnnnnnnnnnnk..', '...kknnnnnnnnkk...', '.....kkkkkkkk.....']);
+    const lipB = L(['..................', '......kkk.kkk.....', '.....knnnknnnk....', '....knnnnnnnnnk...', '....kkkkkkkkkkk...', '....knnnnnnnnnk...', '.....knnnnnnnk....', '......kkkkkkk.....', '..................']);
+    const STK = [['keep', 'KEEP', 31, 4.5, -6, 6], ['it', 'IT', 58, 3.5, 5, 6], ['simple', 'SIMPLE,', 34, 13.5, 3, 6], ['stupid', 'STUPID.', 46, 18, -4, 7.4]];
+    const KS = R.win({ layer: 'kiss', title: 'K.I.S.S.', right: '♥ ✣', x: 4, y: 20.5, w: 82, h: 34,
+      body: `<div class="lips"><div class="a">${lipA}</div><div class="b">${lipB}</div></div>
+        <span class="sp" style="left:calc(var(--u)*24);top:calc(var(--u)*2)">✣</span><span class="sp" style="left:calc(var(--u)*2);top:calc(var(--u)*20)">✣</span>
+        ${STK.map(([w, s, x, y, r, f], i) => `<span class="st" id="k${i}" style="left:calc(var(--u)*${x});top:calc(var(--u)*${y});transform:rotate(${r}deg);font-size:calc(var(--u)*${f})">${s}</span>`).join('')}` });
+    KS.id = 'KS';
+    R.open(KS, kiss, { from: { x: 50, y: 40 } });
+    R.$$('#KS .sp').forEach(s => R.blink(s, kiss, END, 0.4));
+    R.sfx('sparkle', kiss);
+    // pucker: two frames, swapping every 4 frames
+    const A = R.$('.lips .a'), B = R.$('.lips .b');
+    R.every(kiss, END, t => { const f = Math.floor((t - kiss) * 15 / 4) % 2; A.style.display = f ? 'none' : 'block'; B.style.display = f ? 'block' : 'none'; });
+    STK.forEach(([w], i) => {
+      const t = W(w);
+      R.show(R.$('#k' + i), t);
+      R.sfx(i === 3 ? 'thunk' : 'pop', t);
+    });
+    R.tl.set(R.$('#k3'), { backgroundColor: 'var(--accent)' }, R.T(W('stupid')));
+    R.flash(R.$('#k3'), W('stupid'), 2);
+    R.done(END);
+  </script>
+</body>
+</html>

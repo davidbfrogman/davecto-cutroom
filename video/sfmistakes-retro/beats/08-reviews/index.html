@@ -1,0 +1,66 @@
+<!doctype html>
+<!-- 08 30.10–35.27 "it's awesome that your friends and family think your app idea is great.
+     Unfortunately, they're rarely your customer."
+     Reviews (pink) above the head: five-star reviews from Mom, Uncle Rob, Best friend and Roommate
+     land on "awesome / friends / family / great", stars filling. On "Unfortunately" a "Paid" column
+     appears and every row gets stamped $0 one per word; "customer" → Customers: 0 of 4. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08-reviews</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #RV .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.4); }
+    .row { display: grid; grid-template-columns: calc(var(--u) * 17) calc(var(--u) * 17) 1fr calc(var(--u) * 9); align-items: center; gap: calc(var(--u) * 1.2);
+           font: calc(var(--u) * 3.5)/1 var(--f-pixel); white-space: nowrap; border-bottom: var(--hair) dotted var(--ink-55); padding-bottom: calc(var(--u) * .9); visibility: hidden; }
+    .row.hd { visibility: visible; color: var(--grey); font-size: calc(var(--u) * 2.8); }
+    .stars { color: var(--accent); -webkit-text-stroke: calc(var(--u) * .12) var(--ink); letter-spacing: .05em; }
+    .row q { quotes: none; font-family: var(--f-display); font-weight: 600; letter-spacing: -.03em; font-size: calc(var(--u) * 3.4); overflow: hidden; text-overflow: ellipsis; }
+    .pd { visibility: hidden; justify-self: start; }
+    .sum { display: flex; justify-content: space-between; align-items: center; margin-top: auto; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    #ph { visibility: hidden; }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 30.10;
+    const P = [['Mom', 'Genius!!'], ['Uncle Rob', "I'd use it"], ['Best friend', 'So good'], ['Roommate', 'Great idea']];
+    const RV = R.win({ title: 'Reviews (4)', right: 'Avg ★5.0', x: 5, y: 20.5, w: 78, h: 35,
+      body: `<div class="row hd"><span>From</span><span>Rating</span><span>Said</span><span id="ph">Paid</span></div>
+        ${P.map(([n, q], i) => `<div class="row" id="r${i}"><span>${n}</span><span class="stars" id="s${i}">☆☆☆☆☆</span><q>${q}</q><span class="pd chip-inv" id="d${i}">$0</span></div>`).join('')}
+        <div class="sum"><span id="sl">Opinions: 4</span><span class="chip h" id="cu">Customers: 0 of 4</span></div>` });
+    RV.id = 'RV';
+    R.open(RV, R.w("it's"), { from: { x: 48, y: 66 } });
+
+    // A review per word, stars filling in steps.
+    ['awesome', 'friends', 'family', 'great'].forEach((w, i) => {
+      const t = R.w(w);
+      R.show(R.$('#r' + i), t);
+      for (let k = 1; k <= 5; k++) R.text(R.$('#s' + i), t + k * R.F * 0.5, '★'.repeat(k) + '☆'.repeat(5 - k));
+      R.sfx('pop', t);
+    });
+
+    // "Unfortunately": who paid? Nobody.
+    const un = R.w('unfortunately');
+    R.show(R.$('#ph'), un);
+    R.sfx('alert', un);
+    ["they're", 'rarely', 'your', 'customer'].forEach((w, i) => {
+      const t = R.w(w, un);
+      R.show(R.$('#d' + i), t);
+      R.sfx('strike', t, { vol: -3 });
+    });
+    const cu = R.w('customer', un);
+    R.show(R.$('#cu'), cu + 0.2);
+    R.flash(R.$('#cu'), cu + 0.2, 2);
+    R.tl.set(R.$('#cu'), { backgroundColor: 'var(--ink)', color: 'var(--accent)' }, R.T(cu + 0.2));
+    R.hide(RV, 35.08);   // the next shot's face is detected a few frames early
+    R.done(35.27);
+  </script>
+</body>
+</html>

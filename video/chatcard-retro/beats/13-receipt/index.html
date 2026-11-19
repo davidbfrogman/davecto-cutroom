@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- 13 61.40–65.63 "That way you won't spend $80 overnight shipping a $12 phone charger."
+     Receipt.prn (yellow) prints down the left side, clear of the face; Ship.Speed above the head.
+     "$80" → OVERNIGHT SHIP $80.00 prints. "overnight" → the pixel freighter's stars stretch (sweep)
+     and it jumps to lightspeed on "shipping" (crash), leaving a ring. "$12" → PHONE CHARGER $12.00
+     prints, then TOTAL $92.00. "phone" → 6.7× The Charger. lands in display type where the ship
+     was; "charger" → the receipt stamps SHIP = 6.67× ITEM (alert). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>13 Receipt</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="ships.js"></script>
+  <style>
+    #RC .win__body { background: var(--paper); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.4); display: flex; flex-direction: column; gap: calc(var(--u) * .9);
+                     font: calc(var(--u) * 3.3)/1 var(--f-pixel); }
+    #RC .ln { display: flex; justify-content: space-between; visibility: hidden; white-space: nowrap; }
+    #RC .ln.v { justify-content: flex-end; }
+    #RC .dash { border-top: var(--hair) dashed var(--ink); height: 0; visibility: hidden; margin: calc(var(--u) * .6) 0; }
+    #RC .tot { font-size: calc(var(--u) * 4.6); }
+    #stamp { visibility: hidden; align-self: flex-start; background: var(--coral); color: var(--ink); font-size: calc(var(--u) * 3.3); margin-top: calc(var(--u) * .6); }
+    #RC .edge { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--u) * 1.2);
+                background: repeating-linear-gradient(135deg, var(--ink) 0 calc(var(--u) * .6), transparent calc(var(--u) * .6) calc(var(--u) * 1.2)); opacity: .25; }
+    #SS .win__body { background: var(--paper); padding: calc(var(--u) * 1.2); }
+    #SS .eta { position: absolute; left: calc(var(--u) * 1.2); bottom: calc(var(--u) * 1); }
+    #SS .q { position: absolute; right: calc(var(--u) * 2); top: 50%; transform: translateY(-50%); padding: calc(var(--u) * 1.8) calc(var(--u) * 1.6); visibility: hidden; }
+    #SS .crop { inset: 0; color: var(--ink); }
+    #SS .disp { font-size: calc(var(--u) * 6.6); line-height: .92; color: var(--ink-86); }
+    #SS .disp .hl { display: inline-block; background: var(--accent); padding: calc(var(--u) * .4) calc(var(--u) * .5) 0; margin-top: calc(var(--u) * .4); }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w('way you', 0);
+    const lines = [['h0', 'Order #0043'], ['h1', 'Agent.GPT · 1 Item'], ['d0'], ['s0', 'Overnight Ship'], ['s1', '$80.00', 'v'], ['c0', 'Phone Charger'], ['c1', '$12.00', 'v'], ['d1'], ['t0', 'Total']];
+    const RC = R.win({ title: 'Receipt.prn', right: '▮▮', x: 3, y: 22, w: 28, h: 58,
+      body: lines.map(([id, s, c]) => s ? `<div class="ln ${c || ''}" id="${id}"><span>${s}</span></div>` : `<div class="dash" id="${id}"></div>`).join('')
+        .replace('<span>Total</span></div>', '<span>Total</span></div><div class="ln v tot" id="t1"><span>$92.00</span></div>') +
+        `<span class="chip-inv" id="stamp">Ship = 6.67× Item</span><i class="edge"></i>` });
+    RC.id = 'RC';
+    R.open(RC, R.START + 0.05, { from: { x: 30, y: 70 } });
+    const print = (ids, t, sfx = true) => ids.forEach((id, i) => { R.show(R.$(`#${id}`), t + i * 2 * R.F); if (sfx) R.sfx('type', t + i * 2 * R.F); });
+    print(['h0', 'h1', 'd0'], R.START + 0.15);
+    const e80 = R.w('$80'), e12 = R.w('$12');
+    print(['s0', 's1'], e80);
+    R.flash(R.$('#s1'), e80 + 2 * R.F, 2);
+    print(['c0', 'c1'], e12);
+    print(['d1', 't0', 't1'], R.w('phone') + 0.1);
+    const ch = R.w('charger');
+    R.show(R.$('#stamp'), ch);
+    R.flash(R.$('#stamp'), ch, 3);
+    R.sfx('alert', ch);
+
+    // Ship.Speed: overnight = lightspeed.
+    const SS = R.win({ layer: 'ship', title: 'Ship.Speed', right: 'Overnight ▶▶▶', x: 34, y: 22, w: 52, h: 31,
+      body: `<span class="micro eta">ETA · 09:41:00.114</span>
+        <div class="q" id="q"><div class="crop"><b></b><b></b><b></b><b></b></div><div class="disp">6.7× The<br><span class="hl">Charger.</span></div></div>` });
+    SS.id = 'SS';
+    const on = R.START + 0.05, ov = R.w('overnight');
+    R.open(SS, on, { from: { x: 50, y: 60 }, sfx: false });
+    // falcon (box 100 cells wide, x1 .8, speed 40): cruise lasts 2.75s, then 0.7s stretch, 0.3s jump.
+    const stretch = ov - 0.1;
+    R.ship('falcon', { layer: 'ship', x: 34.9, y: 28.3, w: 50.2, h: 23.2, from: on, to: R.w('phone'), t0: 2.75 - (stretch - on), opts: { y: .45, x1: .8, speed: 40 } });
+    R.sfx('sweep', stretch, { layer: 'ship' });
+    R.sfx('crash', stretch + 0.7, { layer: 'ship' });
+    R.text(SS.querySelector('.win__bar .r'), stretch + 0.7, 'Gone ▶▶▶');
+    const ph = R.w('phone');
+    R.show(R.$('#q'), ph);
+    R.sfx('pop', ph, { layer: 'ship' });
+    R.done(67.56);
+  </script>
+</body>
+</html>

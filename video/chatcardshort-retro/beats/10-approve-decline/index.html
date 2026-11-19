@@ -1,0 +1,97 @@
+<!doctype html>
+<!-- 10 43.30–51.43 "Approve the purchase and you may have just approved fraud. Decline the purchase and
+     you may have lost a customer."
+     Txn.88213 (blue) above the head: an agent purchase, $412.06, sig ✓ OpenAI, two buttons.
+     "Approve" → a pixel cursor clicks Approve (thunk), it reads Approved ✓ … then "approved fraud" →
+     the pane turns coral: FRAUD, Chargeback −$412.06 (alert, flashing). "Decline" → the cursor
+     crosses and clicks Decline (thunk), a pixel customer walks out of the pane, and on "lost" it
+     reads Customer Lost, LTV −$2,940.11 (error). "customer" → the title blinks Lose / Lose. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>10 Approve / Decline</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #TX .win__body { background: var(--win); padding: calc(var(--u) * 1.1) calc(var(--u) * 1.6); display: grid; grid-template-columns: 1fr 1fr;
+                     grid-template-rows: auto calc(var(--u) * 5.4) 1fr; gap: calc(var(--u) * 1) calc(var(--u) * 2); }
+    .hd { grid-column: 1 / 3; display: flex; gap: calc(var(--u) * 1.4); align-items: center; font: calc(var(--u) * 2.6)/1 var(--f-mono); white-space: nowrap; }
+    .hd b { font: 400 calc(var(--u) * 4)/1 var(--f-pixel); }
+    .btn { display: flex; align-items: center; justify-content: center; border: var(--hair) solid var(--ink); background: var(--paper); font: calc(var(--u) * 4)/1 var(--f-pixel);
+           outline: calc(var(--u) * .4) solid var(--ink); outline-offset: calc(var(--u) * .35); margin: calc(var(--u) * .6); }
+    .pane { position: relative; overflow: hidden; border: var(--hair) solid var(--ink); background: var(--paper); }
+    .pane > div { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u) * 1); padding: 0 calc(var(--u) * 1.6);
+                  font: calc(var(--u) * 2.5)/1 var(--f-mono); visibility: hidden; white-space: nowrap; }
+    .pane .big { font: calc(var(--u) * 6)/.8 var(--f-pixel); }
+    .pane .wait { visibility: visible; color: var(--grey); font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    #ap .ok { color: var(--green); }
+    #fr { background: var(--coral); color: var(--ink); }
+    #lost { background: var(--ink); color: var(--accent); }
+    #dno { justify-content: flex-start !important; padding-top: calc(var(--u) * 1.2) !important; }
+    #walker { position: absolute; bottom: calc(var(--u) * 1.4); visibility: hidden; }
+    #walker > div { position: absolute; left: 0; bottom: 0; }
+    #cur { position: absolute; z-index: 10; visibility: hidden; }
+  </style>
+</head>
+<body data-world="blue">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="6"></div>
+  </div>
+  <script>
+    R.START = 45.26;
+    const arrow = R.pix(['k.......', 'kk......', 'kpk.....', 'kppk....', 'kpppk...', 'kppppk..', 'kpppppk.', 'kppppppk', 'kppppkkk', 'kpkkpk..', 'kk.kppk.', '....kk..'], 0.6);
+    const P1 = R.pix(['..kk..', '..kk..', '.kkkk.', 'k.kk.k', '..kk..', '..kk..', '.k..k.', 'k....k'], 0.75);
+    const P2 = R.pix(['..kk..', '..kk..', '.kkkk.', '.kkkk.', '..kk..', '..kk..', '..kk..', '..kk..'], 0.75);
+    const TX = R.win({ title: 'Txn.88213', right: 'Decide ▶', x: 5, y: 20.5, w: 80, h: 32,
+      body: `<div class="hd"><span class="chip-inv">Agent</span><b>$412.06</b><span>1× Headphones · sig ✓ OpenAI</span></div>
+        <div class="btn" id="ba">Approve</div><div class="btn" id="bd">Decline</div>
+        <div class="pane" id="ap"><div class="wait">…</div><div class="ok" id="aok"><span class="big">Approved ✓</span></div>
+          <div id="fr"><span class="big">Fraud!</span><span>Chargeback $412.06</span></div></div>
+        <div class="pane" id="dp"><div class="wait">…</div><div id="dno"><span class="big" style="color:var(--grey)">Declined</span></div>
+          <div id="walker"><div id="p1">${P1}</div><div id="p2" class="h">${P2}</div></div>
+          <div id="lost"><span class="big">Customer Lost</span><span>LTV Lost $2,940.11</span></div></div>
+        <div id="cur">${arrow}</div>` });
+    TX.id = 'TX';
+    R.open(TX, R.START + 0.1, { from: { x: 48, y: 66 } });
+    const cur = R.$('#cur'), go = (t, x, y) => R.tl.set(cur, { left: R.u(x), top: R.u(y) }, R.T(t));
+    const ap = R.w('Approve'), fraud = R.w('approved fraud'), dc = R.w('Decline'), lost = R.w('lost'), cust = R.w('customer.');
+    // Approve.
+    go(R.START, 34, 20); R.show(cur, R.START + 0.15);
+    go(ap - 0.2, 27, 15); go(ap - 0.13, 22, 11); go(ap - 0.07, 19, 9.4);
+    R.tl.set('#ba', { backgroundColor: '#1E1E1E', color: '#6FA3E0' }, R.T(ap));
+    R.tl.set('#ba', { backgroundColor: '#FEFEFE', color: '#1E1E1E' }, R.T(ap + 0.2));
+    R.sfx('thunk', ap);
+    R.show(R.$('#aok'), ap + 0.2);
+    R.hide(R.$('#aok'), fraud); R.show(R.$('#fr'), fraud);
+    R.flash(R.$('#fr'), fraud, 3);
+    R.sfx('alert', fraud);
+    // Decline.
+    go(dc - 0.2, 32, 11); go(dc - 0.13, 45, 10); go(dc - 0.07, 56, 9.4);
+    R.tl.set('#bd', { backgroundColor: '#1E1E1E', color: '#6FA3E0' }, R.T(dc));
+    R.tl.set('#bd', { backgroundColor: '#FEFEFE', color: '#1E1E1E' }, R.T(dc + 0.2));
+    R.sfx('thunk', dc);
+    R.show(R.$('#dno'), dc + 0.2);
+    R.hide(cur, dc + 0.4);
+    // The customer walks out.
+    const wk = R.$('#walker'), p1 = R.$('#p1'), p2 = R.$('#p2');
+    R.tl.set(wk, { left: R.u(3) }, 0);
+    R.show(wk, dc + 0.4);
+    R.every(dc + 0.4, lost, t => {
+      const k = Math.round((t - dc - 0.4) * 15);
+      wk.style.left = R.u(3 + k * 1.7);
+      p1.style.visibility = k % 2 ? 'hidden' : 'visible'; p2.style.visibility = k % 2 ? 'visible' : 'hidden';
+    });
+    R.hide(wk, lost);
+    R.hide(R.$('#dno'), lost); R.show(R.$('#lost'), lost);
+    R.flash(R.$('#lost'), lost, 2);
+    R.sfx('error', lost);
+    // "customer"
+    const tr = TX.querySelector('.win__bar .r');
+    R.text(tr, cust, 'Lose / Lose');
+    R.blink(tr, cust, 51.43, 0.27);
+    R.done(51.43);
+  </script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<!-- 05 14.60–19.72 "instead of five minutes picking up the phone and dialing one of their potential prospects."
+     Phone.app (lime) above the head. Top: time compare, Build a feature 20:00:00 (full bar) vs Call
+     a prospect 00:05:00 (a sliver) on "five minutes", "240x less" chip. Below: a pixel desk phone;
+     the handset lifts on "picking up" (thunk), the number dials key by key on "dialing" (rising blips,
+     keys flash), RINGING blinks on "potential", CONNECTED on "prospects" and the call clock runs. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05-phone</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PH .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1.8); padding: calc(var(--u) * 1.6); }
+    .cmp { display: grid; grid-template-columns: calc(var(--u) * 20) 1fr calc(var(--u) * 13); align-items: center; gap: calc(var(--u) * 1) calc(var(--u) * 1.4);
+           font: calc(var(--u) * 3.5)/1 var(--f-pixel); white-space: nowrap; }
+    .trk { position: relative; height: calc(var(--u) * 3); border: var(--hair) solid var(--ink); }
+    .trk b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink); }
+    .trk.c b { background: var(--accent); border-right: var(--hair) solid var(--ink); width: calc(var(--u) * .6); }
+    .bot { flex: 1; display: flex; gap: calc(var(--u) * 2.4); border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * 1.6); min-height: 0; }
+    .phone { position: relative; flex: none; width: calc(var(--u) * 24); }
+    .phone > div { position: absolute; left: calc(var(--u) * 1); }
+    #base { bottom: 0; }
+    #hs { bottom: calc(var(--u) * 8.8); }
+    #cord { left: calc(var(--u) * 4) !important; bottom: calc(var(--u) * 8.8); }
+    .rc { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); min-width: 0; }
+    .lcd { background: var(--ink); color: var(--accent); font: calc(var(--u) * 4)/1 var(--f-pixel); padding: calc(var(--u) * .8) calc(var(--u) * 1.2) calc(var(--u) * 1.1);
+           display: flex; justify-content: space-between; white-space: nowrap; }
+    .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u) * .7); }
+    .keys i { font: normal calc(var(--u) * 3.6)/1 var(--f-pixel); text-align: center; border: var(--hair) solid var(--ink); background: var(--win); padding: calc(var(--u) * .3) 0 calc(var(--u) * .6); }
+  </style>
+</head>
+<body data-world="lime">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 14.60;
+    const HS = R.pix([
+      '..kkkkkkkkkkkkkkkk..',
+      '.kkkkkkkkkkkkkkkkkk.',
+      'kkkkkk........kkkkkk',
+      'kkkkk..........kkkkk',
+    ], 1.1);
+    const BASE = R.pix([
+      '...kk..........kk...',
+      '..nnnnnnnnnnnnnnnn..',
+      '.nnnnnnnnnnnnnnnnnn.',
+      '.nnnnkkkkkkkkkknnnn.',
+      'nnnnnkpkpkpkpkknnnnn',
+      'nnnnnkkkkkkkkkknnnnn',
+      'nnnnnnnnnnnnnnnnnnnn',
+      'kkkkkkkkkkkkkkkkkkkk',
+    ], 1.1);
+    const CORD = R.pix(['k.', '.k', 'k.', '.k', 'k.', '.k'], 0.8);
+    const PH = R.win({ title: 'Phone.app', right: 'Line 1', x: 6, y: 21, w: 76, h: 47,
+      body: `<div class="cmp">
+          <span>Build a feature</span><div class="trk"><b style="right:0"></b></div><span id="t1">20:00:00</span>
+          <span class="h" id="l2">Call a prospect</span><div class="trk c h" id="k2"><b></b></div><span class="h" id="t2">00:05:00</span>
+        </div>
+        <div class="bot">
+          <div class="phone"><div id="cord" class="h">${CORD}</div><div id="base">${BASE}</div><div id="hs">${HS}</div></div>
+          <div class="rc">
+            <div class="lcd"><span id="num">ON HOOK</span><span id="clk"></span></div>
+            <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '*', 0, '#'].map(k => `<i data-k="${k}">${k}</i>`).join('')}</div>
+            <span class="chip-inv h" id="x" style="align-self:flex-start">240x less time</span>
+          </div>
+        </div>` });
+    PH.id = 'PH';
+    R.open(PH, R.w('instead') + 0.1, { from: { x: 52, y: 66 } });
+
+    // "five minutes"
+    const five = R.w('five');
+    ['#l2', '#k2', '#t2'].forEach(s => R.show(R.$(s), five));
+    R.sfx('tick', five);
+    const mins = R.w('minutes');
+    R.show(R.$('#x'), mins); R.sfx('pop', mins);
+
+    // "picking up the phone": the handset lifts in three steps, the cord shows.
+    const pu = R.w('picking');
+    [3, 6, 9].forEach((d, i) => R.tl.set(R.$('#hs'), { bottom: R.u(8.8 + d) }, R.T(pu + i * R.F)));
+    R.show(R.$('#cord'), pu + R.F);
+    R.sfx('thunk', pu);
+    R.text(R.$('#num'), pu + 0.2, 'DIAL TONE');
+
+    // "dialing": 1-415-555-0142, key by key.
+    const NUM = '14155550142', d0 = R.w('dialing'), d1 = R.w('potential');
+    const fmt = s => s.replace(/^(\d)(\d{0,3})(\d{0,3})(\d{0,4})$/, (m, a, b, c, d) => [a, b, c, d].filter(Boolean).join('-'));
+    [...NUM].forEach((k, i) => {
+      const t = d0 + (d1 - d0) * i / NUM.length;
+      R.text(R.$('#num'), t, fmt(NUM.slice(0, i + 1)));
+      R.flash(R.$(`.keys i[data-k="${k}"]`), t, 1);
+      R.sfx('blip', t, { freq: 500 * 2 ** (i / 16), vol: -4 });
+    });
+
+    // "potential prospects": ringing, then connected; the call clock runs.
+    R.text(R.$('#clk'), d1, 'RING');
+    R.blink(R.$('#clk'), d1, R.w('prospects'), 0.2);
+    const pr = R.w('prospects');
+    R.text(R.$('#num'), pr, 'PROSPECT #1');
+    R.tl.set(R.$('#clk'), { autoAlpha: 1 }, R.T(pr));
+    R.count(R.$('#clk'), pr, 19.72 - pr, 0, 19.72 - pr, v => `00:0${Math.floor(v)}.${Math.floor(v * 10) % 10}`);
+    R.flash(R.$('.lcd'), pr, 2);
+    R.sfx('success', pr);
+    R.done(19.72);
+  </script>
+</body>
+</html>

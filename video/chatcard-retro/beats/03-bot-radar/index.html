@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- 03 9.7–13.3 "I used to build bot detection for Facebook and Google, so I think this"
+     BotRadar 2.0 (teal on ink) above the head: a 1-bit radar sweeps (a ping each turn), blips
+     light up as the beam passes and a Bots Caught counter races from "bot detection". A Résumé.txt
+     window opens beside it; "Facebook" and "Google" land as ✣ chips (pop). "so I think" → the
+     radar locks a target (crop brackets + BOT 99.2%, lock). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03 Bot radar</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #RD .win__body { background: var(--ink); color: var(--accent); display: flex; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1.4); }
+    .scope { position: relative; flex: none; width: calc(var(--u) * 21.5); height: calc(var(--u) * 21.5); }
+    .scope canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+    .scope .crop { color: var(--paper); visibility: hidden; width: calc(var(--u) * 5); height: calc(var(--u) * 5); }
+    .scope .crop b { width: calc(var(--u) * 1.4); height: calc(var(--u) * 1.4); }
+    .stats { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1.1); font: calc(var(--u) * 3.3)/1 var(--f-pixel); white-space: nowrap; }
+    .stats .micro { color: var(--paper); font-size: calc(var(--u) * 1.9); }
+    .stats .big { font-size: calc(var(--u) * 5.2); color: var(--paper); }
+    #tag { visibility: hidden; margin-top: auto; align-self: flex-start; background: var(--accent); color: var(--ink); padding: calc(var(--u) * .3) calc(var(--u) * .8) calc(var(--u) * .5); }
+    #CV .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1.3); padding: calc(var(--u) * 1.6); }
+    #CV .disp { font-size: calc(var(--u) * 4.4); line-height: .86; color: var(--ink-86); }
+    #CV .chips { display: flex; gap: calc(var(--u) * .8); }
+    #CV .chip { visibility: hidden; font-size: calc(var(--u) * 3); }
+  </style>
+</head>
+<body data-world="teal">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="4"></div>
+  </div>
+  <script>
+    R.START = 9.7;
+    const RD = R.win({ title: 'BotRadar 2.0', right: 'Scan', x: 5, y: 21, w: 47, h: 31.5,
+      body: `<div class="scope" id="scope"><canvas id="cv" width="48" height="48"></canvas><div class="crop" id="lock"><b></b><b></b><b></b><b></b></div></div>
+        <div class="stats"><span class="micro">Bots Caught</span><span class="big" id="n">0</span>
+          <span class="micro">Mouse · Strings · IP</span><span>Model: BD-7</span><span id="tag">BOT 99.2%</span></div>` });
+    RD.id = 'RD';
+    const t0 = R.w('I used'), sweep0 = R.w('bot detection'), lockT = R.w('so I think');
+    R.open(RD, t0, { from: { x: 50, y: 70 } });
+
+    // The scope, drawn pixel by pixel (1-bit: accent on ink, blips in paper).
+    const cv = R.$('#cv'), ctx = cv.getContext('2d'), N = 48, C = 23.5, TURN = 1.6;
+    const acc = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+    R.seed(7);
+    const blips = Array.from({ length: 9 }, () => { const a = R.rnd() * Math.PI * 2, r = 5 + R.rnd() * 16; return [C + Math.cos(a) * r, C + Math.sin(a) * r, a]; });
+    const target = blips[3];
+    const draw = t => {
+      ctx.clearRect(0, 0, N, N);
+      const A = (t - t0) / TURN * Math.PI * 2;
+      ctx.fillStyle = acc;
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const dx = x + .5 - C, dy = y + .5 - C, r = Math.hypot(dx, dy);
+        if (r > C) continue;
+        let on = Math.abs(r - 23) < .6 || Math.abs(r - 15.5) < .5 || Math.abs(r - 8) < .5 || ((x === 23 || y === 23) && (x + y) % 2 === 0);
+        const d = ((A - Math.atan2(dy, dx)) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        if (d < .09) on = true;
+        else if (d < .7 && (x + y) % 2 === 0 && (d < .3 || (x % 2 === 0 && y % 4 === 0))) on = true;
+        if (on) ctx.fillRect(x, y, 1, 1);
+      }
+      ctx.fillStyle = '#FEFEFE';
+      if (t >= sweep0) blips.forEach(([x, y, a]) => {
+        const since = ((A - a) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) / (Math.PI * 2) * TURN;   // seconds since the beam passed
+        if ((t - t0) / TURN * Math.PI * 2 >= a && since < 1.1) ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2);
+      });
+      if (t >= lockT) ctx.fillRect(Math.round(target[0]) - 1, Math.round(target[1]) - 1, 2, 2);
+    };
+    draw(t0);
+    R.every(t0, 13.3, draw);
+    for (let t = t0 + TURN; t < 13.3; t += TURN) R.sfx('blip', t, { freq: 1180, vol: -6 });
+
+    R.count(R.$('#n'), sweep0, 2.4, 0, 1048576);
+    const title = RD.querySelector('.win__bar .r');
+    R.text(title, sweep0, 'Live');
+    R.blink(title, sweep0, lockT, 0.4);
+
+    // Résumé.
+    const CV = R.win({ layer: 'resume', title: 'Résumé.txt', right: 'p.1', x: 54, y: 23, w: 32, h: 26,
+      body: `<span class="micro">Previously</span><div class="disp">Built Bot<br>Detection At</div>
+        <div class="chips"><span class="chip" id="fb">✣ Facebook</span><span class="chip" id="gg">✣ Google</span></div>` });
+    CV.id = 'CV';
+    R.open(CV, R.w('bot detection') + 0.15, { from: { x: 30, y: 38 } });
+    R.show(R.$('#fb'), R.w('Facebook')); R.sfx('pop', R.w('Facebook'), { layer: 'resume' });
+    R.show(R.$('#gg'), R.w('Google')); R.sfx('pop', R.w('Google'), { layer: 'resume' });
+
+    // "so I think": target lock.
+    const lk = R.$('#lock');
+    lk.style.left = `${target[0] / N * 100}%`; lk.style.top = `${target[1] / N * 100}%`;
+    lk.style.transform = 'translate(-50%, -50%)';
+    R.tl.set(lk, { width: R.u(9), height: R.u(9) }, 0);
+    R.show(lk, lockT);
+    R.tl.set(lk, { width: R.u(6.5), height: R.u(6.5) }, R.T(lockT + R.F));
+    R.tl.set(lk, { width: R.u(4.5), height: R.u(4.5) }, R.T(lockT + 2 * R.F));
+    R.blink(lk, lockT + 0.5, 13.3, 0.27);
+    R.show(R.$('#tag'), lockT + 0.13);
+    R.show(title, lockT);
+    R.text(title, lockT, "Lock");
+    R.sfx('lock', lockT);
+    R.done(13.3);
+  </script>
+</body>
+</html>

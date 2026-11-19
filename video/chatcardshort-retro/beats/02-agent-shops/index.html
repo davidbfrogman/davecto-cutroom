@@ -1,0 +1,87 @@
+<!doctype html>
+<!-- 02 2.90–9.7 "They're launching ChatGPT wallet, which will allow an AI agent to use your credit card online."
+     Agent.Shop (lime) above the head: a 3×2 shelf of products and a cart. "wallet" → ✣ Wallet:
+     Connected. From "AI agent" a pixel robot hops tile to tile on each word, grabbing a product
+     each time (rising blip run), the cart fills and the total races to $1,284.17. "online" →
+     Checkout is pressed (thunk) and it reads Order Placed ✓ (success). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>02 Agent shops</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #S .win__body { background: var(--win); display: grid; grid-template-columns: calc(var(--u) * 45) 1fr; grid-template-rows: calc(var(--u) * 4.6) calc(var(--u) * 27.6);
+                    gap: calc(var(--u) * 1.4) calc(var(--u) * 2); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6); }
+    .hdr { grid-column: 1; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .shelf { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, calc(var(--u) * 13.05)); gap: calc(var(--u) * 1.5); }
+    .tile { position: relative; background: var(--paper); border: var(--hair) solid var(--ink); display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: calc(var(--u) * .7); font: calc(var(--u) * 3.2)/1 var(--f-pixel); color: var(--ink); }
+    .tile .pr { color: var(--grey); font-size: calc(var(--u) * 2.8); }
+    .tile .got { position: absolute; left: 0; top: 0; visibility: hidden; font-size: calc(var(--u) * 2.6); padding: calc(var(--u) * .2) calc(var(--u) * .6) calc(var(--u) * .4); }
+    .bot { position: absolute; z-index: 5; visibility: hidden; }
+    .cart { grid-column: 2; grid-row: 1 / 3; display: flex; flex-direction: column; gap: calc(var(--u) * .45); font: calc(var(--u) * 2.9)/1 var(--f-pixel); }
+    .cart .ln { display: flex; justify-content: space-between; visibility: hidden; white-space: nowrap; }
+    .cart .tot { margin-top: auto; border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * 1); display: flex; justify-content: space-between; align-items: baseline; }
+    .cart .tot b { font-weight: 400; font-size: calc(var(--u) * 4.6); }
+    .btn { border: var(--hair) solid var(--ink); background: var(--paper); text-align: center; padding: calc(var(--u) * .7) 0 calc(var(--u) * .9); font: calc(var(--u) * 3.4)/1 var(--f-pixel); margin-top: calc(var(--u) * .5); }
+  </style>
+</head>
+<body data-world="lime">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 2.9;
+    const items = [['Blender', 49.99], ['Kayak', 389.0], ['Socks ×40', 61.2], ['Lamp', 34.5], ['Drone', 612.0], ['Toaster', 137.48]];
+    const parcel = R.pix(['.kkkkkk.', 'kppppppk', 'kkkkkkkk', 'kpnnnnpk', 'kppnnppk', 'kppnnppk', 'kppppppk', 'kkkkkkkk'], 0.55);
+    const bot = R.pix(['..k..k..', '..k..k..', 'kkkkkkkk', 'kppppppk', 'kpnppnpk', 'kppppppk', 'kpkkkkpk', 'kppppppk', 'kkkkkkkk', '.kk..kk.'], 0.85);
+    const money = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const S = R.win({ title: 'Agent.Shop', right: '$0.00', x: 6, y: 21, w: 78, h: 44,
+      body: `<div class="hdr"><span class="micro">Aisle 07</span><span class="chip-inv h" id="wal">✣ Wallet: Connected</span></div>
+        <div class="shelf" id="shelf">${items.map(([n, p], i) => `<div class="tile" id="t${i}"><span class="chip-inv got" id="g${i}">In Cart</span>${parcel}<span>${n}</span><span class="pr">${money(p)}</span></div>`).join('')}
+          <div class="bot" id="bot">${bot}</div></div>
+        <div class="cart"><span class="micro" id="cn">Cart (0)</span>
+          ${items.map(([n, p], i) => `<div class="ln" id="l${i}"><span>+ ${n}</span><span>${p.toFixed(2)}</span></div>`).join('')}
+          <div class="tot"><span>Total</span><b id="tot">$0.00</b></div>
+          <div class="btn" id="co">Checkout ▶▶▶</div></div>` });
+    S.id = 'S';
+    R.open(S, 3.1, { from: { x: 50, y: 80 } });
+    // "wallet"
+    R.show(R.$('#wal'), 4.06);
+    R.flash(R.$('#wal'), 4.06, 2);
+    R.sfx('pop', 4.06);
+    // The robot hops to a tile on each word and grabs it.
+    const grabs = [R.w('AI agent'), R.w('agent'), R.w('to use'), R.w('use your'), R.w('credit card', 5), R.w('card online', 5)];
+    const tile = i => [(i % 3) * 15.5 + 9.4, Math.floor(i / 3) * 14.55 - 3.4];   // bot spot in u inside the shelf
+    const bt = R.$('#bot'), title = S.querySelector('.win__bar .r');
+    R.show(bt, grabs[0] - 0.14);
+    let sum = 0;
+    grabs.forEach((t, i) => {
+      const [x, y] = tile(i);
+      R.tl.set(bt, { left: R.u(x), top: R.u(y - 1.5) }, R.T(t - 0.14));   // hop up…
+      R.tl.set(bt, { left: R.u(x), top: R.u(y) }, R.T(t - 0.07));         // …and land
+      R.tl.set(`#t${i}`, { backgroundColor: '#1E1E1E', color: '#A6C94B' }, R.T(t));
+      R.show(R.$(`#g${i}`), t);
+      R.show(R.$(`#l${i}`), t);
+      R.text(R.$('#cn'), t, `Cart (${i + 1})`);
+      R.count(R.$('#tot'), t, 0.2, sum, sum + items[i][1], money);
+      sum += items[i][1];
+      R.text(title, t + 0.2, money(sum));
+      R.sfx('blip', t, { freq: 500 * 2 ** (i * 3 / 16) });
+    });
+    R.$('#tot').textContent = '$0.00';   // R.count wrote its own start values at build time
+    // "online": checkout.
+    const on = R.w('online');
+    R.tl.set('#co', { backgroundColor: '#1E1E1E', color: '#A6C94B' }, R.T(on));
+    R.sfx('thunk', on);
+    R.text(R.$('#co'), on + 0.27, 'Order Placed ✓');
+    R.tl.set('#co', { backgroundColor: '#03AA5C', color: '#FEFEFE' }, R.T(on + 0.27));
+    R.sfx('success', on + 0.27);
+    R.hide(bt, on + 0.27);
+    R.done(9.7);
+  </script>
+</body>
+</html>

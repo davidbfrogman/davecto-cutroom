@@ -1,0 +1,75 @@
+<!doctype html>
+<!-- 12 54.90–61.40 "Give it the exact product, quantity, maximum price, what you expect shipping to be like,
+     and your preferred seller."
+     Prompt.Card (sky) above the head: a 40-column punch card. Each field is keypunched as it's
+     said, one column per frame on twos (type clicks), with the character printed along the top
+     and its real Hollerith holes punched below: USB-C CHARGER · QTY 1 · $15.00 · STANDARD · ACME.
+     A label lands under each field; the title counts Col nn/40. "seller" done → ✓ Prompt Ready
+     (success), the card flashes. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>12 Punch card</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PC .win__body { background: var(--win); padding: calc(var(--u) * 1) calc(var(--u) * .9); display: flex; flex-direction: column; gap: calc(var(--u) * .8); }
+    .card { --c: calc(var(--u) * 1.95); --r: calc(var(--u) * 1.45); position: relative; width: calc(var(--c) * 40); height: calc(var(--u) * 3.8 + var(--r) * 12 + var(--u) * .6);
+            background: var(--accent); clip-path: polygon(calc(var(--u) * 1.3) 0, 100% 0, 100% 100%, 0 100%, 0 calc(var(--u) * 1.8)); }
+    .card .pr { position: absolute; top: calc(var(--u) * .5); left: 0; display: flex; font: calc(var(--u) * 3.3)/1 var(--f-pixel); }
+    .card .pr i { width: var(--c); text-align: center; font-style: normal; visibility: hidden; }
+    .card .dg { position: absolute; left: 0; display: flex; font: calc(var(--u) * 1.15)/1 var(--f-mono); color: var(--cool); opacity: .55; }
+    .card .dg i { width: var(--c); height: var(--r); display: flex; align-items: center; justify-content: center; font-style: normal; }
+    .card .ho { position: absolute; width: calc(var(--u) * .95); height: calc(var(--r) * .78); background: var(--ink); visibility: hidden; }
+    .card .edge { position: absolute; left: 0; right: 0; top: calc(var(--u) * 3.8); border-top: var(--hair) dashed var(--cool); opacity: .5; }
+    .labs { position: relative; height: calc(var(--u) * 3.6); }
+    .labs span { position: absolute; top: 0; font-size: calc(var(--u) * 3); visibility: hidden; }
+  </style>
+</head>
+<body data-world="sky">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="7"></div>
+  </div>
+  <script>
+    R.START = 56.87;
+    const TEXT = 'USB-C CHARGER QTY 1 $15.00 STANDARD ACME';
+    // Hollerith: rows 12, 11, 0, 1…9 → indices 0…11.
+    const holes = ch => {
+      const c = ch.charCodeAt(0);
+      if (ch >= '0' && ch <= '9') return [ch === '0' ? 2 : 2 + (c - 48)];
+      if (ch >= 'A' && ch <= 'I') return [0, 2 + (c - 64)];
+      if (ch >= 'J' && ch <= 'R') return [1, 2 + (c - 73)];
+      if (ch >= 'S' && ch <= 'Z') return [2, 2 + (c - 81)];
+      return { '$': [1, 5, 10], '.': [0, 5, 10], '-': [1], '/': [2, 3] }[ch] || [];
+    };
+    const C = 1.95, RW = 1.45, TOP = 4.4;
+    const digits = [...Array(10)].map((_, d) => `<div class="dg" style="top:calc(var(--u) * ${TOP + (d + 2) * RW})">${('<i>' + d + '</i>').repeat(40)}</div>`).join('');
+    const hs = [...TEXT].flatMap((ch, col) => holes(ch).map(r => `<i class="ho" data-col="${col}" style="left:calc(var(--u) * ${col * C + (C - .95) / 2});top:calc(var(--u) * ${TOP + r * RW + RW * .11})"></i>`)).join('');
+    const zones = [['Product', 0, 13, 'exact product'], ['Qty', 14, 19, 'quantity'], ['Max $', 20, 26, 'maximum'], ['Shipping', 27, 35, 'expect'], ['Seller', 36, 40, 'preferred']];
+    const PC = R.win({ title: 'Prompt.Card', right: 'Col 00/40', x: 4, y: 20.5, w: 82, h: 35.5,
+      body: `<div class="card" id="card"><div class="pr">${[...TEXT].map((ch, i) => `<i id="p${i}">${ch === ' ' ? '&nbsp;' : ch}</i>`).join('')}</div><div class="edge"></div>${digits}${hs}</div>
+        <div class="labs">${zones.map(([n, a], i) => `<span class="chip-inv" id="z${i}" style="left:calc(var(--u) * ${Math.min(a * C, 78 - n.length * 1.6 - 2)})">${n}</span>`).join('')}</div>` });
+    PC.id = 'PC';
+    R.open(PC, R.w('Give it'), { from: { x: 50, y: 66 } });
+    const title = PC.querySelector('.win__bar .r');
+    zones.forEach(([n, a, b, word], i) => {
+      const t0 = R.w(word);
+      R.show(R.$(`#z${i}`), t0);
+      for (let col = a; col < b; col++) {
+        const t = t0 + (col - a) * R.F;
+        R.show(R.$(`#p${col}`), t);
+        PC.querySelectorAll(`.ho[data-col="${col}"]`).forEach(h => R.show(h, t));
+        R.text(title, t, `Col ${String(col + 1).padStart(2, '0')}/40`);
+        R.sfx('type', t);
+      }
+    });
+    const done = R.w('seller') + 0.1;
+    R.text(title, done, '✓ Prompt Ready');
+    R.flash(R.$('#card'), done, 2);
+    R.sfx('success', done);
+    R.done(R.w('way you'));
+  </script>
+</body>
+</html>

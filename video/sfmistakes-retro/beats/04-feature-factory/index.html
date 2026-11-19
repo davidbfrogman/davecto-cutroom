@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- 04 12.03–14.60 "One, they'll spend 20 hours building another feature"
+     "Mistake 01" label lands on "One"; Build.log (orange) above the head: the hour meter fills 20
+     cells and counts 00→20 h on "20 hours"; the feature list streams new features while "building",
+     and the last one lands on "another feature": feature_048, 0 users. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>04-feature-factory</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .lab { font: calc(var(--u) * 6.4)/1 var(--f-pixel); padding: calc(var(--u) * .4) calc(var(--u) * 1.6) calc(var(--u) * .9); }
+    #BL .win__body { background: var(--paper); display: flex; gap: calc(var(--u) * 2.4); padding: calc(var(--u) * 1.6); }
+    .hrs { flex: none; width: calc(var(--u) * 27); display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    #hr { font: calc(var(--u) * 13)/.8 var(--f-pixel); }
+    .meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: calc(var(--u) * .5); }
+    .meter i { height: calc(var(--u) * 2.6); border: var(--hair) solid var(--ink); }
+    .list { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(var(--u) * .9); font: calc(var(--u) * 3.6)/1 var(--f-pixel); white-space: nowrap; overflow: hidden; }
+    .list span { display: block; }
+    .list span:first-child { color: var(--grey); }
+    #last { background: var(--accent); outline: var(--hair) solid var(--ink); padding: calc(var(--u) * .3) calc(var(--u) * .6) calc(var(--u) * .5); }
+    #last em { font-style: normal; background: var(--ink); color: var(--accent); padding: 0 calc(var(--u) * .6); margin-left: calc(var(--u) * 1); }
+  </style>
+</head>
+<body data-world="orange">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 12.03;
+    const one = R.w('one');
+    const LB = R.box('chip-inv lab h', { x: 6, y: 21, layer: 'label', html: 'Mistake 01 / 03' });
+    R.show(LB, one); R.flash(LB, one, 2); R.sfx('pop', one, { layer: 'label' });
+
+    const BL = R.win({ title: 'Build.log', right: '▶ building', x: 6, y: 30, w: 76, h: 37,
+      body: `<div class="hrs"><span>Time spent</span><div><span id="hr">00</span> hrs</div><div class="meter">${'<i></i>'.repeat(20)}</div><span id="blk">▮ compiling</span></div>
+        <div class="list">${'<span></span>'.repeat(6)}</div>` });
+    BL.id = 'BL';
+    R.open(BL, R.w('spend'), { from: { x: 54, y: 72 } });
+    R.blink(R.$('#blk'), R.w('spend'), 14.6, 0.4);
+
+    // "20 hours": the meter fills, a cell per step.
+    const a = R.w('20'), b = R.we('hours');
+    R.count(R.$('#hr'), a, b - a, 0, 20, v => String(Math.round(v)).padStart(2, '0'));
+    R.$$('.meter i').forEach((c, i) => R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(a + (b - a) * (i + 1) / 20)));
+    R.sfx('sweep', a);
+
+    // "building another feature": the list streams, newest at the bottom.
+    const F = ['dark mode', 'AI button', 'export to PDF', 'confetti on save', 'emoji picker', 'settings v3',
+      'onboarding tour', 'custom themes', 'AI button v2', 'gantt chart', 'API for the API', 'dark mode v2',
+      'sound effects', 'retina favicon', 'widgets'];
+    const rows = R.$$('.list span'), s0 = R.w('spend'), last = R.w('another');
+    R.every(s0, 14.6, t => {
+      const n = Math.min(F.length, Math.floor((t - s0) * 9));
+      const lines = F.slice(0, n).map((f, i) => `+ feature_${String(33 + i).padStart(3, '0')} ${f}`);
+      if (t >= last) lines.push('<span id="last">+ feature_048 another one<em>0 users</em></span>');
+      const vis = lines.slice(-6);
+      rows.forEach((r, i) => { r.innerHTML = vis[i] || ''; });
+    });
+    R.sfx('error', R.w('feature', last));
+    R.done(14.6);
+  </script>
+</body>
+</html>

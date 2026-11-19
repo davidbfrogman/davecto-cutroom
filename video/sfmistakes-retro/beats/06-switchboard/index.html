@@ -1,0 +1,73 @@
+<!doctype html>
+<!-- 06 19.72–26.50 "Make 20 cold calls a day so you can find your customers and their problems and figure
+     out how they're solving it today."
+     Switchboard.20 (yellow): 20 jacks with lamps; they light one by one as calls connect on
+     "20 cold calls a day" (rising blips) while the counter runs 00/20. On "customers" four lamps go
+     green: those are customers. Problems.txt opens beside it on "problems" and lists what they said,
+     one line per phrase; "solving it today" → "Today: a spreadsheet + sticky notes". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>06-switchboard</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #SW .win__body { background: var(--win-2); display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1.6); }
+    .jacks { display: grid; grid-template-columns: repeat(5, 1fr); gap: calc(var(--u) * .9) calc(var(--u) * 1); }
+    .jk { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .6); }
+    .jk .lamp { width: calc(var(--u) * 3.2); height: calc(var(--u) * 1.6); border: var(--hair) solid var(--ink); background: var(--paper); }
+    .jk .hole { width: calc(var(--u) * 3); height: calc(var(--u) * 3); border-radius: 0; background: var(--ink); outline: var(--hair) solid var(--ink); outline-offset: calc(var(--u) * .4);
+                box-shadow: inset 0 0 0 calc(var(--u) * .9) var(--win); }
+    .jk span { font: calc(var(--u) * 2.4)/1 var(--f-pixel); }
+    .st { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); margin-top: auto; }
+    #cc { font-size: calc(var(--u) * 5); }
+    #PB .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.2); font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    #PB .pr { border-bottom: var(--hair) dotted var(--ink-55); padding-bottom: calc(var(--u) * .9); }
+    #PB .today { display: block; background: var(--ink); color: var(--paper); padding: calc(var(--u) * .8) calc(var(--u) * 1) calc(var(--u) * 1); font-size: calc(var(--u) * 3.6); line-height: 1; }
+    #PB .today b { display: block; font-weight: normal; color: var(--accent); margin-bottom: calc(var(--u) * .6); }
+    #PB .win__body > div { visibility: hidden; }
+    #PB .today { margin-top: auto; }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 19.72;
+    const SW = R.win({ title: 'Switchboard.20', right: 'Day 1', x: 5, y: 21, w: 46, h: 49,
+      body: `<div class="jacks">${[...Array(20)].map((_, i) => `<div class="jk"><i class="lamp"></i><i class="hole"></i><span>${String(i + 1).padStart(2, '0')}</span></div>`).join('')}</div>
+        <div class="st"><span>Calls</span><span id="cc">00/20</span></div>` });
+    SW.id = 'SW';
+    R.open(SW, R.w('make'), { from: { x: 52, y: 70 } });
+
+    // 20 calls, one lamp each, from "20" to "find".
+    const a = R.w('20'), b = R.w('find'), lamps = R.$$('.lamp');
+    lamps.forEach((l, i) => {
+      const t = a + (b - a) * i / 19;
+      R.tl.set(l, { backgroundColor: 'var(--accent)' }, R.T(t));
+      R.text(R.$('#cc'), t, `${String(i + 1).padStart(2, '0')}/20`);
+      if (i % 2 === 0) R.sfx('blip', t, { freq: 500 * 2 ** (i / 16), vol: -5 });
+    });
+
+    // "customers": four of them are the real thing.
+    const cu = R.w('customers');
+    [2, 7, 13, 18].forEach(i => R.tl.set(lamps[i], { backgroundColor: 'var(--green)' }, R.T(cu)));
+    R.text(SW.querySelector('.win__bar .r'), cu, '4 customers');
+    R.flash(SW.querySelector('.win__bar'), cu, 2);
+    R.sfx('success', cu);
+
+    // Problems.txt: what they said.
+    const PB = R.win({ layer: 'notes', title: 'Problems.txt', right: '', x: 54, y: 25, w: 31, h: 50,
+      body: `<div class="pr" id="p0">#03 invoices eat my Fridays</div><div class="pr" id="p1">#08 chasing late payers</div><div class="pr" id="p2">#14 can't see who owes what</div>
+        <div id="p3" class="today"><b>Today they use:</b>a spreadsheet + sticky notes</div>` });
+    PB.id = 'PB';
+    R.open(PB, R.w('problems'), { from: { x: 40, y: 40 } });
+    [['p0', 'problems'], ['p1', 'figure'], ['p2', 'how']].forEach(([id, w]) => { R.show(R.$('#' + id), R.w(w)); R.sfx('tick', R.w(w)); });
+    R.show(R.$('#p3'), R.w('solving')); R.sfx('pop', R.w('solving'));
+    R.done(26.5);
+  </script>
+</body>
+</html>

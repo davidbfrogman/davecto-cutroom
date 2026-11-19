@@ -1,0 +1,111 @@
+<!doctype html>
+<!-- 10 51.80–58.60 "I put together a checklist so you can steal their process. Comment checklist below and
+     I'll send it to you for free and follow along for more tips on building with AI."
+     Above the head (green), two windows. steal_this.txt is a 10-item checklist and only 3 are readable:
+     the three steps drop in on "put together" (ticks), the title flashes on "checklist", and the boxes
+     tick ✓ on "steal", "their", "process" (ticks). Then the tease: "+7 MORE · full checklist" and
+     items 04–10 deal in below as redacted bars with padlocks (quiet ticks, lock), the counter reads
+     3 of 10 and the scrollbar thumb shows you're only seeing the top of a long page. On "checklist"
+     (the second one) the locked rows flash and the last cell reads ▼ comment.
+     Pager (own layer) beeps in on "comment" (notify): COMMENT "CHECKLIST" ▼ BELOW ▼ scrolls; on "send it
+     to you" SENDING with a filling bar (blips), on "free" $0.00 · ALL 10 (pop), then FULL LIST: 10 ITEMS
+     blinks to the end. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>10-checklist</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #CK .win__body { background: var(--paper); display: grid; grid-template-columns: 1fr calc(var(--u) * 2.4); gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1) calc(var(--u) * 1.2) calc(var(--u) * 1) calc(var(--u) * 2); }
+    .pgc { display: flex; flex-direction: column; gap: calc(var(--u) * .8); min-width: 0; }
+    .it { display: flex; align-items: center; gap: calc(var(--u) * 1.6); font: calc(var(--u) * 3.6)/1 var(--f-pixel); visibility: hidden; }
+    .bx { flex: none; width: calc(var(--u) * 3.6); height: calc(var(--u) * 3.6); border: var(--hair) solid var(--ink); display: flex; align-items: center; justify-content: center; font-size: calc(var(--u) * 4.2); }
+    .bx span { visibility: hidden; }
+    .it em, .rd em { font-style: normal; color: var(--grey); }
+    .mr { display: flex; justify-content: space-between; align-items: center; border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * .9); font: calc(var(--u) * 3.3)/1 var(--f-pixel); visibility: hidden; }
+    .mr .chip-inv { font-size: calc(var(--u) * 3.4); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: calc(var(--u) * .8) calc(var(--u) * 2); }
+    .rd { display: flex; align-items: center; gap: calc(var(--u) * .9); font: calc(var(--u) * 3)/1 var(--f-pixel); visibility: hidden; height: calc(var(--u) * 3.2); }
+    .rd b { flex: none; height: calc(var(--u) * 2.4); background: var(--ink); }
+    .rd .pix { flex: none; margin-left: auto; }
+    #un { visibility: hidden; font-size: calc(var(--u) * 2.9); align-self: center; white-space: nowrap; }
+    .sb { border: var(--hair) solid var(--ink); position: relative; }
+    #th { position: absolute; left: 0; right: 0; top: 0; height: 30%; background: var(--ink); }
+    #PG .win__body { background: var(--win-2); display: flex; align-items: center; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * .9) calc(var(--u) * 1.6); }
+    .lcd { flex: 1; height: 100%; background: var(--accent); border: var(--hair) solid var(--ink); display: flex; align-items: center; padding: 0 calc(var(--u) * 1.4); overflow: hidden;
+           font: calc(var(--u) * 5.2)/1 var(--f-pixel); white-space: pre; }
+    .lcd .seg { flex: 1; margin-left: calc(var(--u) * 1.4); }
+    .lcd .seg i { height: calc(var(--u) * 3); border-color: var(--ink); }
+    .side { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .8); font: calc(var(--u) * 2.8)/1 var(--f-pixel); }
+    #led { width: calc(var(--u) * 2.2); height: calc(var(--u) * 2.2); background: var(--accent); border: var(--hair) solid var(--ink); }
+    #l2, #l3, #l4 { display: none; }
+  </style>
+</head>
+<body data-world="green">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 51.80;
+    const END = 58.60, W = p => R.w(p, R.START - 0.1);
+    R.seed(31);
+    const ITEMS = [['01', 'Test the whole product'], ['02', "Don't break anything else"], ['03', 'Second agent reviews']];
+    const lock = R.pix(['.kkk.', 'k...k', 'kkkkk', 'kpkpk', 'kkkkk'], .5);
+    const MORE = [4, 5, 6, 7, 8, 9, 10].map(n => `<div class="rd" id="r${n}"><em>${String(n).padStart(2, '0')}</em><b style="width:calc(var(--u) * ${(8 + R.rnd() * 8).toFixed(1)})"></b>${lock}</div>`).join('');
+    const CK = R.win({ title: 'steal_this.txt', right: '<span id="ct">0 of 10</span>', x: 4, y: 20.5, w: 82, h: 42,
+      body: `<div class="pgc">${ITEMS.map(([n, s], i) => `<div class="it" id="i${i}"><span class="bx"><span>✓</span></span><em>${n}</em><span>${s}</span></div>`).join('')}
+          <div class="mr" id="mr"><span class="chip-inv">+7 MORE</span><span>on the full checklist</span></div>
+          <div class="grid">${MORE}<span class="chip chip--world" id="un">▼ comment</span></div></div>
+        <div class="sb"><i id="th"></i></div>` });
+    CK.id = 'CK';
+    R.open(CK, Math.max(W('i put'), R.START + 4 * R.F));      // room for the zoom trail inside the beat
+    const tg = W('together');
+    ITEMS.forEach((_, i) => { const t = tg + i * 3 * R.F; R.show(R.$('#i' + i), t); R.sfx('tick', t, { vol: -4 }); });
+    R.flash(CK.querySelector('.win__bar'), W('checklist'), 1);
+    const ticks = [W('steal'), W('their'), W('process')];
+    ticks.forEach((t, i) => {
+      R.show(R.$(`#i${i} .bx span`), t);
+      R.tl.set(R.$(`#i${i} .bx`), { backgroundColor: 'var(--accent)' }, R.T(t));
+      R.text(R.$('#ct'), t, `${i + 1} of 10`);
+      R.sfx('tick', t);
+    });
+
+    // the tease: seven more, locked
+    const tz = R.we('process') + 0.05;
+    R.show(R.$('#mr'), tz); R.sfx('pop', tz);
+    [4, 5, 6, 7, 8, 9, 10].forEach((n, i) => { const t = tz + (i + 1) * R.F; R.show(R.$('#r' + n), t); if (i % 2 === 0) R.sfx('tick', t, { vol: -8 }); });
+    const lk = tz + 8 * R.F;
+    R.sfx('lock', lk);
+    R.text(R.$('#ct'), lk, '3 of 10 · 7 locked');
+    // the scrollbar nudges down and back: there's a whole page under this
+    const th = R.$('#th');
+    R.every(lk, END, t => { const k = Math.floor((t - lk) * 7.5) % 16; th.style.top = `${[0, 4, 8, 12, 16, 20, 16, 12, 8, 4, 0, 0, 0, 0, 0, 0][k]}%`; });
+    const ck2 = W('checklist', W('comment'));
+    R.$$('.rd b').forEach(b => R.flash(b, ck2, 2));
+    R.show(R.$('#un'), ck2); R.flash(R.$('#un'), ck2 + 4 * R.F, 1);
+
+    // Pager
+    const PG = R.win({ title: 'Pager', right: 'ch 1', layer: 'pager', x: 4, y: 64, w: 82, h: 14.5,
+      body: `<div class="lcd"><span id="l1"></span><span id="l2">SENDING</span><span id="l3">$0.00 · ALL 10</span><span id="l4">FULL LIST: 10 ITEMS</span><div id="sg" style="display:none;flex:1">${R.seg(8)}</div></div>
+        <div class="side"><i id="led"></i><span>MSG</span></div>` });
+    PG.id = 'PG';
+    const cm = W('comment'), se = W('send'), fr = W('free'), fo = W('follow');
+    R.open(PG, cm, { sfx: 'notify' });
+    const MQ = 'COMMENT "CHECKLIST"  ▼ BELOW ▼     ', l1 = R.$('#l1');
+    R.every(cm, se, t => { const k = Math.floor((t - cm) * 15) % MQ.length; l1.textContent = (MQ + MQ).slice(k, k + 22); });
+    R.blink(R.$('#led'), cm, END, 0.4);
+    const sh = (el, t, on) => R.tl.set(R.$(el), { display: on }, R.T(t));
+    sh('#l1', se, 'none'); sh('#l2', se, 'inline'); sh('#sg', se, 'flex');
+    const sc = PG.querySelectorAll('.lcd .seg i');
+    sc.forEach((c, i) => { const t = se + (fr - se) * i / 7; R.tl.set(c, { backgroundColor: 'var(--ink)' }, R.T(t)); if (i % 2 === 0) R.sfx('blip', t, { freq: 500 * 2 ** (i / 16), vol: -7, layer: 'pager' }); });
+    sh('#l2', fr, 'none'); sh('#sg', fr, 'none'); sh('#l3', fr, 'inline');
+    R.flash(R.$('.lcd'), fr, 1); R.sfx('pop', fr, { layer: 'pager' });
+    sh('#l3', fo, 'none'); sh('#l4', fo, 'inline');
+    R.blink(R.$('#l4'), fo, END, 0.6);
+    R.done(END);
+  </script>
+</body>
+</html>
