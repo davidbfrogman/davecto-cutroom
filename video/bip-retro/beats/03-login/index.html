@@ -44,7 +44,7 @@
 
     const st = Math.max(W('by the way'), R.START + 4 * R.F) + 0.03;
     R.type(R.$('#c1'), st, 40);
-    R.show(R.$('#o1'), W('dave')); R.sfx('pop', W('dave'), { vol: -3 });
+    R.show(R.$('#o1'), W('dave')); R.sfx('bell', W('dave'), { vol: -4 });
     R.type(R.$('#c2'), W('dave') + 0.08, 40);
     const ro = R.we('cto') + 0.02;
     R.show(R.$('#o2'), ro); R.sfx('pop', ro, { vol: -3 });
@@ -53,7 +53,7 @@
     const bu = W('build'), ai = W('ai', bu);
     R.show(R.$('#bl'), bu);
     TM.querySelectorAll('#bl .seg i').forEach((c, i) => { const t = bu + (ai - bu) * i / 13; R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(t)); if (i % 3 === 0) R.sfx('tick', t, { vol: -7 }); });
-    R.text(R.$('#ok'), ai, '✓ ready'); R.sfx('success', ai, { vol: -2 });
+    R.text(R.$('#ok'), ai, '✓ ready'); R.sfx('sunset', ai, { vol: -3 });
     R.done(END);
   </script>
 </body>

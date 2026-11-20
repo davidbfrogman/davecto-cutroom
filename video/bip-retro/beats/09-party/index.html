@@ -49,13 +49,13 @@
         <div class="em" id="em"><span>email:</span><span class="fld"><span class="type" id="ad">sam@usesit.co</span></span><span class="chip chip--green" id="ok">✓ list: 1</span></div>` });
     IN.id = 'IN';
     R.open(IN, Math.max(W('and three'), R.START + 4 * R.F));
-    R.show(R.$('#tp'), W('three')); R.sfx('pop', W('three'), { vol: -3 });
+    R.show(R.$('#tp'), W('three')); R.sfx('stab', W('three'), { vol: -3 });
     const sy = W('says');
-    R.show(R.$('#dm'), sy); R.sfx('notify', sy, { vol: -3 });
+    R.show(R.$('#dm'), sy); R.sfx('bell', sy, { vol: -4 });
     const gt = W('get their');
     R.show(R.$('#em'), gt); R.type(R.$('#ad'), gt + 0.05, 36);
     const ok = R.we('email') + 0.05;
-    R.show(R.$('#ok'), ok); R.sfx('success', ok, { vol: -3 });
+    R.show(R.$('#ok'), ok); R.sfx('coin', ok, { vol: -3 });
 
     // Party.exe
     const balloon = c => R.pix(['.kkk.', `k${c}${c}${c}k`, `k${c}p${c}k`, `k${c}${c}${c}k`, '.kkk.', '..k..'], .9);
@@ -75,9 +75,9 @@
       bls.forEach((b, i) => { b.style.marginBottom = R.u(((f >> 1) + i) % 4 < 2 ? 0 : .8); });
       ds.forEach(d => { d.style.display = (f % 4 < 2) === d.classList.contains('a') ? 'inline-block' : 'none'; });
     });
-    R.sfx('pop', W('party'), { vol: -5, layer: 'party' });
+    R.sfx('victory', W('party'), { vol: -6, layer: 'party' });
     R.tl.set(R.$('#iv'), { backgroundColor: 'var(--warm)' }, R.T(wo));
-    R.flash(R.$('#iv'), an, 3); R.sfx('error', an, { layer: 'party', vol: -3 });
+    R.flash(R.$('#iv'), an, 3); R.sfx('gameover', an, { layer: 'party', vol: -3 });
     R.blink(R.$('.bn'), an, END, 0.5);
     R.done(END);
   </script>

@@ -2,101 +2,208 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>retro preview</title>
+<title>Retro preview</title>
+<!-- retro preview: the video with every beat running live on top, sound effects mixed in the browser
+     with the export's synth, and controls that write straight to retro.json (via lib/preview.mjs).
+     Layout: header (global toggles) · stage (click an animation to select it, drag to move) ·
+     timeline (scrub, pick a beat) · side panel (beat list + inspector for the selected beat). -->
 <style>
-  :root { --ink: #1E1E1E; --paper: #FEFEFE; --pink: #F386A1; --grey: #858585; --win: #DEDEDE; }
+  :root {
+    --bg: #0f0f11; --panel: #17171a; --panel-2: #1e1e22; --hover: #25252a; --line: #2a2a30; --line-2: #393940;
+    --text: #ececef; --muted: #a0a0a9; --faint: #6c6c75; --accent: #f386a1; --sel: #6ea8fe; --warn: #f0b35a;
+    --r: 8px;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: #2a2a2a; color: var(--paper); font: 13px/1.35 ui-monospace, Menlo, monospace; display: flex; height: 100vh; overflow: hidden; }
-  #left { flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; }
-  #stage { position: relative; background: #000; overflow: hidden; }
-  #stage video, #stage iframe, #grab, #zone { position: absolute; left: 0; top: 0; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--text); font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+         display: grid; grid-template-rows: 52px minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr) 380px; height: 100vh; overflow: hidden; }
+  button { font: inherit; color: inherit; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* header */
+  header { grid-column: 1 / 3; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { font-size: 14px; font-weight: 600; margin: 0 8px 0 0; }
+  #status { color: var(--muted); margin-left: auto; margin-right: 8px; font-size: 12px; transition: opacity .3s; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line-2);
+          background: transparent; color: var(--muted); cursor: pointer; user-select: none; }
+  .pill:hover { background: var(--hover); }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+  .pill.on { color: var(--text); background: var(--panel-2); }
+  .pill.on .dot { background: var(--accent); }
+
+  /* stage */
+  #stageWrap { grid-row: 2; grid-column: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 16px; }
+  #stage { position: relative; background: #000; border-radius: 6px; overflow: hidden; box-shadow: 0 12px 40px rgba(0, 0, 0, .45); }
+  #stage video, #stage iframe, #grab, #zone, #selBox { position: absolute; left: 0; top: 0; }
   #stage iframe { border: 0; transform-origin: 0 0; pointer-events: none; visibility: hidden; background: transparent; }
-  #zone { border: 2px dashed #ff4d4d; pointer-events: none; display: none; }
-  #grab { inset: 0; width: 100%; height: 100%; cursor: grab; }
-  /* Snap guides: dashed while on, solid when a layer is snapped to them. */
+  #grab { inset: 0; width: 100%; height: 100%; cursor: default; }
+  #grab.can { cursor: grab; } #grab.dragging { cursor: grabbing; }
+  #zone { border: 2px dashed #ff5a5a; pointer-events: none; display: none; }
+  #selBox { border: 1.5px solid var(--sel); border-radius: 2px; pointer-events: none; display: none; box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
+  #selBox span { position: absolute; left: -1.5px; bottom: 100%; margin-bottom: 4px; background: var(--sel); color: #0b1424; font-size: 11px; font-weight: 600;
+                 padding: 1px 7px; border-radius: 4px; white-space: nowrap; }
   .guide { position: absolute; pointer-events: none; display: none; }
-  #guideV { top: 0; bottom: 0; left: 50%; border-left: 1px dashed rgba(243, 134, 161, .75); transform: translateX(-.5px); }
-  #guideH { left: 0; right: 0; top: 50%; border-top: 1px dashed rgba(243, 134, 161, .75); transform: translateY(-.5px); }
-  #guideV.hit { border-left: 2px solid var(--pink); transform: translateX(-1px); }
-  #guideH.hit { border-top: 2px solid var(--pink); transform: translateY(-1px); }
-  #grab.off { pointer-events: none; }
-  #bar { display: flex; gap: 8px; align-items: center; width: 100%; }
-  #scrub { flex: 1; accent-color: var(--pink); }
-  button { font: inherit; background: var(--paper); color: var(--ink); border: 0; padding: 3px 9px; cursor: pointer; }
-  button.on { background: var(--pink); }
-  #right { flex: 1; overflow: auto; padding: 12px 16px; border-left: 2px solid #111; }
-  h1 { font-size: 14px; margin: 0 0 4px; color: var(--pink); font-weight: normal; }
-  .hint { color: #aaa; margin: 0 0 10px; }
-  .beat { border-top: 1px solid #444; padding: 7px 0; }
-  .beat.now { background: #3a3036; }
-  .beat.isoff .name { color: var(--grey); text-decoration: line-through; }
-  .row { display: flex; gap: 10px; align-items: center; }
-  .name { cursor: pointer; flex: 1; }
-  .time { color: #aaa; }
-  .layers { margin: 4px 0 0 24px; display: flex; gap: 6px; flex-wrap: wrap; }
-  .layer { border: 1px solid #777; padding: 1px 7px; cursor: pointer; }
-  .layer.sel { background: var(--pink); color: var(--ink); border-color: var(--pink); }
-  .layer small { color: #aaa; } .layer.sel small { color: var(--ink); }
-  .eye { cursor: pointer; margin-right: 4px; opacity: .9; }
-  .layer.hid { border-style: dashed; color: var(--grey); text-decoration: line-through; }
-  .layer.hid .eye { opacity: .35; text-decoration: none; display: inline-block; }
-  label { cursor: pointer; user-select: none; }
-  #status { color: #aaa; min-height: 1.4em; }
-  .timing { margin: 6px 0 0 24px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .timing button { padding: 1px 7px; }
-  .timing .seg2 button { background: #555; color: var(--paper); }
-  .timing .seg2 button.on { background: var(--pink); color: var(--ink); }
-  .timing small { color: #aaa; }
-  .tmark { color: var(--pink); }
+  #guideV { top: 0; bottom: 0; left: 50%; border-left: 1px dashed rgba(243, 134, 161, .7); }
+  #guideH { left: 0; right: 0; top: 50%; border-top: 1px dashed rgba(243, 134, 161, .7); }
+  #guideV.hit { border-left: 2px solid var(--accent); } #guideH.hit { border-top: 2px solid var(--accent); }
+
+  /* transport + timeline */
+  footer { grid-row: 3; grid-column: 1; padding: 10px 16px 14px; border-top: 1px solid var(--line); background: var(--panel); }
+  .transport { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  #play { width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--text); color: #111; cursor: pointer; font-size: 13px; display: grid; place-items: center; }
+  #play:hover { background: #fff; }
+  #tc { font-size: 13px; color: var(--muted); }
+  #tc b { color: var(--text); font-weight: 600; }
+  .keys { margin-left: auto; color: var(--faint); font-size: 11.5px; }
+  .keys kbd { font: 11px ui-monospace, Menlo, monospace; color: var(--muted); border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; }
+  #track { position: relative; height: 54px; border-radius: 6px; background: var(--panel-2); cursor: pointer; user-select: none; overflow: hidden; }
+  .tick { position: absolute; top: 0; height: 100%; border-left: 1px solid var(--line); }
+  .tick span { position: absolute; top: 2px; left: 4px; font-size: 10px; color: var(--faint); }
+  .blk { position: absolute; top: 18px; height: 30px; border-radius: 5px; background: #34343c; border: 1px solid #44444d; padding: 0 6px;
+         font-size: 11px; color: var(--muted); display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+  .blk.now { background: #3f3f48; color: var(--text); }
+  .blk.sel { border: 1.5px solid var(--accent); color: var(--text); }
+  .blk.off { background: repeating-linear-gradient(135deg, #26262b 0 6px, #2c2c32 6px 12px); color: var(--faint); }
+  .ghost { position: absolute; top: 18px; height: 30px; border-radius: 5px; border: 1px dashed #55555e; pointer-events: none; }
+  #head { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none; }
+
+  /* side panel */
+  aside { grid-row: 2 / 4; grid-column: 2; border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
+  .sec-title { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin: 0 0 8px; }
+  #list { flex: 0 1 auto; max-height: 38%; overflow: auto; padding: 14px 10px 10px; border-bottom: 1px solid var(--line); }
+  #list .sec-title { padding: 0 6px; }
+  .brow { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 6px; cursor: pointer; }
+  .brow:hover { background: var(--hover); }
+  .brow.sel { background: var(--panel-2); box-shadow: inset 2px 0 0 var(--accent); }
+  .brow.now .bname::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 7px; vertical-align: 1px; }
+  .brow.off .bname { color: var(--faint); }
+  .bname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btime { color: var(--faint); font-size: 12px; }
+  .badge { font-size: 11px; color: var(--warn); }
+  #insp { flex: 1; overflow: auto; padding: 16px; }
+  .empty { color: var(--faint); text-align: center; margin-top: 40px; }
+  .ihead { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+  .ihead h2 { font-size: 16px; font-weight: 600; margin: 0; }
+  .ihead .sub { color: var(--muted); font-size: 12px; }
+  .ihead .jump { margin-left: auto; }
+  .card { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; margin-bottom: 12px; }
+  .line { display: flex; align-items: center; gap: 10px; min-height: 30px; }
+  .line + .line { border-top: 1px solid var(--line); }
+  .line .lab { flex: 1; }
+  .hint { color: var(--faint); font-size: 12px; margin: 6px 0 0; }
+
+  /* controls */
+  .sw { position: relative; width: 32px; height: 18px; border-radius: 999px; background: #3a3a42; border: 0; cursor: pointer; flex: none; padding: 0; transition: background .15s; }
+  .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #d4d4da; transition: left .15s; }
+  .sw.on { background: var(--accent); } .sw.on::after { left: 16px; background: #fff; }
+  .btn { background: var(--hover); border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #2e2e35; }
+  .btn.ghostb { background: transparent; border-color: transparent; color: var(--muted); }
+  .btn.ghostb:hover { background: var(--hover); color: var(--text); }
+  .btn.sm { padding: 2px 8px; font-size: 12px; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .seg { display: inline-flex; background: var(--bg); border: 1px solid var(--line-2); border-radius: 7px; padding: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--muted); padding: 4px 14px; border-radius: 5px; cursor: pointer; }
+  .seg button.on { background: var(--hover); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .anim { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+  .anim:hover { background: var(--hover); }
+  .anim.sel { border-color: var(--sel); background: rgba(110, 168, 254, .08); }
+  .anim.hid .aname { color: var(--faint); text-decoration: line-through; }
+  .aname { flex: 1; }
+  .apos { color: var(--faint); font-size: 12px; }
+  .eye { width: 26px; height: 24px; border: 0; border-radius: 5px; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--muted); padding: 0; }
+  .eye:hover { background: #33333a; color: var(--text); }
+  .eye svg { width: 16px; height: 16px; pointer-events: none; }
+  .trow { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 8px; margin-top: 10px; }
+  .tctl { display: flex; align-items: center; gap: 4px; }
+  .tin { width: 74px; background: var(--bg); border: 1px solid var(--line-2); border-radius: 6px; color: var(--text); padding: 4px 8px; font: inherit; font-variant-numeric: tabular-nums; text-align: right; }
+  .tin:focus { outline: none; border-color: var(--sel); }
+  .tsum { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip { font-size: 11.5px; color: var(--muted); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; }
+  .chip.hl { color: var(--warn); border-color: #5a4a2c; }
+  .busy { color: var(--muted); font-size: 12px; }
 </style>
 </head>
 <body>
-<div id="left">
-  <div id="stage"><video id="v" src="/video.mp4" preload="auto" playsinline></video><div id="zone"></div><div id="guideV" class="guide"></div><div id="guideH" class="guide"></div><div id="grab" class="off"></div></div>
-  <div id="bar">
-    <button id="play">▶ Play</button>
-    <input id="scrub" type="range" min="0" step="0.001" value="0">
-    <span id="tc">0.00</span>
+<header>
+  <h1>Retro preview</h1>
+  <button class="pill" id="pSfx" title="Hear the sound effects while you play"><span class="dot"></span>Sound effects</button>
+  <button class="pill" id="pZone" title="Show the face no-go zone (red dashes)"><span class="dot"></span>Face zone</button>
+  <button class="pill" id="pSnapV" title="While dragging, pull an animation's centre onto the vertical centre line (hold ⌥ to drag past)"><span class="dot"></span>Snap centre</button>
+  <button class="pill" id="pSnapH" title="Same for the horizontal middle line"><span class="dot"></span>Snap middle</button>
+  <span id="status"></span>
+</header>
+
+<div id="stageWrap">
+  <div id="stage">
+    <video id="v" src="/video.mp4" preload="auto" playsinline></video>
+    <div id="zone"></div><div id="guideV" class="guide"></div><div id="guideH" class="guide"></div>
+    <div id="selBox"><span></span></div>
+    <div id="grab"></div>
   </div>
 </div>
-<div id="right">
-  <h1>retro preview</h1>
-  <p class="hint">Space play/pause · click a beat to jump · tick to turn it on/off (its sounds go with it) · click a layer, then drag on the video or use the arrow keys (shift = 5u) to move it (tick snap to centre to line it up dead centre) · <b>r</b> resets the layer · 👁 hides one animation (and its sounds) · timing, under each beat: <b>stretch</b> plays the whole animation between new start/end points (sounds move with it), <b>cut</b> trims it at normal speed. Scrub to a spot and hit <b>start here</b> / <b>end here</b>, or nudge with ‹ ›. Changes save to retro.json; run <code>retro render</code> to export.</p>
-  <div class="row" style="gap:16px;margin-bottom:8px">
-    <label><input type="checkbox" id="sfxOn" checked> sound effects</label>
-    <label><input type="checkbox" id="zoneOn"> face no-go zone</label>
+
+<footer>
+  <div class="transport">
+    <button id="play" title="Play / pause (Space)">▶</button>
+    <span id="tc" class="num"><b>0.00</b> / 0.00</span>
+    <span class="keys"><kbd>Space</kbd> play · click an animation on the video to move it · <kbd>←↑→↓</kbd> nudge (<kbd>⇧</kbd> ×10) · <kbd>[</kbd> <kbd>]</kbd> set start / end · <kbd>R</kbd> reset position · <kbd>Esc</kbd> deselect</span>
   </div>
-  <div class="row" style="gap:16px;margin-bottom:8px">
-    <label title="Dragging pulls a layer's centre onto the vertical centre line of the video (x = 50u). Hold ⌥ to drag without snapping.">
-      <input type="checkbox" id="snapV"> snap to centre ┃</label>
-    <label title="Same for the horizontal middle line (y = half the height).">
-      <input type="checkbox" id="snapH"> snap to middle ━</label>
-    <span class="hint" style="margin:0">hold ⌥ to drag past</span>
-  </div>
-  <div id="status"></div>
-  <div id="beats"></div>
-</div>
+  <div id="track"><div id="head"></div></div>
+</footer>
+
+<aside>
+  <div id="list"></div>
+  <div id="insp"></div>
+</aside>
+
 <script type="module">
 import { mix, RATE } from '/synth.mjs';
 
 const $ = s => document.querySelector(s);
-const v = $('#v'), stage = $('#stage'), grab = $('#grab'), zone = $('#zone');
+const v = $('#v'), stage = $('#stage'), grab = $('#grab'), zone = $('#zone'), selBox = $('#selBox'), track = $('#track');
 const state = await (await fetch('/api/state')).json();
-const [W, H] = state.size;
-const dispH = Math.min(innerHeight - 70, 1100), k = dispH / H, dispW = Math.round(W * k), U = dispW / 100;
-Object.assign(stage.style, { width: dispW + 'px', height: dispH + 'px' });
-Object.assign(v.style, { width: dispW + 'px', height: dispH + 'px' });
-$('#scrub').max = state.duration;
+const [W, H] = state.size, DUR = state.duration, FH = 100 * H / W;      // frame height in u
+let k = 1, U = 1;                                                         // display scale; px per u on screen
 
 const beats = state.beats.map(b => ({ ...b, move: b.move || {}, hide: b.hide || [], ready: false }));
-let sel = null;                                   // { beat, layer }
-let tmode = 'stretch';                            // what the timing buttons do: stretch or cut
-const status = s => { $('#status').textContent = s; };
+let cur = null;                  // the beat in the inspector
+let sel = null;                  // { beat, layer } being moved
+let tmode = localStorage.getItem('retro.tmode') || 'stretch';
+const pref = (k, d) => (localStorage.getItem('retro.' + k) ?? d) === '1';
+const opts = { sfx: pref('sfx', '1'), zone: pref('zone', '0'), snapV: pref('snapV', '0'), snapH: pref('snapH', '0') };
+
+let statusT = null;
+const status = s => { $('#status').textContent = s; $('#status').style.opacity = 1; clearTimeout(statusT); statusT = setTimeout(() => { $('#status').style.opacity = 0; }, 2500); };
+const f2 = n => n.toFixed(2);
+const r1 = n => Math.round(n * 10) / 10, r2 = n => Math.round(n * 100) / 100;
+
+/* ---------- layout ---------- */
+function layout() {
+  const wrap = $('#stageWrap'), aw = wrap.clientWidth - 32, ah = wrap.clientHeight - 32;
+  k = Math.min(ah / H, aw / W); const dw = Math.round(W * k), dh = Math.round(H * k); U = dw / 100;
+  Object.assign(stage.style, { width: dw + 'px', height: dh + 'px' });
+  Object.assign(v.style, { width: dw + 'px', height: dh + 'px' });
+  for (const b of beats) if (b.frame) b.frame.style.transform = `scale(${k})`;
+  renderTimeline();
+}
+addEventListener('resize', layout);
+
+/* ---------- header toggles ---------- */
+const pills = { sfx: $('#pSfx'), zone: $('#pZone'), snapV: $('#pSnapV'), snapH: $('#pSnapH') };
+for (const [key, el] of Object.entries(pills)) {
+  el.classList.toggle('on', opts[key]);
+  el.addEventListener('click', () => {
+    opts[key] = !opts[key]; el.classList.toggle('on', opts[key]); localStorage.setItem('retro.' + key, opts[key] ? '1' : '0');
+    if (key === 'sfx') restartSfx();
+    guides();
+  });
+}
 
 /* ---------- beats as live iframes ---------- */
 for (const b of beats) {
   const f = document.createElement('iframe');
-  f.width = W; f.height = H; f.style.transform = `scale(${k})`;
+  f.width = W; f.height = H;
   f.src = `/work/${b.id}/index.html`;
   stage.insertBefore(f, zone);
   b.frame = f;
@@ -108,11 +215,15 @@ for (const b of beats) {
     const O = w.R.OUT || { start: w.R.START, end: w.R.END };
     Object.assign(b, { ready: true, start: O.start, end: O.end, src: w.R.SRC || O, cues: w.R.cues, layers: w.R.layers(), win: w });
     applyMove(b);
-    renderList();
+    if (!cur) cur = b;
+    renderAll();
     if (beats.every(x => x.ready)) { buildSfx(); status(`${beats.length} beats loaded`); }
   };
 }
-
+function rebuild(b) {                                  // reload a beat after a timing or hide change
+  b.ready = false; renderAll();
+  setTimeout(() => { b.frame.src = `/work/${b.id}/index.html?t=${Date.now()}`; }, 120);
+}
 function applyMove(b) {
   if (!b.win) return;
   const all = b.move['*'] || [0, 0];
@@ -121,170 +232,252 @@ function applyMove(b) {
     el.style.transform = `translate(calc(var(--u) * ${dx + all[0]}), calc(var(--u) * ${dy + all[1]}))`;
   }
 }
-
 let saveT = null;
-function save(b, patch) {
+function save(b, patch, delay = 0) {
   clearTimeout(saveT);
   saveT = setTimeout(async () => {
     await fetch('/api/beat', { method: 'POST', body: JSON.stringify({ id: b.id, ...patch }) });
-    status(`saved ${b.id}`);
-  }, patch.move ? 250 : 0);
+    status(`Saved ${b.id}`);
+  }, delay);
 }
 
-/* ---------- list ---------- */
+/* ---------- side panel: beat list ---------- */
+const showing = (b, t = v.currentTime) => b.ready && b.on !== false && t >= b.start && t < b.end;
 function renderList() {
   const t = v.currentTime;
-  $('#beats').innerHTML = beats.map((b, i) => `
-    <div class="beat ${b.on === false ? 'isoff' : ''} ${b.ready && t >= b.start && t < b.end ? 'now' : ''}" data-i="${i}">
-      <div class="row">
-        <input type="checkbox" class="on" ${b.on === false ? '' : 'checked'} title="on/off">
-        <span class="name">${b.id}</span>
-        <span class="time">${b.ready ? `${b.time ? '<span class="tmark" title="timing changed">⏱</span> ' : ''}${b.start.toFixed(2)}–${b.end.toFixed(2)}` : '…'}</span>
-        <label title="this beat's sounds"><input type="checkbox" class="sfx" ${b.sfx === false ? '' : 'checked'}> ♪${b.cues ? b.cues.length : ''}</label>
-      </div>
-      <div class="layers">${(b.layers || []).concat(b.layers?.length > 1 ? ['*'] : []).map(L => {
-        const [dx, dy] = b.move[L] || [0, 0];
-        const hid = b.hide.includes(L), eye = L === '*' ? '' : `<span class="eye" title="${hid ? 'show' : 'hide'} this animation (and its sounds)">👁</span>`;
-        return `<span class="layer ${sel && sel.beat === b && sel.layer === L ? 'sel' : ''} ${hid ? 'hid' : ''}" data-l="${L}">${eye}${L === '*' ? 'all' : L}${dx || dy ? ` <small>${dx},${dy}</small>` : ''}</span>`;
-      }).join('')}</div>
-      ${b.ready ? timingRow(b) : ''}
+  $('#list').innerHTML = `<p class="sec-title">Beats</p>` + beats.map((b, i) => `
+    <div class="brow ${b === cur ? 'sel' : ''} ${b.on === false ? 'off' : ''} ${b.ready && t >= b.start && t < b.end ? 'now' : ''}" data-i="${i}">
+      <button class="sw ${b.on === false ? '' : 'on'}" data-a="on" title="Show this beat"></button>
+      <span class="bname">${b.id}</span>
+      ${b.time ? '<span class="badge" title="Timing changed">⏱</span>' : ''}
+      ${b.hide.length ? `<span class="badge" title="${b.hide.length} animation(s) hidden">◐</span>` : ''}
+      ${b.sfx === false ? '<span class="badge" title="Sounds muted">mute</span>' : ''}
+      <span class="btime num">${b.start != null ? `${f2(b.start)}–${f2(b.end)}` : '…'}</span>
     </div>`).join('');
 }
-function timingRow(b) {
-  const r = b.time?.retime, speed = r ? (b.src.end - b.src.start) / (r[1] - r[0]) : 1;
-  return `<div class="timing">
-    <span class="seg2"><button data-t="mode" data-m="stretch" class="${tmode === 'stretch' ? 'on' : ''}" title="squeeze or stretch the whole animation (and its sounds) between the new edges">stretch</button><button data-t="mode" data-m="cut" class="${tmode === 'cut' ? 'on' : ''}" title="trim the start or end; what's left plays at normal speed">cut</button></span>
-    start <button data-t="nudge" data-e="0" data-d="-0.1">‹</button><button data-t="here" data-e="0">here</button><button data-t="nudge" data-e="0" data-d="0.1">›</button>
-    end <button data-t="nudge" data-e="1" data-d="-0.1">‹</button><button data-t="here" data-e="1">here</button><button data-t="nudge" data-e="1" data-d="0.1">›</button>
-    <button data-t="reset" title="back to the beat's own timing">reset</button>
-    <small>written ${b.src.start.toFixed(2)}–${b.src.end.toFixed(2)} · shows ${b.start.toFixed(2)}–${b.end.toFixed(2)}${speed !== 1 ? ` · ${speed.toFixed(2)}x speed` : ''}</small>
-  </div>`;
-}
-function setTime(b, edge, value) {
-  const key = tmode === 'stretch' ? 'retime' : 'crop';
-  const cur = b.time?.[key] || (key === 'crop' ? [b.start, b.end] : [b.src.start, b.src.end]);
-  const next = [...cur]; next[edge] = Math.round(value * 1000) / 1000;
-  if (next[1] - next[0] < 0.2) { status('start and end need at least 0.2 s between them'); return; }
-  b.time = { ...(b.time || {}), [key]: next };
-  retime(b);
-}
-function retime(b) {                               // save, then rebuild the beat with its new timing
-  save(b, { time: b.time || null });
-  b.ready = false; renderList();
-  setTimeout(() => { b.frame.src = `/work/${b.id}/index.html?t=${Date.now()}`; }, 120);
-}
-$('#beats').addEventListener('click', e => {
-  const el = e.target.closest('.beat'); if (!el) return;
-  const b = beats[+el.dataset.i];
-  if (e.target.classList.contains('on')) { b.on = e.target.checked; save(b, { on: b.on }); buildSfx(); renderList(); sync(); return; }
-  if (e.target.classList.contains('sfx')) { b.sfx = e.target.checked ? undefined : false; save(b, { sfx: e.target.checked }); buildSfx(); return; }
-  const L = e.target.closest('.layer');
-  if (L && e.target.classList.contains('eye')) {   // hide/show one animation; it rebuilds without it (and its sounds)
-    const name = L.dataset.l;
-    b.hide = b.hide.includes(name) ? b.hide.filter(x => x !== name) : [...b.hide, name];
-    save(b, { hide: b.hide }); b.ready = false; renderList();
-    setTimeout(() => { b.frame.src = `/work/${b.id}/index.html?t=${Date.now()}`; }, 120);
-    return;
-  }
-  if (L) { sel = sel && sel.beat === b && sel.layer === L.dataset.l ? null : { beat: b, layer: L.dataset.l }; grab.classList.toggle('off', !sel); if (sel && !(v.currentTime >= b.start && v.currentTime < b.end)) seek((b.start + b.end) / 2); renderList(); return; }
-  const T = e.target.dataset.t;
-  if (T === 'mode') { tmode = e.target.dataset.m; renderList(); return; }
-  if (T === 'here') { setTime(b, +e.target.dataset.e, v.currentTime); return; }
-  if (T === 'nudge') {
-    const key = tmode === 'stretch' ? 'retime' : 'crop', E = +e.target.dataset.e;
-    const cur = b.time?.[key] || (key === 'crop' ? [b.start, b.end] : [b.src.start, b.src.end]);
-    setTime(b, E, cur[E] + +e.target.dataset.d); return;
-  }
-  if (T === 'reset') { delete b.time; retime(b); return; }
-  if (e.target.classList.contains('name') && b.ready) seek(b.start);
+$('#list').addEventListener('click', e => {
+  const row = e.target.closest('.brow'); if (!row) return;
+  const b = beats[+row.dataset.i];
+  if (e.target.dataset.a === 'on') { b.on = b.on === false; save(b, { on: b.on }); buildSfx(); renderAll(); return; }
+  pick(b, true);
 });
+function pick(b, jump) {
+  if (cur !== b) sel = null;
+  cur = b;
+  if (jump && b.ready && !(v.currentTime >= b.start && v.currentTime < b.end)) seek(b.start + 0.05);
+  renderAll();
+}
 
-/* ---------- moving ---------- */
-function nudge(dx, dy) {
-  if (!sel) return;
-  const b = sel.beat, [x, y] = b.move[sel.layer] || [0, 0];
-  b.move[sel.layer] = [Math.round((x + dx) * 10) / 10, Math.round((y + dy) * 10) / 10];
-  applyMove(b); renderList(); save(b, { move: b.move });
+/* ---------- side panel: inspector ---------- */
+const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7c1.9 0 3.6-.6 5-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+function edges(b, mode = tmode) {
+  return mode === 'stretch' ? (b.time?.retime || [b.src.start, b.src.end]) : (b.time?.crop || [b.start, b.end]);
 }
-/* Snapping: while dragging, a layer's centre is pulled onto the video's centre line (and/or middle
-   line) once it comes within SNAP u of it. It's a light pull: keep dragging and it lets go, or hold ⌥.
-   The centre is the box around what the layer shows right now (window frames, not their shadows). */
-const SNAP = 1.5, FH = 100 * H / W;               // pull distance in u; frame height in u
-const snapOn = { V: $('#snapV'), H: $('#snapH') };
-for (const [k, el] of Object.entries(snapOn)) {
-  el.checked = localStorage.getItem('retro.snap' + k) === '1';
-  el.addEventListener('change', () => { localStorage.setItem('retro.snap' + k, el.checked ? '1' : '0'); guides(); });
+function renderInspector() {
+  const b = cur, el = $('#insp');
+  if (!b || b.start == null) { el.innerHTML = `<p class="empty">Pick a beat in the list or on the timeline.</p>`; return; }
+  const busy = !b.ready, dis = busy ? 'disabled' : '';
+  const layers = b.layers || [];
+  const r = b.time?.retime, speed = r ? (b.src.end - b.src.start) / (r[1] - r[0]) : 1, [e0, e1] = edges(b);
+  const allMoved = (b.move['*'] || [0, 0]).some(Boolean);
+  el.innerHTML = `
+    <div class="ihead">
+      <div><h2>${b.id}</h2><div class="sub num">${f2(b.start)}–${f2(b.end)} s · ${b.cues ? b.cues.length : 0} sounds</div></div>
+      <button class="btn sm jump" data-a="jump">Jump to start</button>
+    </div>
+    <div class="card">
+      <div class="line"><span class="lab">Show this beat</span><button class="sw ${b.on === false ? '' : 'on'}" data-a="on"></button></div>
+      <div class="line"><span class="lab">Sound effects</span><button class="sw ${b.sfx === false ? '' : 'on'}" data-a="sfx"></button></div>
+    </div>
+
+    <p class="sec-title">Animations</p>
+    <div class="card" style="padding:6px">
+      ${layers.map(L => {
+        const hid = b.hide.includes(L), [dx, dy] = b.move[L] || [0, 0], isSel = sel && sel.beat === b && sel.layer === L;
+        return `<div class="anim ${isSel ? 'sel' : ''} ${hid ? 'hid' : ''}" data-l="${L}">
+          <button class="eye" data-a="eye" title="${hid ? 'Show' : 'Hide'} this animation (and its sounds)" ${dis}>${hid ? EYE_OFF : EYE}</button>
+          <span class="aname">${L}</span>
+          <span class="apos num">${dx || dy ? `moved ${dx}, ${dy}` : ''}</span>
+          ${dx || dy ? `<button class="btn ghostb sm" data-a="unmove" title="Put it back where it was written">Reset</button>` : ''}
+        </div>`;
+      }).join('')}
+      ${layers.length > 1 ? `<div class="anim ${sel && sel.beat === b && sel.layer === '*' ? 'sel' : ''}" data-l="*">
+          <span style="width:26px"></span><span class="aname">All together</span>
+          <span class="apos num">${allMoved ? `moved ${b.move['*'].join(', ')}` : ''}</span>
+          ${allMoved ? `<button class="btn ghostb sm" data-a="unmove">Reset</button>` : ''}</div>` : ''}
+      <p class="hint" style="margin:6px 8px 4px">Click one on the video (or here) to select it, then drag it or use the arrow keys.</p>
+    </div>
+
+    <p class="sec-title">Timing</p>
+    <div class="card">
+      <div class="seg"><button data-a="mode" data-m="stretch" class="${tmode === 'stretch' ? 'on' : ''}">Stretch</button><button data-a="mode" data-m="cut" class="${tmode === 'cut' ? 'on' : ''}">Cut</button></div>
+      <p class="hint">${tmode === 'stretch' ? 'Squeeze or stretch the whole animation to fit between start and end. Its sounds move with it.' : 'Trim the start or end. What is left plays at normal speed; sounds in the trimmed part are dropped.'}</p>
+      ${[['Start', 0, e0], ['End', 1, e1]].map(([lab, i, val]) => `
+        <div class="trow">
+          <span>${lab}</span>
+          <div class="tctl">
+            <button class="btn sm" data-a="nudge" data-e="${i}" data-d="-0.1" title="0.1 s earlier" ${dis}>−</button>
+            <input class="tin" data-e="${i}" type="number" step="0.05" value="${f2(val)}" ${dis}>
+            <button class="btn sm" data-a="nudge" data-e="${i}" data-d="0.1" title="0.1 s later" ${dis}>+</button>
+          </div>
+          <button class="btn sm" data-a="here" data-e="${i}" title="Set to the playhead (${i ? ']' : '['})" ${dis}>Playhead</button>
+        </div>`).join('')}
+      <div class="tsum">
+        <span class="chip num">Written ${f2(b.src.start)}–${f2(b.src.end)}</span>
+        <span class="chip num ${b.time ? 'hl' : ''}">Showing ${f2(b.start)}–${f2(b.end)}</span>
+        ${Math.abs(speed - 1) > 0.005 ? `<span class="chip hl num">${speed.toFixed(2)}× speed</span>` : ''}
+        ${b.time?.crop ? '<span class="chip hl">trimmed</span>' : ''}
+      </div>
+      ${b.time ? `<div style="margin-top:12px"><button class="btn sm" data-a="treset" ${dis}>Reset timing</button></div>` : ''}
+      ${busy ? '<p class="busy">Updating…</p>' : ''}
+    </div>`;
 }
+$('#insp').addEventListener('click', e => {
+  const b = cur; if (!b) return;
+  const btn = e.target.closest('[data-a]'), a = btn?.dataset.a, row = e.target.closest('.anim');
+  if (a === 'jump') { if (b.ready) seek(b.start + 0.05); return; }
+  if (a === 'on') { b.on = b.on === false; save(b, { on: b.on }); buildSfx(); renderAll(); return; }
+  if (a === 'sfx') { b.sfx = b.sfx === false ? undefined : false; save(b, { sfx: b.sfx !== false }); buildSfx(); renderAll(); return; }
+  if (a === 'eye' && row) {
+    const L = row.dataset.l;
+    b.hide = b.hide.includes(L) ? b.hide.filter(x => x !== L) : [...b.hide, L];
+    if (sel && sel.layer === L && b.hide.includes(L)) sel = null;
+    save(b, { hide: b.hide }); rebuild(b); return;
+  }
+  if (a === 'unmove' && row) { delete b.move[row.dataset.l]; applyMove(b); save(b, { move: b.move }); renderAll(); return; }
+  if (a === 'mode') { tmode = btn.dataset.m; localStorage.setItem('retro.tmode', tmode); renderAll(); return; }
+  if (a === 'here') { setTime(b, +btn.dataset.e, v.currentTime); return; }
+  if (a === 'nudge') { const i = +btn.dataset.e; setTime(b, i, edges(b)[i] + +btn.dataset.d); return; }
+  if (a === 'treset') { delete b.time; save(b, { time: null }); rebuild(b); return; }
+  if (row && !btn) {                                 // select an animation to move it
+    const L = row.dataset.l;
+    sel = sel && sel.beat === b && sel.layer === L ? null : { beat: b, layer: L };
+    if (sel && b.ready && !showing(b)) seek(Math.max(b.start + 0.05, Math.min(b.end - 0.05, (b.start + b.end) / 2)));
+    renderAll();
+  }
+});
+$('#insp').addEventListener('change', e => {
+  if (!e.target.classList.contains('tin') || !cur) return;
+  const val = parseFloat(e.target.value);
+  if (Number.isFinite(val)) setTime(cur, +e.target.dataset.e, val);
+});
+function setTime(b, edge, value) {
+  if (!b.ready) return;
+  const key = tmode === 'stretch' ? 'retime' : 'crop';
+  const next = [...edges(b)]; next[edge] = Math.round(value * 1000) / 1000;
+  if (next[1] - next[0] < 0.2) { status('Start and end need at least 0.2 s between them'); renderInspector(); return; }
+  b.time = { ...(b.time || {}), [key]: next };
+  save(b, { time: b.time }); rebuild(b);
+}
+
+/* ---------- timeline ---------- */
+function renderTimeline() {
+  const pct = t => `${(t / DUR) * 100}%`;
+  const step = DUR > 90 ? 10 : 5;
+  let html = '';
+  for (let t = 0; t < DUR; t += step) html += `<div class="tick" style="left:${pct(t)}"><span class="num">${t}s</span></div>`;
+  for (const [i, b] of beats.entries()) {
+    if (b.start == null) continue;
+    if (b.src && (Math.abs(b.src.start - b.start) > 0.01 || Math.abs(b.src.end - b.end) > 0.01))
+      html += `<div class="ghost" style="left:${pct(b.src.start)};width:${pct(b.src.end - b.src.start)}" title="where ${b.id} was written"></div>`;
+    html += `<div class="blk ${b === cur ? 'sel' : ''} ${b.on === false ? 'off' : ''}" data-i="${i}" style="left:${pct(b.start)};width:calc(${pct(b.end - b.start)} - 2px)" title="${b.id} · ${f2(b.start)}–${f2(b.end)}">${b.id.slice(0, 2)}<span style="margin-left:5px;opacity:.7">${b.id.slice(3)}</span></div>`;
+  }
+  track.innerHTML = html + '<div id="head"></div>';
+  lastNow = null;
+}
+let scrubbing = false;
+const trackTime = e => { const r = track.getBoundingClientRect(); return Math.max(0, Math.min(DUR, (e.clientX - r.left) / r.width * DUR)); };
+track.addEventListener('pointerdown', e => {
+  scrubbing = true; track.setPointerCapture(e.pointerId);
+  const blk = e.target.closest('.blk'); if (blk) pick(beats[+blk.dataset.i], false);
+  seek(trackTime(e));
+});
+track.addEventListener('pointermove', e => { if (scrubbing) seek(trackTime(e)); });
+track.addEventListener('pointerup', () => { scrubbing = false; });
+
+function renderAll() { renderList(); renderInspector(); renderTimeline(); }
+
+/* ---------- moving: click an animation on the video, drag it ---------- */
+const SNAP = 1.5;                                  // pull distance in u
 function guides(hitV = false, hitH = false) {
-  $('#guideV').style.display = snapOn.V.checked ? 'block' : 'none';
-  $('#guideH').style.display = snapOn.H.checked ? 'block' : 'none';
-  $('#guideV').classList.toggle('hit', hitV);
-  $('#guideH').classList.toggle('hit', hitH);
+  $('#guideV').style.display = opts.snapV ? 'block' : 'none';
+  $('#guideH').style.display = opts.snapH ? 'block' : 'none';
+  $('#guideV').classList.toggle('hit', hitV); $('#guideH').classList.toggle('hit', hitH);
 }
 guides();
-function layerBox(b, layer) {                     // [x0, y0, x1, y1] in u, as drawn now (moves included)
+function layerBox(b, layer, onlyShown = false) {   // [x0, y0, x1, y1] in u, as drawn now (moves included)
+  if (!b.win) return null;
   const doc = b.win.document, px = W / 100;
-  const layers = layer === '*' ? [...doc.querySelectorAll('.layer')] : [doc.querySelector(`.layer[data-layer="${layer}"]`)].filter(Boolean);
-  const kids = layers.flatMap(L => [...L.children]).filter(el => !el.classList.contains('zoom'))
+  const Ls = layer === '*' ? [...doc.querySelectorAll('.layer')] : [doc.querySelector(`.layer[data-layer="${layer}"]`)].filter(Boolean);
+  const kids = Ls.filter(L => L.style.display !== 'none').flatMap(L => [...L.children]).filter(el => !el.classList.contains('zoom'))
     .map(el => ({ r: el.getBoundingClientRect(), cs: b.win.getComputedStyle(el) })).filter(o => o.r.width >= 2 && o.r.height >= 2);
   const shown = kids.filter(o => o.cs.visibility !== 'hidden' && +o.cs.opacity > 0 && o.cs.display !== 'none');
-  const use = shown.length ? shown : kids;        // nothing on screen yet: measure what will appear
+  const use = shown.length || onlyShown ? shown : kids;
   if (!use.length) return null;
   return [Math.min(...use.map(o => o.r.left)) / px, Math.min(...use.map(o => o.r.top)) / px,
           Math.max(...use.map(o => o.r.right)) / px, Math.max(...use.map(o => o.r.bottom)) / px];
 }
-const r2 = n => Math.round(n * 100) / 100;
+const inBox = (bx, x, y) => bx && x >= bx[0] && x <= bx[2] && y >= bx[1] && y <= bx[3];
+function hitTest(ux, uy) {                         // the topmost animation under a point on the video
+  for (const b of [...beats].reverse()) {
+    if (!showing(b)) continue;
+    for (const L of [...(b.layers || [])].reverse()) {
+      if (b.hide.includes(L)) continue;
+      if (inBox(layerBox(b, L, true), ux, uy)) return { beat: b, layer: L };
+    }
+  }
+  return null;
+}
+const stageU = e => { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left) / U, (e.clientY - r.top) / U]; };
 let drag = null;
 grab.addEventListener('pointerdown', e => {
-  if (!sel) return;
+  const [ux, uy] = stageU(e);
+  const keep = sel && showing(sel.beat) && inBox(layerBox(sel.beat, sel.layer, true), ux, uy);   // "all together" stays selected
+  const hit = keep ? sel : hitTest(ux, uy);
+  if (!hit) { if (sel) { sel = null; renderAll(); } return; }
+  if (!sel || sel.beat !== hit.beat || sel.layer !== hit.layer) { sel = hit; cur = hit.beat; renderAll(); }
   const m = [...(sel.beat.move[sel.layer] || [0, 0])], box = layerBox(sel.beat, sel.layer);
-  // where the layer's centre would be with no move of its own: centre = c0 + move
-  drag = { x: e.clientX, y: e.clientY, m, c0: box && [(box[0] + box[2]) / 2 - m[0], (box[1] + box[3]) / 2 - m[1]] };
-  grab.setPointerCapture(e.pointerId);
+  drag = { x: e.clientX, y: e.clientY, m, moved: false, c0: box && [(box[0] + box[2]) / 2 - m[0], (box[1] + box[3]) / 2 - m[1]] };
+  grab.setPointerCapture(e.pointerId); grab.classList.add('dragging');
 });
 grab.addEventListener('pointermove', e => {
-  if (!drag) return;
+  if (!drag) { grab.classList.toggle('can', !!hitTest(...stageU(e))); return; }   // hover: grab hand over anything movable
   const b = sel.beat, rx = drag.m[0] + (e.clientX - drag.x) / U, ry = drag.m[1] + (e.clientY - drag.y) / U;
   let x = Math.round(rx * 2) / 2, y = Math.round(ry * 2) / 2, hitV = false, hitH = false;
   if (drag.c0 && !e.altKey) {
     const tx = 50 - drag.c0[0], ty = FH / 2 - drag.c0[1];
-    if (snapOn.V.checked && Math.abs(rx - tx) < SNAP) { x = r2(tx); hitV = true; }
-    if (snapOn.H.checked && Math.abs(ry - ty) < SNAP) { y = r2(ty); hitH = true; }
+    if (opts.snapV && Math.abs(rx - tx) < SNAP) { x = r2(tx); hitV = true; }
+    if (opts.snapH && Math.abs(ry - ty) < SNAP) { y = r2(ty); hitH = true; }
   }
+  drag.moved = true;
   b.move[sel.layer] = [x, y];
-  applyMove(b);
-  guides(hitV, hitH);
-  status(hitV || hitH ? `${sel.beat.id} · ${sel.layer}: snapped to ${[hitV && 'centre', hitH && 'middle'].filter(Boolean).join(' + ')}` : '');
+  applyMove(b); guides(hitV, hitH);
 });
-grab.addEventListener('pointerup', () => { if (!drag) return; drag = null; guides(); renderList(); save(sel.beat, { move: sel.beat.move }); });
+grab.addEventListener('pointerup', () => {
+  if (!drag) return;
+  const moved = drag.moved; drag = null; grab.classList.remove('dragging'); guides();
+  if (moved) { save(sel.beat, { move: sel.beat.move }, 150); renderInspector(); }
+});
+function nudge(dx, dy) {
+  if (!sel) return;
+  const b = sel.beat, [x, y] = b.move[sel.layer] || [0, 0];
+  b.move[sel.layer] = [r1(x + dx), r1(y + dy)];
+  applyMove(b); renderInspector(); save(b, { move: b.move }, 250);
+}
 
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' && e.target.type !== 'checkbox' && e.target.type !== 'range') return;
+  if (e.target.tagName === 'INPUT') { if (e.key === 'Enter') e.target.blur(); return; }
   const s = e.shiftKey ? 5 : 0.5;
+  const keys = { ArrowLeft: [-s, 0], ArrowRight: [s, 0], ArrowUp: [0, -s], ArrowDown: [0, s] };
   if (e.key === ' ') { e.preventDefault(); togglePlay(); }
-  else if (e.key === 'ArrowLeft' && sel) { e.preventDefault(); nudge(-s, 0); }
-  else if (e.key === 'ArrowRight' && sel) { e.preventDefault(); nudge(s, 0); }
-  else if (e.key === 'ArrowUp' && sel) { e.preventDefault(); nudge(0, -s); }
-  else if (e.key === 'ArrowDown' && sel) { e.preventDefault(); nudge(0, s); }
-  else if (e.key === 'r' && sel) { delete sel.beat.move[sel.layer]; applyMove(sel.beat); renderList(); save(sel.beat, { move: sel.beat.move }); }
-  else if (e.key === 'Escape') { sel = null; grab.classList.add('off'); renderList(); }
+  else if (keys[e.key] && sel) { e.preventDefault(); nudge(...keys[e.key]); }
+  else if ((e.key === '[' || e.key === ']') && cur) setTime(cur, e.key === ']' ? 1 : 0, v.currentTime);
+  else if ((e.key === 'r' || e.key === 'R') && sel) { delete sel.beat.move[sel.layer]; applyMove(sel.beat); save(sel.beat, { move: sel.beat.move }); renderAll(); }
+  else if (e.key === 'Escape' && sel) { sel = null; renderAll(); }
 });
 
 /* ---------- time ---------- */
-function sync() {
-  const t = v.currentTime;
-  for (const b of beats) {
-    if (!b.ready) continue;
-    const show = b.on !== false && t >= b.start && t < b.end;
-    b.frame.style.visibility = show ? 'visible' : 'hidden';
-    if (show) b.win.__timelines.root.seek(Math.max(0, t - b.start), false);
-  }
-  $('#tc').textContent = t.toFixed(2);
-  $('#scrub').value = t;
-  const z = $('#zoneOn').checked && faceZone(t);
-  zone.style.display = z ? 'block' : 'none';
-  if (z) Object.assign(zone.style, { left: z[0] * U + 'px', top: z[1] * U + 'px', width: z[2] * U + 'px', height: z[3] * U + 'px' });
-}
 function faceZone(t) {               // same rule as lib/faces.mjs noGo()
   const f = state.faces; if (!f) return null;
   const s = f.samples[Math.max(0, Math.min(f.samples.length - 1, Math.round(t * f.fps)))];
@@ -292,40 +485,61 @@ function faceZone(t) {               // same rule as lib/faces.mjs noGo()
   const [x, y, w, h] = b;
   return [x - w * 0.12, y - h * 0.2, w * 1.24, h * (1 + 0.2 + 0.45)];
 }
-let lastNow = '';
-(function loop() {
-  sync();
-  const now = beats.filter(b => b.ready && v.currentTime >= b.start && v.currentTime < b.end).map(b => b.id).join();
-  if (now !== lastNow) { lastNow = now; renderList(); }
-  requestAnimationFrame(loop);
-})();
+let lastNow = null;
+function sync() {
+  const t = v.currentTime;
+  for (const b of beats) {
+    if (!b.ready) continue;
+    const show = showing(b, t);
+    b.frame.style.visibility = show ? 'visible' : 'hidden';
+    if (show) b.win.__timelines.root.seek(Math.max(0, t - b.start), false);
+  }
+  $('#tc').innerHTML = `<b>${f2(t)}</b> / ${f2(DUR)}`;
+  $('#play').textContent = v.paused ? '▶' : '❚❚';
+  const hd = $('#head'); if (hd) hd.style.left = `${(t / DUR) * 100}%`;
+  const z = opts.zone && faceZone(t);
+  zone.style.display = z ? 'block' : 'none';
+  if (z) Object.assign(zone.style, { left: z[0] * U + 'px', top: z[1] * U + 'px', width: z[2] * U + 'px', height: z[3] * U + 'px' });
+  const box = sel && showing(sel.beat, t) && layerBox(sel.beat, sel.layer);
+  selBox.style.display = box ? 'block' : 'none';
+  if (box) {
+    Object.assign(selBox.style, { left: box[0] * U - 3 + 'px', top: box[1] * U - 3 + 'px', width: (box[2] - box[0]) * U + 6 + 'px', height: (box[3] - box[1]) * U + 6 + 'px' });
+    selBox.firstChild.textContent = `${sel.beat.id} · ${sel.layer === '*' ? 'all' : sel.layer}`;
+  }
+  const now = beats.filter(b => b.ready && t >= b.start && t < b.end).map(b => b.id).join();
+  if (now !== lastNow) {                           // "playing now" markers, without re-rendering the panel
+    lastNow = now;
+    for (const q of ['.brow', '.blk']) document.querySelectorAll(q).forEach(r => { const b = beats[+r.dataset.i]; r.classList.toggle('now', b.ready && t >= b.start && t < b.end); });
+  }
+}
+(function loop() { sync(); requestAnimationFrame(loop); })();
 function seek(t) { v.currentTime = t; restartSfx(); }
-$('#scrub').addEventListener('input', e => seek(+e.target.value));
-$('#zoneOn').addEventListener('change', sync);
+function togglePlay() { ac.resume(); v.paused ? v.play() : v.pause(); }
+$('#play').addEventListener('click', togglePlay);
 
 /* ---------- sound effects: the export's synth, in the browser ---------- */
 const ac = new AudioContext({ sampleRate: RATE });
 let sfxBuf = null, src = null;
 function buildSfx() {
-  const cues = beats.filter(b => b.ready && b.on !== false && b.sfx !== false).flatMap(b => b.cues.map(c => ({ ...c, vol: (c.vol || 0) + (b.sfxGain || 0) })));
-  const m = mix(cues, state.duration, state.sfxGain);
+  if (!beats.every(b => b.ready)) return;
+  const cues = beats.filter(b => b.on !== false && b.sfx !== false).flatMap(b => b.cues.map(c => ({ ...c, vol: (c.vol || 0) + (b.sfxGain || 0) })));
+  const m = mix(cues, DUR, state.sfxGain);
   sfxBuf = ac.createBuffer(1, m.length, RATE); sfxBuf.copyToChannel(m, 0);
   restartSfx();
 }
 function restartSfx() {
   if (src) { src.stop(); src = null; }
-  if (v.paused || !sfxBuf || !$('#sfxOn').checked) return;
+  if (v.paused || !sfxBuf || !opts.sfx) return;
   src = ac.createBufferSource(); src.buffer = sfxBuf; src.connect(ac.destination);
   src.start(0, v.currentTime);
 }
-$('#sfxOn').addEventListener('change', restartSfx);
-function togglePlay() { if (v.paused) { ac.resume(); v.play(); } else v.pause(); }
-$('#play').onclick = togglePlay;
-v.addEventListener('play', () => { $('#play').textContent = '❚❚ Pause'; restartSfx(); });
-v.addEventListener('pause', () => { $('#play').textContent = '▶ Play'; restartSfx(); });
+v.addEventListener('play', restartSfx);
+v.addEventListener('pause', restartSfx);
 v.addEventListener('seeked', restartSfx);
 v.addEventListener('ended', restartSfx);
-renderList();
+
+layout();
+renderAll();
 </script>
 </body>
 </html>

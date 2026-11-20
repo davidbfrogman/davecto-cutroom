@@ -48,7 +48,7 @@
         <div class="ft"><span>watching: <span id="wt">0</span></span><span id="nx">▶▶▶ ep.4</span></div>` });
     SR.id = 'SR';
     R.open(SR, Math.max(W('second'), R.START + 4 * R.F));
-    R.show(R.$('#tp'), W('second') + 0.1); R.sfx('pop', W('second') + 0.1, { vol: -3 });
+    R.show(R.$('#tp'), W('second') + 0.1); R.sfx('stab', W('second') + 0.1, { vol: -3 });
 
     const sps = R.$$('.sp'), ans = R.$$('.an');
     R.every(R.START, END, t => {
@@ -57,13 +57,13 @@
       ans.forEach(a => { a.style.display = (f % 4 < 2) === a.classList.contains('a') ? 'inline-block' : 'none'; });
     });
     const mi = W('mistakes'), wi = W('wins'), fu = W('fun');
-    R.show(R.$('#m0'), mi); R.sfx('error', mi, { vol: -6 });
-    R.show(R.$('#m1'), wi); R.sfx('success', wi, { vol: -4 });
-    R.show(R.$('#m2'), fu); R.sfx('pop', fu, { vol: -3 });
+    R.show(R.$('#m0'), mi); R.sfx('fireball', mi, { vol: -3 });
+    R.show(R.$('#m1'), wi); R.sfx('fanfare', wi, { vol: -4 });
+    R.show(R.$('#m2'), fu); R.sfx('jump', fu, { vol: -3 });
     const iv = W('invested'), st = W('story');
     R.count(R.$('#wt'), iv, st - iv + 0.3, 0, 1204);
     [0, 1, 2, 3].forEach(k => R.sfx('tick', iv + (st - iv) * k / 3, { vol: -7 }));
-    R.show(R.$('#nx'), st); R.blink(R.$('#nx'), st, END, 0.4); R.sfx('pop', st, { vol: -4 });
+    R.show(R.$('#nx'), st); R.blink(R.$('#nx'), st, END, 0.4); R.sfx('shimmer', st, { vol: -3 });
     R.done(END);
   </script>
 </body>

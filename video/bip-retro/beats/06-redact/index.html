@@ -56,7 +56,7 @@
       b.style.width = `${Math.round(k * 10) * 10}%`;
     }));
     ROWS.forEach((_, i) => R.sfx('strike', pb + (li - pb) * i / 3, { vol: -5 }));
-    R.show(R.$('#nt'), li); R.flash(R.$('#nt'), li, 2); R.sfx('error', li, { vol: -4 });
+    R.show(R.$('#nt'), li); R.flash(R.$('#nt'), li, 2); R.sfx('gated', li, { vol: -3 });
 
     // Mail, below the chest
     const ML = R.win({ title: 'Mail', right: 'draft', layer: 'mail', x: 4, y: 100, w: 82, h: 33,
@@ -70,7 +70,7 @@
     R.type(R.$('#to'), hn, 36);
     R.show(R.$('#at'), en); R.sfx('pop', en, { vol: -4, layer: 'mail' });
     ML.querySelectorAll('.qs span').forEach((s, i) => { const t = en + 0.1 + (rm - en) * i / 3; R.show(s, t); R.sfx('tick', t, { vol: -6, layer: 'mail' }); });
-    R.show(R.$('#sb'), co); R.flash(R.$('#sb'), co, 3); R.sfx('alert', co, { layer: 'mail', vol: -3 });
+    R.show(R.$('#sb'), co); R.flash(R.$('#sb'), co, 3); R.sfx('brick', co, { layer: 'mail', vol: -1 });
     R.done(END);
   </script>
 </body>

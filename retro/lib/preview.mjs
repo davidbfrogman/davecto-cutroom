@@ -34,7 +34,7 @@ function sendFile(req, res, file) {
   createReadStream(file).pipe(res);
 }
 
-export async function serve(project, port) {
+export async function serve(project, port, { open = true } = {}) {
   const video = proxy(project), len = duration(project.video);
   const fresh = () => new Project(project.dir);                 // re-read retro.json each request (hand edits win)
   const server = createServer((req, res) => {
@@ -83,5 +83,7 @@ export async function serve(project, port) {
     }
   });
   await new Promise(r => server.listen(port, '127.0.0.1', r));
-  console.log(`preview: http://localhost:${port}   (Ctrl-C to stop; changes save to ${join(project.dir, 'retro.json')})`);
+  const url = `http://localhost:${port}`;
+  console.log(`preview: ${url}   (Ctrl-C to stop; changes save to ${join(project.dir, 'retro.json')})`);
+  if (open && process.platform === 'darwin') spawnSync('open', [url]);     // straight into the browser
 }

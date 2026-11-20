@@ -49,16 +49,16 @@
     CL.id = 'CL';
     R.open(CL, Math.max(W('ai is'), R.START + 4 * R.F));
     const sw = W('software'), cr = W('clearance'), rk = R.we('rack');
-    TAGS.forEach((_, i) => { const t = sw + i * 3 * R.F; R.show(R.$('#t' + i), t); R.sfx('tick', t, { vol: -5 }); });
+    TAGS.forEach((_, i) => { const t = sw + i * 3 * R.F; R.show(R.$('#t' + i), t); R.sfx('pluck', t, { vol: -7 }); });
     TAGS.forEach((_, i) => {
       const t = cr + (rk - cr) * i / 2;
       R.tl.set(R.$(`#t${i} s`), { '--cut': 'visible' }, R.T(t));
-      R.show(R.$(`#t${i} b`), t); R.sfx('strike', t, { vol: -5 });
+      R.show(R.$(`#t${i} b`), t); R.sfx('sword', t, { vol: -5 });
     });
     // the tags sway on their hooks, on twos
     const tags = TAGS.map((_, i) => R.$('#t' + i)), cz = W('and finding') + 0.25;   // closes before he leans up into it
     R.every(sw, cz, t => { const f = Math.round(t * 15); tags.forEach((el, i) => { el.style.transform = `rotate(${[0, 1, 2, 1, 0, -1, -2, -1][((f >> 1) + i * 3) % 8]}deg)`; }); });
-    R.show(R.$('#pc'), rk); R.blink(R.$('#pc'), rk, cz, 0.4);
+    R.show(R.$('#pc'), rk); R.sfx('orchhit', rk + 0.12, { vol: -4 }); R.blink(R.$('#pc'), rk, cz, 0.4);
     R.close(CL, cz);
 
     // CAC.exe → the cheat prompt
@@ -71,17 +71,17 @@
     R.open(CA, fc);
     R.count(R.$('#cc'), W('customers', fc) + 0.1, th - W('customers', fc), 12, 1280, v => `$${Math.round(v).toLocaleString('en-US')}`);
     [W('still'), W('one of'), W('most')].forEach(t => R.sfx('tick', t, { vol: -7, layer: 'cac' }));
-    R.flash(R.$('#cc'), ex, 3); R.sfx('alert', ex, { layer: 'cac', vol: -3 });
+    R.flash(R.$('#cc'), ex, 3); R.sfx('explode', ex, { layer: 'cac', vol: -4 });
     // building in public is the cheat code
     const bp = W('building in public'), ch = W('cheat'), fn = W('to finding');
     R.tl.set(R.$('#p1'), { display: 'none' }, R.T(bp)); R.tl.set(R.$('#p2'), { display: 'block' }, R.T(bp));
-    R.text(R.$('#rt'), bp, 'secret menu'); R.sfx('blip', bp, { freq: 700, vol: -6, layer: 'cac' });
+    R.text(R.$('#rt'), bp, 'secret menu'); R.sfx('revcym', bp - 0.6, { vol: -5, layer: 'cac' });
     const KC = [...'↑↑↓↓←→←→BA'], k0 = W('is the', bp);
     KC.forEach((_, k) => { const t = k0 + k / 14; R.text(R.$('#kd'), t, KC.slice(0, k + 1).join('')); R.sfx('tick', t, { vol: -8, layer: 'cac' }); });
     const on = R.we('code') + 0.05;
-    R.show(R.$('#on'), on); R.sfx('success', on, { layer: 'cac', vol: -2 });
+    R.show(R.$('#on'), on); R.sfx('secret', on, { layer: 'cac', vol: -2 });
     R.count(R.$('#fd'), fn, END - fn - 0.05, 0, 37, v => `+${Math.round(v)} customers`);
-    [0, 1, 2].forEach(k => R.sfx('blip', fn + k * 0.12, { freq: 500 * 2 ** (k * 4 / 16), vol: -7, layer: 'cac' }));
+    R.sfx('sunset', fn, { vol: -4, layer: 'cac' }); [0, 1, 2].forEach(k => R.sfx('coin', fn + 0.15 + k * 0.18, { vol: -7 - k, layer: 'cac' }));
     R.done(END);
   </script>
 </body>

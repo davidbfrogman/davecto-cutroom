@@ -50,17 +50,17 @@
     FD.id = 'FD';
     R.open(FD, Math.max(W("here's how"), R.START + 4 * R.F));
     const fi = W('first');
-    R.show(R.$('#tp'), fi); R.sfx('pop', fi, { vol: -3 });
+    R.show(R.$('#tp'), fi); R.sfx('stab', fi, { vol: -3 });
     // post A: their problems
     const cp = W("customer's"), hd = R.we('headaches');
     R.show(R.$('#pa'), cp); R.sfx('tick', cp);
     R.count(R.$('#ha'), W('problems'), hd + 0.4 - W('problems'), 0, 248);
     R.count(R.$('#ra'), W('problems') + 0.2, hd + 0.4 - W('problems'), 0, 37);
-    [W('problems'), W('their', W('problems')), W('headaches')].forEach(t => R.sfx('tick', t, { vol: -6 }));
+    [W('problems'), W('their', W('problems')), W('headaches')].forEach(t => R.sfx('coin', t, { vol: -6 }));
     // post B: the settings screen
     const ss = W('setting'), sn = R.we('screen');
     R.show(R.$('#pb'), ss); R.sfx('tick', ss);
-    R.flash(R.$('#rb'), sn + 0.05, 2); R.sfx('blip', sn + 0.05, { freq: 220, vol: -8 });
+    R.flash(R.$('#rb'), sn + 0.05, 2); R.sfx('tapestop', sn + 0.05, { vol: -4 });
 
     // Audience.db
     const founder = R.pix(['.kkk.', '.kwk.', '.kkk.', 'kkkkk', 'k.k.k', '..k..', '.k.k.'], .6);
@@ -78,9 +78,9 @@
       el.style.left = R.u((50 - k * (48 - i * 9.5)).toFixed(1));
       el.style.display = t >= arr[i] ? 'flex' : 'none';
     }));
-    arr.forEach(t => R.sfx('tick', t, { vol: -6, layer: 'aud' }));
+    arr.forEach(t => R.sfx('jump', t, { vol: -7, layer: 'aud' }));
     fs.forEach((el, i) => R.show(el.querySelector('b'), nv + i * 2 * R.F));
-    R.text(R.$('#rv'), py, '$0.00'); R.flash(R.$('#rv'), py, 3); R.sfx('error', py, { layer: 'aud', vol: -3 });
+    R.text(R.$('#rv'), py, '$0.00'); R.flash(R.$('#rv'), py, 3); R.sfx('gameover', py, { layer: 'aud', vol: -3 });
     R.text(AU.querySelector('.win__bar .r'), py, 'paying: 0 of 5');
     R.done(END);
   </script>
