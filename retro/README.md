@@ -38,6 +38,9 @@ retro lint                            # over your face or chin? under Instagram'
 retro frames 06                       # contact sheet of beat 06 over the video → out/check-06-….jpg
 retro frames all                      # one frame from every beat in one sheet → out/check-all.jpg
 retro zones 20 30                     # where there's room around your head, moment by moment
+retro time 01 cut +2 -                # start beat 01 two seconds later (cut), same speed
+retro time 04 stretch - 17.2          # squeeze beat 04 so it ends at 17.2 s (sounds move with it)
+retro time 04 --reset                 # back to the beat's own timing
 retro render --draft                  # quicker, lower quality export
 retro render --video ../OtherCut.mov  # same graphics over another cut (same timing)
 retro render --size 1080x1920

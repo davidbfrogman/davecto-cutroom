@@ -34,6 +34,21 @@ plumbing, and don't re-derive anything this file already says.
 6. `retro render --draft` once at the end, then tell the user about `retro preview` for toggling
    and moving things themselves. Never undo their moves (retro.json `move`).
 
+## Timing tweaks (the user's, in retro.json)
+
+The user retimes beats in the preview (click a beat's name) or with `retro time`. It's stored per
+beat as `"time": { "retime": [a, b], "crop": [c, d] }` (video seconds):
+- **stretch** (`retime`): the whole beat plays between a and b, faster or slower; every animation
+  and sound moves proportionally (sounds keep their own length).
+- **cut** (`crop`): only c..d shows, at normal speed; sounds outside it are dropped. A cut start
+  skips the window's zoom-rect open, so it just appears.
+The kit applies both in `R.done`, so lint, frames, preview and render all see the same thing. Write
+beats in their natural times; `R.START`/`R.END` stay as written and `R.OUT` is where the beat shows.
+The user can also switch off single animations: `"hide": ["copy"]` (layers; the preview's 👁, or
+`retro hide <beat> <layer>`). A hidden layer is gone from lint, preview and render, and so are the
+sounds cued on it, so cue each sound on the layer it belongs to (`{ layer: 'copy' }`).
+Never undo the user's timing, hidden layers or moves; `retro ls` shows them all.
+
 ## Placement rules (the user's, non-negotiable)
 
 - **Never cover the face**, and never put anything **right under the chin**. The no-go zone is

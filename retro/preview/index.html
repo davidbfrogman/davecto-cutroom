@@ -37,8 +37,17 @@
   .layer { border: 1px solid #777; padding: 1px 7px; cursor: pointer; }
   .layer.sel { background: var(--pink); color: var(--ink); border-color: var(--pink); }
   .layer small { color: #aaa; } .layer.sel small { color: var(--ink); }
+  .eye { cursor: pointer; margin-right: 4px; opacity: .9; }
+  .layer.hid { border-style: dashed; color: var(--grey); text-decoration: line-through; }
+  .layer.hid .eye { opacity: .35; text-decoration: none; display: inline-block; }
   label { cursor: pointer; user-select: none; }
   #status { color: #aaa; min-height: 1.4em; }
+  .timing { margin: 6px 0 0 24px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .timing button { padding: 1px 7px; }
+  .timing .seg2 button { background: #555; color: var(--paper); }
+  .timing .seg2 button.on { background: var(--pink); color: var(--ink); }
+  .timing small { color: #aaa; }
+  .tmark { color: var(--pink); }
 </style>
 </head>
 <body>
@@ -52,7 +61,7 @@
 </div>
 <div id="right">
   <h1>retro preview</h1>
-  <p class="hint">Space play/pause · click a beat to jump · tick to turn it on/off (its sounds go with it) · click a layer, then drag on the video or use the arrow keys (shift = 5u) to move it (tick snap to centre to line it up dead centre) · <b>r</b> resets the layer. Changes save to retro.json; run <code>retro render</code> to export.</p>
+  <p class="hint">Space play/pause · click a beat to jump · tick to turn it on/off (its sounds go with it) · click a layer, then drag on the video or use the arrow keys (shift = 5u) to move it (tick snap to centre to line it up dead centre) · <b>r</b> resets the layer · 👁 hides one animation (and its sounds) · timing, under each beat: <b>stretch</b> plays the whole animation between new start/end points (sounds move with it), <b>cut</b> trims it at normal speed. Scrub to a spot and hit <b>start here</b> / <b>end here</b>, or nudge with ‹ ›. Changes save to retro.json; run <code>retro render</code> to export.</p>
   <div class="row" style="gap:16px;margin-bottom:8px">
     <label><input type="checkbox" id="sfxOn" checked> sound effects</label>
     <label><input type="checkbox" id="zoneOn"> face no-go zone</label>
@@ -79,8 +88,9 @@ Object.assign(stage.style, { width: dispW + 'px', height: dispH + 'px' });
 Object.assign(v.style, { width: dispW + 'px', height: dispH + 'px' });
 $('#scrub').max = state.duration;
 
-const beats = state.beats.map(b => ({ ...b, move: b.move || {}, ready: false }));
+const beats = state.beats.map(b => ({ ...b, move: b.move || {}, hide: b.hide || [], ready: false }));
 let sel = null;                                   // { beat, layer }
+let tmode = 'stretch';                            // what the timing buttons do: stretch or cut
 const status = s => { $('#status').textContent = s; };
 
 /* ---------- beats as live iframes ---------- */
@@ -95,7 +105,8 @@ for (const b of beats) {
     for (let i = 0; i < 200 && !w.__timelines?.root; i++) await new Promise(r => setTimeout(r, 25));
     if (!w.__timelines?.root) { status(`${b.id}: no timeline (see the console)`); return; }
     await w.document.fonts.ready;
-    Object.assign(b, { ready: true, start: w.R.START, end: w.R.END, cues: w.R.cues, layers: w.R.layers(), win: w });
+    const O = w.R.OUT || { start: w.R.START, end: w.R.END };
+    Object.assign(b, { ready: true, start: O.start, end: O.end, src: w.R.SRC || O, cues: w.R.cues, layers: w.R.layers(), win: w });
     applyMove(b);
     renderList();
     if (beats.every(x => x.ready)) { buildSfx(); status(`${beats.length} beats loaded`); }
@@ -128,14 +139,39 @@ function renderList() {
       <div class="row">
         <input type="checkbox" class="on" ${b.on === false ? '' : 'checked'} title="on/off">
         <span class="name">${b.id}</span>
-        <span class="time">${b.ready ? `${b.start.toFixed(2)}–${b.end.toFixed(2)}` : '…'}</span>
+        <span class="time">${b.ready ? `${b.time ? '<span class="tmark" title="timing changed">⏱</span> ' : ''}${b.start.toFixed(2)}–${b.end.toFixed(2)}` : '…'}</span>
         <label title="this beat's sounds"><input type="checkbox" class="sfx" ${b.sfx === false ? '' : 'checked'}> ♪${b.cues ? b.cues.length : ''}</label>
       </div>
       <div class="layers">${(b.layers || []).concat(b.layers?.length > 1 ? ['*'] : []).map(L => {
         const [dx, dy] = b.move[L] || [0, 0];
-        return `<span class="layer ${sel && sel.beat === b && sel.layer === L ? 'sel' : ''}" data-l="${L}">${L === '*' ? 'all' : L}${dx || dy ? ` <small>${dx},${dy}</small>` : ''}</span>`;
+        const hid = b.hide.includes(L), eye = L === '*' ? '' : `<span class="eye" title="${hid ? 'show' : 'hide'} this animation (and its sounds)">👁</span>`;
+        return `<span class="layer ${sel && sel.beat === b && sel.layer === L ? 'sel' : ''} ${hid ? 'hid' : ''}" data-l="${L}">${eye}${L === '*' ? 'all' : L}${dx || dy ? ` <small>${dx},${dy}</small>` : ''}</span>`;
       }).join('')}</div>
+      ${b.ready ? timingRow(b) : ''}
     </div>`).join('');
+}
+function timingRow(b) {
+  const r = b.time?.retime, speed = r ? (b.src.end - b.src.start) / (r[1] - r[0]) : 1;
+  return `<div class="timing">
+    <span class="seg2"><button data-t="mode" data-m="stretch" class="${tmode === 'stretch' ? 'on' : ''}" title="squeeze or stretch the whole animation (and its sounds) between the new edges">stretch</button><button data-t="mode" data-m="cut" class="${tmode === 'cut' ? 'on' : ''}" title="trim the start or end; what's left plays at normal speed">cut</button></span>
+    start <button data-t="nudge" data-e="0" data-d="-0.1">‹</button><button data-t="here" data-e="0">here</button><button data-t="nudge" data-e="0" data-d="0.1">›</button>
+    end <button data-t="nudge" data-e="1" data-d="-0.1">‹</button><button data-t="here" data-e="1">here</button><button data-t="nudge" data-e="1" data-d="0.1">›</button>
+    <button data-t="reset" title="back to the beat's own timing">reset</button>
+    <small>written ${b.src.start.toFixed(2)}–${b.src.end.toFixed(2)} · shows ${b.start.toFixed(2)}–${b.end.toFixed(2)}${speed !== 1 ? ` · ${speed.toFixed(2)}x speed` : ''}</small>
+  </div>`;
+}
+function setTime(b, edge, value) {
+  const key = tmode === 'stretch' ? 'retime' : 'crop';
+  const cur = b.time?.[key] || (key === 'crop' ? [b.start, b.end] : [b.src.start, b.src.end]);
+  const next = [...cur]; next[edge] = Math.round(value * 1000) / 1000;
+  if (next[1] - next[0] < 0.2) { status('start and end need at least 0.2 s between them'); return; }
+  b.time = { ...(b.time || {}), [key]: next };
+  retime(b);
+}
+function retime(b) {                               // save, then rebuild the beat with its new timing
+  save(b, { time: b.time || null });
+  b.ready = false; renderList();
+  setTimeout(() => { b.frame.src = `/work/${b.id}/index.html?t=${Date.now()}`; }, 120);
 }
 $('#beats').addEventListener('click', e => {
   const el = e.target.closest('.beat'); if (!el) return;
@@ -143,7 +179,23 @@ $('#beats').addEventListener('click', e => {
   if (e.target.classList.contains('on')) { b.on = e.target.checked; save(b, { on: b.on }); buildSfx(); renderList(); sync(); return; }
   if (e.target.classList.contains('sfx')) { b.sfx = e.target.checked ? undefined : false; save(b, { sfx: e.target.checked }); buildSfx(); return; }
   const L = e.target.closest('.layer');
+  if (L && e.target.classList.contains('eye')) {   // hide/show one animation; it rebuilds without it (and its sounds)
+    const name = L.dataset.l;
+    b.hide = b.hide.includes(name) ? b.hide.filter(x => x !== name) : [...b.hide, name];
+    save(b, { hide: b.hide }); b.ready = false; renderList();
+    setTimeout(() => { b.frame.src = `/work/${b.id}/index.html?t=${Date.now()}`; }, 120);
+    return;
+  }
   if (L) { sel = sel && sel.beat === b && sel.layer === L.dataset.l ? null : { beat: b, layer: L.dataset.l }; grab.classList.toggle('off', !sel); if (sel && !(v.currentTime >= b.start && v.currentTime < b.end)) seek((b.start + b.end) / 2); renderList(); return; }
+  const T = e.target.dataset.t;
+  if (T === 'mode') { tmode = e.target.dataset.m; renderList(); return; }
+  if (T === 'here') { setTime(b, +e.target.dataset.e, v.currentTime); return; }
+  if (T === 'nudge') {
+    const key = tmode === 'stretch' ? 'retime' : 'crop', E = +e.target.dataset.e;
+    const cur = b.time?.[key] || (key === 'crop' ? [b.start, b.end] : [b.src.start, b.src.end]);
+    setTime(b, E, cur[E] + +e.target.dataset.d); return;
+  }
+  if (T === 'reset') { delete b.time; retime(b); return; }
   if (e.target.classList.contains('name') && b.ready) seek(b.start);
 });
 

@@ -78,7 +78,7 @@ export class Project {
   stage(id, [W, H] = this.size, { live = false } = {}) {
     const src = readFileSync(join(this.dir, 'beats', id, 'index.html'), 'utf8');
     const move = live ? {} : this.beat(id).move || {};
-    const inject = { beat: id, words: this.words(), move };
+    const inject = { beat: id, words: this.words(), move, time: this.beat(id).time || null, hide: this.beat(id).hide || [] };   // timing applies live too
     const kit = ['retro.css', 'retro.js', 'ships.js'].map(f => readFileSync(join(KIT, f), 'utf8'));
     const brandJs = ['retro-os.js', 'retro-os-critters.js', 'retro-os-starships.js'].map(f => readFileSync(join(BRAND, 'assets', 'js', f), 'utf8'));
     const key = createHash('sha1').update(src).update(kit.join('')).update(brandJs.join('')).update(JSON.stringify(inject)).update(`${W}x${H}`).digest('hex').slice(0, 12);

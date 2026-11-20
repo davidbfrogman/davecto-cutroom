@@ -4,7 +4,7 @@
   "sfxGain": 0,
   "beats": {
     "01-vault": {
-      "on": true,
+      "on": false,
       "move": {
         "main": [
           5,
@@ -22,7 +22,7 @@
       }
     },
     "03-login": {
-      "on": true,
+      "on": false,
       "move": {
         "main": [
           5,
@@ -41,7 +41,10 @@
           5,
           7
         ]
-      }
+      },
+      "hide": [
+        "copy"
+      ]
     },
     "05-moat": {
       "on": true,
@@ -67,7 +70,10 @@
           5,
           23
         ]
-      }
+      },
+      "hide": [
+        "mail"
+      ]
     },
     "07-problems": {
       "on": true,
@@ -80,7 +86,10 @@
           5,
           -4
         ]
-      }
+      },
+      "hide": [
+        "aud"
+      ]
     },
     "08-story": {
       "on": true,
@@ -100,9 +109,12 @@
         ],
         "party": [
           5,
-          1
+          -79.5
         ]
-      }
+      },
+      "hide": [
+        "main"
+      ]
     },
     "10-cheat": {
       "on": true,
@@ -114,6 +126,12 @@
         "cac": [
           5,
           4
+        ]
+      },
+      "time": {
+        "retime": [
+          55.13,
+          65.317
         ]
       }
     }

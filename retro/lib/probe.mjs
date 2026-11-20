@@ -1,5 +1,6 @@
 /* Probe: load each staged beat in headless Chromium and read what it does, without rendering video.
-     start, end      R.START / R.END (absolute seconds)
+     start, end      where the beat shows: R.OUT (R.START/R.END after any retime/crop), absolute seconds
+     src             R.SRC: the beat's own start/end as written
      cues            R.cues: the beat's sound effects
      layers          layer names
      boxes           every 2 frames: the visible elements' boxes in u, per layer (for the lint), and
@@ -11,7 +12,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { playwright } from './project.mjs';
 
-const VERSION = 4;   // bump when what the probe records changes
+const VERSION = 6;   // bump when what the probe records changes
 
 export async function probe(project, ids, size = project.size) {
   const dir = join(project.out, '.probe');
@@ -41,8 +42,9 @@ export async function probe(project, ids, size = project.size) {
         const R = window.R, tl = window.__timelines?.root;
         if (!tl) throw new Error('no timeline: did the beat call R.done(end)?');
         const U = window.innerWidth / 100, boxes = [];
-        for (let t = R.START; t < R.END - 1e-6; t += 1 / 15) {   // overlays show [start, end)
-          tl.seek(Math.max(0, t - R.START), false);
+        const O = R.OUT || { start: R.START, end: R.END };      // where the beat shows (after retime/crop)
+        for (let t = O.start; t < O.end - 1e-6; t += 1 / 15) {   // overlays show [start, end)
+          tl.seek(Math.max(0, t - O.start), false);
           const seen = [];
           for (const L of document.querySelectorAll('.layer')) {
             for (const el of L.children) {
@@ -57,7 +59,7 @@ export async function probe(project, ids, size = project.size) {
           }
           boxes.push({ t: Math.round(t * 1000) / 1000, seen, clips: clipped(U) });
         }
-        return { start: R.START, end: R.END, cues: R.cues, layers: R.layers(), boxes, warnings: R.warnings || [] };
+        return { start: O.start, end: O.end, src: R.SRC, cues: R.cues, layers: R.layers(), boxes, warnings: R.warnings || [] };
 
         // Visible content a window cuts off: [layer, window, side, u]. Content inside its own
         // overflow:hidden box (a belt, a marquee) is that box's business, not the window's.
