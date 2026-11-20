@@ -18,7 +18,9 @@
    Layers: R.win/R.box take { layer: 'name' } (default 'main'). retro.json can move a layer
    ("move": { "save": [0, -4] }, in u) and the lint reports per layer.
 
-   window.RETRO is injected by the build: { words: [{t,e,w}], move: {layer: [dx,dy]}, beat }. */
+   window.RETRO is injected by the build: { words: [{t,e,w}], move: {layer: [dx,dy]}, time: {retime, crop}, hide: [layer], beat }.
+   Timing tweaks (retro.json "time", set in the preview or with `retro time`) are applied in R.done:
+   write beats in their natural times; R.OUT says where the beat ends up. */
 (function () {
   const CFG = window.RETRO || {};
   const R = (window.R = {});
@@ -301,9 +303,36 @@
     if (late.length) R.warnings.push(`${late.length} animation(s) start after the beat ends (${end.toFixed(2)}s), first at ${(R.START + Math.min(...late.map(c => c.startTime()))).toFixed(2)}s`);
     const lateSfx = R.cues.filter(c => c.t > end + 0.05 || c.t < R.START - 0.15);
     if (lateSfx.length) R.warnings.push(`${lateSfx.length} sound(s) outside the beat: ${lateSfx.slice(0, 3).map(c => `${c.s}@${c.t.toFixed(2)}`).join(', ')}`);
-    R.$$('.clip').forEach(c => c.setAttribute('data-duration', String(total)));
     R.tl.set({}, {}, total);
+
+    // Timing from retro.json ("time": { retime: [a, b], crop: [c, d] }, absolute seconds):
+    //   retime  the whole beat plays between a and b instead (faster or slower), sounds move with it
+    //   crop    only c..d shows (no speed change); sounds outside it are dropped
+    // Everything downstream (lint, preview, render, the sound mix) reads R.OUT (where the beat shows,
+    // in video seconds) and R.cues (rewritten to output times). R.START/R.END stay as written, so
+    // per-frame code that reads them keeps working; R.SRC is the same pair.
+    const tm = CFG.time || {}, s0 = R.START, e0 = end;
+    R.SRC = { start: s0, end: e0 };
+    const [a, b] = tm.retime && tm.retime[1] - tm.retime[0] > 0.1 ? tm.retime : [s0, e0];
+    const k = (b - a) / (e0 - s0);
+    let [c, d] = tm.crop || [a, b];
+    c = Math.max(a, Math.min(c, b - R.F)); d = Math.min(b, Math.max(d, c + R.F));
+    const out = t => a + (t - s0) * k;                        // a beat time → output time
+    R.cues = R.cues.map(q => ({ ...q, t: Math.round(out(q.t) * 1000) / 1000 })).filter(q => q.t >= c - 0.15 && q.t <= d);
+    // Layers the user switched off (retro.json "hide": [layer, ...]): gone, sounds included
+    const hide = CFG.hide || [];
+    hide.forEach(L => { if (layers[L]) layers[L].style.display = 'none'; });
+    R.cues = R.cues.filter(q => !hide.includes(q.layer || 'main'));
+    R.map = out;
+    R.OUT = { start: c, end: d };
+    let root = R.tl;
+    if (k !== 1 || c !== a || d !== b) {
+      root = gsap.timeline({ paused: true });
+      root.add(R.tl.tweenFromTo((c - a) / k, (d - a) / k, { duration: d - c, ease: 'none' }), 0);
+      root.set({}, {}, d - c);
+    }
+    R.$$('.clip').forEach(el => el.setAttribute('data-duration', String(Math.round((d - c) * 30) / 30)));
     window.__timelines = window.__timelines || {};
-    window.__timelines.root = R.tl;
+    window.__timelines.root = root;
   };
 })();

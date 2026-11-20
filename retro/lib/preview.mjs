@@ -53,8 +53,10 @@ export async function serve(project, port) {
         let body = '';
         req.on('data', c => { body += c; });
         req.on('end', () => {
-          const { id, on, move, sfx } = JSON.parse(body), pr = fresh(), b = pr.beat(id);
+          const { id, on, move, sfx, time, hide } = JSON.parse(body), pr = fresh(), b = pr.beat(id);
           if (on != null) b.on = on;
+          if (hide !== undefined) { if (hide?.length) b.hide = hide; else delete b.hide; }
+          if (time !== undefined) { if (time && Object.keys(time).length) b.time = time; else delete b.time; }
           if (sfx != null) { if (sfx) delete b.sfx; else b.sfx = false; }
           if (move) {   // kept to 0.01u so a snapped centre stays dead centre
             b.move = Object.fromEntries(Object.entries(move).filter(([, v]) => v[0] || v[1]).map(([k, [x, y]]) => [k, [Math.round(x * 100) / 100, Math.round(y * 100) / 100]]));

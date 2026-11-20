@@ -39,6 +39,14 @@ Tweak (all of this is retro.json; edit it by hand if you like)
   retro move <beat> [layer] --reset
   retro sfx <beat> off|on|<dB>          mute a beat's sounds or set their level (e.g. -3)
   retro sfx all <dB>                    level of the whole sound stem
+  retro time <beat> stretch|cut <start> <end>
+                                  retime a beat: stretch = play the whole thing between start and end
+                                  (faster/slower, sounds move with it); cut = show only start..end at
+                                  normal speed. Values: seconds (12.4), +/- from the current edge
+                                  (+0.5, -0.3) or - to keep. Both can be combined.
+  retro time <beat> --reset [stretch|cut]
+  retro hide <beat> <layer>  /  retro show <beat> <layer>
+                                  switch one animation (a layer) off or on, its sounds with it
 
 Render
   retro render [beats] [--draft] [--no-sfx] [--video other.mov] [--size 1080x1920]
@@ -179,7 +187,7 @@ ${info} -->
     for (const id of p.beatIds()) {
       const b = p.beat(id), x = pr[id];
       const mv = Object.entries(b.move || {}).map(([k, [dx, dy]]) => `${k}:${dx},${dy}`).join(' ');
-      console.log(`${p.on(id) ? 'on ' : 'off'}  ${id.padEnd(20)} ${x.start.toFixed(2).padStart(6)}–${x.end.toFixed(2).padEnd(6)} layers: ${x.layers.join(',').padEnd(18)} sfx: ${b.sfx === false ? 'muted' : `${x.cues.length}${b.sfxGain ? ` @${b.sfxGain}dB` : ''}`}${mv ? `  move ${mv}` : ''}${b.allow ? `  allow ${b.allow.join(',')}` : ''}`);
+      console.log(`${p.on(id) ? 'on ' : 'off'}  ${id.padEnd(20)} ${x.start.toFixed(2).padStart(6)}–${x.end.toFixed(2).padEnd(6)} layers: ${x.layers.join(',').padEnd(18)} sfx: ${b.sfx === false ? 'muted' : `${x.cues.length}${b.sfxGain ? ` @${b.sfxGain}dB` : ''}`}${mv ? `  move ${mv}` : ''}${b.time ? `  time ${JSON.stringify(b.time)}` : ''}${b.hide ? `  hidden ${b.hide.join(',')}` : ''}${b.allow ? `  allow ${b.allow.join(',')}` : ''}`);
     }
   },
 
@@ -237,6 +245,39 @@ ${info} -->
     if (!Object.keys(b.move).length) delete b.move;
     p.save();
     console.log(`${id} move: ${JSON.stringify(b.move || {})}`);
+  },
+
+  async time() {
+    const p = P(), reset = flag('--reset'), [id] = p.match([argv.shift()]), b = p.beat(id);
+    const key = { stretch: 'retime', cut: 'crop' };
+    if (reset) {
+      const which = argv[0] ? [key[argv[0]]] : ['retime', 'crop'];
+      if (b.time) { which.forEach(k => delete b.time[k]); if (!Object.keys(b.time).length) delete b.time; }
+    } else {
+      const [mode, sa = '-', sb = '-'] = argv, k = key[mode];
+      if (!k) throw new Error('retro time <beat> stretch|cut <start> <end>   (e.g. retro time 01 cut +2 -,  retro time 04 stretch - 17.2)');
+      const x = (await probes(p, [id]))[id];
+      const src = x.src || { start: x.start, end: x.end };
+      const cur = b.time?.[k] || (k === 'crop' ? [x.start, x.end] : b.time?.retime || [src.start, src.end]);
+      const val = (v, c) => v === '-' ? c : /^[+-]/.test(v) ? c + Number(v) : Number(v);
+      const [na, nb] = [val(sa, cur[0]), val(sb, cur[1])].map(v => Math.round(v * 1000) / 1000);
+      if (!Number.isFinite(na) || !Number.isFinite(nb) || nb - na < 0.2) throw new Error(`bad times ${na}–${nb} (end must be at least 0.2 s after start)`);
+      b.time = { ...(b.time || {}), [k]: [na, nb] };
+    }
+    p.save();
+    const x = (await probes(p, [id]))[id], src = x.src || x;
+    const r = b.time?.retime, speed = r ? (src.end - src.start) / (r[1] - r[0]) : 1;
+    console.log(`${id}: written ${src.start.toFixed(2)}–${src.end.toFixed(2)} · shows ${x.start.toFixed(2)}–${x.end.toFixed(2)}${speed !== 1 ? ` · ${speed.toFixed(2)}x speed` : ''} · ${x.cues.length} sounds${b.time ? `  ${JSON.stringify(b.time)}` : ''}`);
+  },
+
+  hide() { cmds.show(true); },
+  show(hiding = false) {
+    const p = P(), [id] = p.match([argv.shift()]), b = p.beat(id), L = argv[0];
+    if (!L) throw new Error(`retro ${hiding ? 'hide' : 'show'} <beat> <layer>   (retro ls lists the layers)`);
+    const h = new Set(b.hide || []); hiding ? h.add(L) : h.delete(L);
+    if (h.size) b.hide = [...h]; else delete b.hide;
+    p.save();
+    console.log(`${id}: ${b.hide ? `hidden: ${b.hide.join(', ')}` : 'all layers showing'}`);
   },
 
   sfx() {
