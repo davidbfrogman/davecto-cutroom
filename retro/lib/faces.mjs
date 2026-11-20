@@ -72,7 +72,45 @@ export function noGo([x, y, w, h]) {
   return [x - w * PAD_X, y - h * PAD_TOP, w * (1 + 2 * PAD_X), h * (1 + PAD_TOP + CHIN)];
 }
 
-/** Scenes (between cuts) with the median face and the free bands around it, for placing graphics. */
+/** Free space over [a, b): worst case across every face sample in it (not the median, which hides
+    the moment the speaker leans up into a window). Bands as [x0, y0, x1, y1] in u; null face = all free. */
+export function freeOver(faces, a, b) {
+  const H = faces.height, bottom = H - SAFE.bottom, r1 = v => Math.round(v);
+  const zs = faces.samples.filter(s => s.t >= a - 1e-6 && s.t < b && s.faces[0]).map(s => noGo(s.faces[0]));
+  const mid = faceAt(faces, (a + b) / 2);
+  if (mid && !zs.length) zs.push(noGo(mid));
+  if (!zs.length) return { face: false, above: [SAFE.x0, SAFE.y0, SAFE.x1, r1(bottom)] };
+  const top = Math.min(...zs.map(z => z[1])), bot = Math.max(...zs.map(z => z[1] + z[3]));
+  const lft = Math.min(...zs.map(z => z[0])), rgt = Math.max(...zs.map(z => z[0] + z[2]));
+  return {
+    face: true,
+    above: [SAFE.x0, SAFE.y0, SAFE.x1, Math.max(SAFE.y0, Math.floor(top))],
+    below: [SAFE.x0, Math.min(r1(bottom), Math.ceil(bot)), SAFE.x1, r1(bottom)],
+    left: [SAFE.x0, SAFE.y0, Math.max(SAFE.x0, Math.floor(lft)), r1(bottom)],
+    right: [Math.min(SAFE.x1, Math.ceil(rgt)), SAFE.y0, SAFE.x1, r1(bottom)],
+  };
+}
+
+/** Free space through time: worst case per `step` seconds, neighbours merged while they stay within
+    `tol` u of each other. [{ a, b, above, below, left, right }]. Never merges across a scene cut. */
+export function zones(faces, a, b, { step = 0.5, tol = 4 } = {}) {
+  const cuts = (faces.cuts || []).filter(c => c > a + 0.05 && c < b - 0.05);
+  const edges = [a];
+  for (let t = a; t < b - 1e-6;) { const c = cuts.find(c => c > t + 1e-6 && c < t + step); t = c ?? Math.min(b, t + step); edges.push(t); }
+  const out = [];
+  for (let i = 0; i < edges.length - 1; i++) {
+    const f = { a: edges[i], b: edges[i + 1], ...freeOver(faces, edges[i], edges[i + 1]) };
+    const p = out.at(-1), same = p && !cuts.some(c => Math.abs(c - f.a) < 1e-6) && p.face === f.face &&
+      ['above', 'below'].every(k => !f[k] || Math.abs(p[k][3] - f[k][3]) <= tol && Math.abs(p[k][1] - f[k][1]) <= tol);
+    if (same) { p.b = f.b; for (const k of ['above', 'below', 'left', 'right']) if (f[k]) p[k] = [Math.max(p[k][0], f[k][0]), Math.max(p[k][1], f[k][1]), Math.min(p[k][2], f[k][2]), Math.min(p[k][3], f[k][3])]; }
+    else out.push(f);
+  }
+  return out;
+}
+export const fmtZone = z => !z.face ? 'no face: all free' : `above y${z.above[1]}→${z.above[3]} (${z.above[3] - z.above[1]}u) · below y${z.below[1]}→${z.below[3]} (${z.below[3] - z.below[1]}u) · left x0→${z.left[2]} · right x${z.right[0]}→86`;
+
+/** Scenes (between cuts) with the median face and the free bands around it, for placing graphics.
+    The bands are the worst case over the scene (freeOver), so anything inside them is clear throughout. */
 export function layout(faces, end) {
   const edges = [0, ...faces.cuts.filter(c => c > 0.2 && c < end - 0.2), end];
   const H = faces.height, bottom = H - SAFE.bottom;
@@ -82,16 +120,7 @@ export function layout(faces, end) {
     if (!fs.length) return { a, b, face: null, free: { all: [SAFE.x0, SAFE.y0, SAFE.x1, bottom] } };
     const med = k => fs.map(f => f[k]).sort((p, q) => p - q)[fs.length >> 1];
     const face = [0, 1, 2, 3].map(med);
-    const [zx, zy, zw, zh] = noGo(face);
-    const r1 = v => Math.round(v);
-    return {
-      a, b, face: face.map(r1),
-      free: {
-        above: [SAFE.x0, SAFE.y0, SAFE.x1, r1(zy)],                  // x0, y0, x1, y1
-        below: [SAFE.x0, r1(zy + zh), SAFE.x1, r1(bottom)],
-        left: [SAFE.x0, SAFE.y0, r1(zx), r1(bottom)],
-        right: [r1(zx + zw), SAFE.y0, SAFE.x1, r1(bottom)],
-      },
-    };
+    const r1 = v => Math.round(v), w = freeOver(faces, a, b);
+    return { a, b, face: face.map(r1), free: { above: w.above, below: w.below, left: w.left, right: w.right } };
   });
 }

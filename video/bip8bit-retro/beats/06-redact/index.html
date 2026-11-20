@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- 06 27.37–33.10 "And look, building in public doesn't mean publishing your customer list or handing your
+     entire roadmap to your competitors."
+     Magenta. Above the head, customers.csv with three real-looking rows; "✣ public?" asks on "building in
+     public" (pop); on "publishing your customer list" a marker redacts each row left to right
+     (strike) and NOT THIS ✗ stamps on "list" (error).
+     Below the chest (own layer), Mail: To: competitors@everyone.com types on "handing", roadmap_2026.pdf
+     attaches with Q1–Q4 on "entire roadmap" (ticks), and SEND BLOCKED ✗ stamps on "competitors"
+     (alert). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>06-redact</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #CS .win__body { background: var(--paper); position: relative; display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u) * .35); padding: calc(var(--u) * .5) calc(var(--u) * 1.6); }
+    .cr { position: relative; display: grid; grid-template-columns: calc(var(--u) * 18) 1fr calc(var(--u) * 13); font: 700 calc(var(--u) * 2.5)/1.15 var(--f-mono); border-bottom: var(--hair) solid var(--ink); }
+    .cr.h { font: calc(var(--u) * 2.5)/1.1 var(--f-pixel); color: var(--grey); }
+    .cr i { position: absolute; left: 0; top: 8%; bottom: 8%; width: 0; background: var(--ink); }
+    .stamp { position: absolute; right: calc(var(--u) * 2); top: 50%; transform: translateY(-50%) rotate(-7deg); font-size: calc(var(--u) * 4.4); visibility: hidden; border: var(--hair) solid var(--ink); }
+    #pq { visibility: hidden; }
+    #ML .win__body { background: var(--win-2); position: relative; display: flex; flex-direction: column; gap: calc(var(--u) * .9); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.6); font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    .fld { display: flex; gap: calc(var(--u) * 1.2); align-items: center; background: var(--paper); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .6) calc(var(--u) * 1); }
+    .fld em { font-style: normal; color: var(--grey); }
+    .fld .type { font: 700 calc(var(--u) * 2.8)/1 var(--f-mono); }
+    #at { visibility: hidden; }
+    .qs { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u) * 1); }
+    .qs span { visibility: hidden; border: var(--hair) solid var(--ink); background: var(--accent); padding: calc(var(--u) * .5) calc(var(--u) * .6) calc(var(--u) * .7); font-size: calc(var(--u) * 2.7); }
+    #sb { top: 30%; right: calc(var(--u) * 3); font-size: calc(var(--u) * 5); }
+  </style>
+</head>
+<body data-world="magenta">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 27.37;                                      // the scene cut
+    const END = 33.10, W = p => R.w(p, R.START - 0.1);
+    const ROWS = [['acme.co', 'jen@acme.co', '$499/mo'], ['bluebird', 'sam@bluebird.io', '$99/mo'], ['kitecorp', 'lee@kite.dev', '$1,250/mo']];
+    const CS = R.win({ title: 'customers.csv', right: '<span class="chip chip--world" id="pq">✣ public?</span>', x: 4, y: 20.5, w: 82, h: 20,
+      body: `<div class="cr h"><span>company</span><span>contact</span><span>pays</span></div>
+        ${ROWS.map((r, i) => `<div class="cr" id="c${i}"><span>${r[0]}</span><span>${r[1]}</span><span>${r[2]}</span><i></i></div>`).join('')}
+        <span class="chip chip--warm stamp" id="nt">NOT THIS ✗</span>` });
+    CS.id = 'CS';
+    R.open(CS, Math.max(W('and look'), R.START + 4 * R.F));
+    R.show(R.$('#pq'), W('building')); R.sfx('pop', W('building'), { vol: -4 });
+
+    // the marker
+    const pb = W('publishing'), li = R.we('list');
+    const bars = ROWS.map((_, i) => R.$(`#c${i} i`));
+    R.every(pb, END, t => bars.forEach((b, i) => {
+      const a = pb + (li - pb) * i / 3, k = Math.max(0, Math.min(1, (t - a) / ((li - pb) / 3)));
+      b.style.width = `${Math.round(k * 10) * 10}%`;
+    }));
+    ROWS.forEach((_, i) => R.sfx('strike', pb + (li - pb) * i / 3, { vol: -5 }));
+    R.show(R.$('#nt'), li); R.flash(R.$('#nt'), li, 2); R.sfx('gated', li, { vol: -3 });
+
+    // Mail, below the chest
+    const ML = R.win({ title: 'Mail', right: 'draft', layer: 'mail', x: 4, y: 100, w: 82, h: 33,
+      body: `<div class="fld"><em>To:</em><span class="type" id="to">competitors@everyone.com</span></div>
+        <div class="fld" id="at"><em>Attach:</em><span>roadmap_2026.pdf · 14 pages</span></div>
+        <div class="qs"><span>Q1 · AI inbox</span><span>Q2 · teams</span><span>Q3 · API</span><span>Q4 · the big one</span></div>
+        <span class="chip chip--warm stamp" id="sb">SEND BLOCKED ✗</span>` });
+    ML.id = 'ML';
+    const hn = W('handing'), en = W('entire'), rm = R.we('roadmap'), co = W('competitors');
+    R.open(ML, W('or', li));
+    R.type(R.$('#to'), hn, 36);
+    R.show(R.$('#at'), en); R.sfx('pop', en, { vol: -4, layer: 'mail' });
+    ML.querySelectorAll('.qs span').forEach((s, i) => { const t = en + 0.1 + (rm - en) * i / 3; R.show(s, t); R.sfx('tick', t, { vol: -6, layer: 'mail' }); });
+    R.show(R.$('#sb'), co); R.flash(R.$('#sb'), co, 3); R.sfx('brick', co, { layer: 'mail', vol: -1 });
+    R.done(END);
+  </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<!-- 01 0.00–4.52 "Founders have started guarding their software ideas like they're the secret recipe for Coca-Cola."
+     Below the chest (sky). Vault.sys: a safe door whose combination dial spins while the founder
+     "guards" (ticks), and a file list that locks row by row on "guarding their software ideas"
+     (lock). On "secret recipe" recipe.txt stamps TOP SECRET (alert) and the combo readout scrambles
+     to the end. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01-vault</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #VT .win__body { background: var(--paper); display: grid; grid-template-columns: calc(var(--u) * 27) 1fr; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1.4); }
+    .door { position: relative; border: var(--hair) solid var(--ink); background: var(--win-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 1); }
+    .door svg { width: calc(var(--u) * 19); height: calc(var(--u) * 19); }
+    .door .rim { fill: var(--accent); stroke: var(--ink); stroke-width: 3; }
+    .door .tk { stroke: var(--ink); stroke-width: 3; }
+    .door .hub { fill: var(--ink); }
+    .door .mk { fill: var(--warm); }
+    #cb { font: calc(var(--u) * 3.4)/1 var(--f-pixel); background: var(--paper); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .3) calc(var(--u) * 1); }
+    .fl { display: flex; flex-direction: column; gap: calc(var(--u) * .9); font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .row { display: flex; align-items: center; justify-content: space-between; border-bottom: var(--hair) solid var(--ink); padding-bottom: calc(var(--u) * .7); }
+    .row .st { display: flex; align-items: center; gap: calc(var(--u) * .8); color: var(--grey); }
+    .row .lk { visibility: hidden; }
+    #ts { visibility: hidden; font-size: calc(var(--u) * 3.2); }
+    .ft { margin-top: auto; font-size: calc(var(--u) * 2.8); color: var(--grey); }
+  </style>
+</head>
+<body data-world="sky">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w('Founders', 0);
+    const END = 4.40, W = p => R.w(p, R.START - 0.1);
+    R.seed(7);
+    const lock = R.pix(['.kkk.', 'k...k', 'kkkkk', 'knknk', 'kkkkk'], .55);
+    const FILES = ['idea.txt', 'app_v0.fig', 'pitch.key', 'recipe.txt'];
+    const ticks = [...Array(24)].map((_, i) => { const a = i * 15 * Math.PI / 180, r0 = i % 2 ? 36 : 31; return `<line class="tk" x1="${(Math.sin(a) * r0).toFixed(1)}" y1="${(-Math.cos(a) * r0).toFixed(1)}" x2="${(Math.sin(a) * 42).toFixed(1)}" y2="${(-Math.cos(a) * 42).toFixed(1)}"/>`; }).join('');
+    const VT = R.win({ title: 'Vault.sys', right: 'clearance: founder', x: 4, y: 80, w: 82, h: 37,
+      body: `<div class="door"><svg viewBox="-50 -50 100 100"><circle class="rim" r="46"/><g id="dg">${ticks}<rect class="mk" x="-3" y="-44" width="6" height="12"/></g><circle class="hub" r="11"/></svg><span id="cb">00-00-00</span></div>
+        <div class="fl">${FILES.map((f, i) => `<div class="row" id="f${i}"><span>${f}</span><span class="st"><span class="lk">${lock}</span><span class="sx">open</span></span></div>`).join('')}
+          <span class="chip chip--warm" id="ts">✣ TOP SECRET RECIPE</span><span class="ft">shared with: nobody · 0 people</span></div>` });
+    VT.id = 'VT';
+    R.open(VT, Math.max(W('founders'), R.START + 4 * R.F));
+
+    // the dial spins in clicks while he guards, the combo readout scrambles
+    const dg = R.$('#dg'), cb = R.$('#cb'), sp = W('started');
+    const combo = [...Array(80)].map(() => [0, 0, 0].map(() => String(Math.floor(R.rnd() * 100)).padStart(2, '0')).join('-'));
+    R.every(sp, END, t => {
+      const f = Math.floor((t - sp) * 15);
+      dg.setAttribute('transform', `rotate(${(f * 15 * (Math.floor(f / 8) % 2 ? -1 : 1)) % 360})`);
+      cb.textContent = combo[Math.floor(f / 2) % combo.length];
+    });
+
+    // each file locks
+    const gu = W('guarding'), id = R.we('ideas');
+    FILES.forEach((_, i) => {
+      const t = gu + (id - gu) * i / 3;
+      R.show(R.$(`#f${i} .lk`), t); R.text(R.$(`#f${i} .sx`), t, 'locked');
+      R.sfx(i === 3 ? 'lock' : 'tick', t, { vol: i === 3 ? 0 : -5 });
+    });
+    // the secret recipe
+    const se = W('secret');
+    R.tl.set(R.$('#f3'), { backgroundColor: 'var(--warm)', color: 'var(--paper)' }, R.T(se));
+    R.tl.set(R.$('#f3 .st'), { color: 'var(--paper)' }, R.T(se));
+    R.show(R.$('#ts'), W('recipe')); R.flash(R.$('#ts'), W('recipe'), 2); R.sfx('orchhit', W('recipe'), { vol: -2 });
+    R.flash(R.$('.ft'), W('coca'), 1); R.sfx('tick', W('coca'));
+    R.done(END);
+  </script>
+</body>
+</html>

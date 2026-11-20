@@ -28,8 +28,9 @@ html, body { margin: 0; overflow: hidden; background: transparent; }
 .clip { position: absolute; inset: 0; }
 * { box-sizing: border-box; }
 
-/* Anything the timeline reveals starts hidden. */
-.win, .zoom, .h { visibility: hidden; }
+/* Anything the timeline reveals starts hidden. Opacity too: a child set to visibility:visible
+   (by R.every, say) would otherwise show through a window that isn't open yet. */
+.win, .zoom, .h { visibility: hidden; opacity: 0; }
 
 /* Window: 2px ink frame, ink title bar, double-rule body, hard 5px shadow. */
 .win { position: absolute; display: flex; flex-direction: column; background: var(--win); border: var(--hair) solid var(--ink);

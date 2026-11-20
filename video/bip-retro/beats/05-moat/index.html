@@ -65,7 +65,7 @@
     const fanA = R.pix(['k...k', '.kkk.', '.knk.', 'kkkkk', '.kkk.', '.k.k.', 'k...k'], .7);
     const fanB = R.pix(['.....', '.kkk.', 'kknkk', '.kkk.', '.kkk.', '.k.k.', '.k.k.'], .7);
     const SIGNS = ['GO!', '', 'YOU', '', 'GOT', '', 'THIS', '', 'GO!'];
-    const CR = R.win({ title: 'Cheering section', right: '<span id="cn">1,204</span> fans', layer: 'fans', x: 4, y: 57.5, w: 82, h: 14,
+    const CR = R.win({ title: 'Cheering section', right: '<span id="cn">1,204</span> fans', layer: 'fans', x: 4, y: 57.5, w: 82, h: 17,
       body: SIGNS.map((s, i) => `<div class="fan" id="fn${i}">${s ? `<span class="sg">${s}</span>` : ''}<div class="a">${fanA}</div><div class="b" style="display:none">${fanB}</div></div>`).join('') });
     CR.id = 'CR';
     const ro = W('rooting'), sc = W('succeed');

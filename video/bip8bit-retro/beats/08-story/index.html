@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- 08 42.93–49.40 "Second, share the mistakes, your little wins, all of the fun stuff that somebody can get
+     invested in your story."
+     Below the chest (lavender). Story.reel: a film strip whose sprockets roll the whole time. №2 · SHARE
+     THE STORY on "second" (pop). Frames land on "mistakes" (ep.1 broke prod, a pixel fire, error),
+     "little wins" (ep.2 first $9 MRR, a trophy, success) and "fun stuff" (ep.3 office dog, pop).
+     On "invested" the watching counter runs up (ticks) and ▶▶▶ ep.4 blinks on "story". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08-story</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #SR .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * .8); padding: calc(var(--u) * 1) calc(var(--u) * 1.4); }
+    .top { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3)/1 var(--f-pixel); }
+    #tp { visibility: hidden; font-size: calc(var(--u) * 3.4); }
+    .film { flex: 1; background: var(--ink); display: flex; flex-direction: column; justify-content: space-between; padding: calc(var(--u) * .7) 0; overflow: hidden; }
+    .sp { display: flex; gap: calc(var(--u) * 1.6); white-space: nowrap; padding-left: calc(var(--u) * .8); }
+    .sp i { flex: none; width: calc(var(--u) * 1.6); height: calc(var(--u) * 1.2); background: var(--paper); }
+    .fr { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: calc(var(--u) * 1.2); padding: 0 calc(var(--u) * 1.2); }
+    .fm { visibility: hidden; background: var(--win-2); border: var(--hair) solid var(--paper); height: calc(var(--u) * 13); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * .8); }
+    .fm .chip { font-size: calc(var(--u) * 2.5); }
+    .ft { display: flex; justify-content: space-between; font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    #nx { visibility: hidden; }
+  </style>
+</head>
+<body data-world="lavender">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 42.93;                                      // the scene cut
+    const END = 49.40, W = p => R.w(p, R.START - 0.1);
+    const fire = [R.pix(['...k...', '..knk..', '.knnk..', '.knnnk.', 'knnpnnk', 'knpppnk', '.kkkkk.'], .75), R.pix(['..k....', '..knk..', '.knnnk.', '.knnnk.', 'knnpnk.', 'knpppnk', '.kkkkk.'], .75)];
+    const trophy = R.pix(['kkkkkkk', 'knnnnnk', '.knnnk.', '..knk..', '...k...', '..kkk..', '.kkkkk.'], .75);
+    const dog = [R.pix(['k...kk.', 'kk.knnk', '.kkknk.', '.knnnk.', '.knnnk.', '.k.k.k.', '.k.k.k.'], .75), R.pix(['.k..kk.', '.k.knnk', '.kkknk.', '.knnnk.', '.knnnk.', 'k..k..k', '.k.k.k.'], .75)];
+    const holes = `<div class="sp">${'<i></i>'.repeat(30)}</div>`;
+    const SR = R.win({ title: 'Story.reel', right: 'tip 2 of 3', x: 4, y: 105, w: 82, h: 32,
+      body: `<div class="top"><span class="chip-inv" id="tp">№2 · SHARE THE STORY</span><span>REC ●</span></div>
+        <div class="film">${holes}<div class="fr">
+          <div class="fm" id="m0"><span class="an a">${fire[0]}</span><span class="an b" style="display:none">${fire[1]}</span><span class="chip chip--warm">ep.1 broke prod</span></div>
+          <div class="fm" id="m1">${trophy}<span class="chip chip--green">ep.2 first $9 MRR</span></div>
+          <div class="fm" id="m2"><span class="an a">${dog[0]}</span><span class="an b" style="display:none">${dog[1]}</span><span class="chip chip--world">ep.3 office dog</span></div>
+        </div>${holes}</div>
+        <div class="ft"><span>watching: <span id="wt">0</span></span><span id="nx">▶▶▶ ep.4</span></div>` });
+    SR.id = 'SR';
+    R.open(SR, Math.max(W('second'), R.START + 4 * R.F));
+    R.show(R.$('#tp'), W('second') + 0.1); R.sfx('stab', W('second') + 0.1, { vol: -3 });
+
+    const sps = R.$$('.sp'), ans = R.$$('.an');
+    R.every(R.START, END, t => {
+      const f = Math.round(t * 15);
+      sps.forEach((s, i) => { s.style.transform = `translateX(${R.u((-(f * .8) % 3.2).toFixed(1))})`; });
+      ans.forEach(a => { a.style.display = (f % 4 < 2) === a.classList.contains('a') ? 'inline-block' : 'none'; });
+    });
+    const mi = W('mistakes'), wi = W('wins'), fu = W('fun');
+    R.show(R.$('#m0'), mi); R.sfx('fireball', mi, { vol: -3 });
+    R.show(R.$('#m1'), wi); R.sfx('fanfare', wi, { vol: -4 });
+    R.show(R.$('#m2'), fu); R.sfx('jump', fu, { vol: -3 });
+    const iv = W('invested'), st = W('story');
+    R.count(R.$('#wt'), iv, st - iv + 0.3, 0, 1204);
+    [0, 1, 2, 3].forEach(k => R.sfx('tick', iv + (st - iv) * k / 3, { vol: -7 }));
+    R.show(R.$('#nx'), st); R.blink(R.$('#nx'), st, END, 0.4); R.sfx('shimmer', st, { vol: -3 });
+    R.done(END);
+  </script>
+</body>
+</html>

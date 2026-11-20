@@ -5,12 +5,12 @@
 */
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { detect, layout } from './lib/faces.mjs';
+import { detect, fmtZone, freeOver, layout, zones } from './lib/faces.mjs';
 import { describe, lint } from './lib/lint.mjs';
 import { probe } from './lib/probe.mjs';
 import { secs } from './lib/progress.mjs';
 import { checkDeps, createProject, duration, findProject, Project, PYTHON, RETRO, sh } from './lib/project.mjs';
-import { exportVideo, frames, renderOverlays, writeSfx } from './lib/render.mjs';
+import { exportVideo, frames, renderOverlays, sheet, writeSfx } from './lib/render.mjs';
 
 const HELP = `retro: Retro OS overlays + sound effects for a finished video
 
@@ -18,13 +18,19 @@ Setup
   retro new <video> [--dir d]     make a project (<video>-retro/ next to it), transcribe, find faces
   retro words [from] [to]         the transcript, one phrase per line with start times
   retro faces                     find faces and scene cuts again (after a re-cut)
-  retro layout                    each scene's face and the free space around it (in u)
-  retro beat <NN-name> [phrase]   start a new beat file (boilerplate only, starting at a phrase)
+  retro layout                    each scene's face and the free space around it (in u, worst case)
+  retro zones [from] [to]         free space through time (every 0.5 s, merged): where a window fits when
+  retro beat <NN-name> [phrase] [--to phrase|secs]
+                                  start a beat: snaps to a nearby scene cut, and writes the words, cuts
+                                  and free space for its span into the file as a comment
 
 Look
   retro ls                        beats: on/off, times, layers, moves, sounds
-  retro lint [beats]              check placement: face/chin zone and the Instagram UI zone
+  retro lint [beats]              check placement (face/chin zone, Instagram UI zone), content cut off
+                                  by its window, and anything timed after the beat ends
   retro frames <beat> [t ...]     contact sheet of a beat over the video (red box = face no-go zone)
+  retro frames <beat> --events    a frame just after each moment something happens (from its sounds)
+  retro frames all|<beats...>     one frame per beat in one sheet (--at 0.85 = how far into each beat)
   retro preview [--port 4180]     browser preview: play, toggle beats, drag layers (saves to retro.json)
 
 Tweak (all of this is retro.json; edit it by hand if you like)
@@ -96,14 +102,40 @@ const cmds = {
   layout() { const p = P(); const f = p.faces(); if (!f) throw new Error('No faces.json: run retro faces'); printLayout(p, f); },
 
   beat() {
-    const p = P(), id = argv[0], phrase = argv.slice(1).join(' ');
-    if (!/^\d\d-[a-z0-9-]+$/.test(id || '')) throw new Error('retro beat <NN-name> [phrase], e.g. retro beat 03-ton-smarter "a ton smarter"');
+    const p = P(), to = flag('--to', true), id = argv[0], phrase = argv.slice(1).join(' ');
+    if (!/^\d\d-[a-z0-9-]+$/.test(id || '')) throw new Error('retro beat <NN-name> [phrase] [--to phrase|secs], e.g. retro beat 03-ton-smarter "a ton smarter"');
     const d = join(p.dir, 'beats', id);
     if (existsSync(join(d, 'index.html'))) throw new Error(`${id} exists`);
+    const ws = p.words(), f = p.faces(), cuts = f?.cuts || [];
+    const find = (q, after = 0) => {
+      const n = s => s.toLowerCase().replace(/[^a-z0-9%$' ]+/g, ' ').trim(), qs = n(q).split(/\s+/);
+      const i = ws.findIndex((w, i) => w.t >= after - 1e-6 && qs.every((x, j) => n(ws[i + j]?.w || '') === x || (j === qs.length - 1 && n(ws[i + j]?.w || '').startsWith(x))));
+      if (i < 0) throw new Error(`"${q}" not in the transcript after ${after}s`);
+      return ws[i].t;
+    };
+    let a = phrase ? find(phrase) : 0, startSrc;
+    const cut = cuts.find(c => Math.abs(c - a) <= 0.5);
+    if (cut != null) { a = cut; startSrc = `${cut};${' '.repeat(Math.max(1, 30 - String(cut).length))}// the scene cut${phrase ? ` (by "${phrase}")` : ''}`; }
+    else startSrc = phrase ? `R.w(${JSON.stringify(phrase)}, 0);` : '0;';
+    const end = to ? (isNaN(+to) ? find(to, a + 0.1) : +to)
+      : Math.min(cuts.find(c => c > a + 1.5) ?? 1e9, (ws.at(-1)?.e ?? a + 5) + 0.3);
+    const endC = cuts.find(c => Math.abs(c - end) <= 0.3) ?? end;
+    // the beat's words, cuts and free space, so writing it needs no other lookups
+    const said = ws.filter(w => w.t >= a - 0.05 && w.t < endC).map(w => `${w.w}@${w.t.toFixed(2)}`);
+    const lines = []; for (let i = 0; i < said.length; i += 10) lines.push(said.slice(i, i + 10).join(' '));
+    const zs = f ? zones(f, a, endC) : [];
+    const info = [
+      `${id} ${a.toFixed(2)}–${endC.toFixed(2)}${cuts.some(c => c > a + 0.05 && c < endC - 0.05) ? `  (cuts inside: ${cuts.filter(c => c > a + 0.05 && c < endC - 0.05).join(', ')})` : ''}`,
+      ...lines.map(l => `  ${l}`),
+      'Free space (worst case; u; Instagram-safe x0–86, y20–' + (f ? Math.round(f.height - 37) : 141) + '):',
+      ...(f ? [`  whole beat   ${fmtZone({ a, b: endC, ...freeOver(f, a, endC) })}`] : []),
+      ...zs.map(z => `  ${z.a.toFixed(2)}–${z.b.toFixed(2)}  ${fmtZone(z)}`),
+    ].map(l => `     ${l}`).join('\n').replace(/--/g, '- -');
     mkdirSync(d, { recursive: true });
-    const start = phrase ? `R.w(${JSON.stringify(phrase)}, 0)` : '0';
     writeFileSync(join(d, 'index.html'), `<!doctype html>
-<!-- ${id}: what's said, and what happens on which word. -->
+<!-- ${id}: what's said, and what happens on which word. (Replace this line; keep the notes below
+     until the beat is done, then delete them.)
+${info} -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -116,21 +148,30 @@ const cmds = {
   <style>
   </style>
 </head>
-<body>
+<body data-world="pink">
   <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
     <div class="clip" id="stage" data-start="0" data-duration="5"></div>
   </div>
   <script>
-    R.START = ${start};
-    // const W = R.win({ title: 'Name.app', right: 'v1', variant: 'paper', x: 8, y: 24, w: 60, h: 30, body: '' });
-    // R.open(W, R.w('word'));
-    R.done(R.START + 3);
+    R.START = ${startSrc}
+    const END = ${endC.toFixed(2)}, W = p => R.w(p, R.START - 0.1);
+    // const A = R.win({ title: 'Name.app', right: 'v1', variant: 'paper', x: 4, y: 20.5, w: 82, h: 'auto', body: '' });
+    // R.open(A, W('word'));
+    R.done(END);
   </script>
 </body>
 </html>
 `);
     p.beat(id); p.save();
     console.log(join(d, 'index.html'));
+    console.log(info.replace(/^ {5}/gm, ''));
+  },
+
+  zones() {
+    const p = P(), f = p.faces(); if (!f) throw new Error('No faces.json: run retro faces');
+    const [a = 0, b = Math.max(p.words().at(-1)?.e ?? 0, f.samples.at(-1).t)] = argv.map(Number);
+    console.log(`free space, worst case per stretch (u). Cuts: ${f.cuts.join(', ')}`);
+    for (const z of zones(f, a, b)) console.log(`${z.a.toFixed(2).padStart(6)}–${z.b.toFixed(2).padEnd(6)} ${fmtZone(z)}`);
   },
 
   async ls() {
@@ -147,16 +188,35 @@ const cmds = {
     const issues = lint(p, pr, p.faces());
     if (!p.faces()) console.log('(no faces.json: only the Instagram zone was checked; run retro faces)');
     issues.forEach(i => console.log(describe(i)));
-    console.log(issues.length ? `${issues.length} placement issue(s)` : 'placement ok');
-    process.exitCode = issues.some(i => i.kind === 'face') ? 1 : 0;
+    const n = k => issues.filter(i => i.kind === k).length;
+    console.log(issues.length ? `${n('face') + n('safe')} placement · ${n('clip')} clipped · ${n('timing')} timing issue(s)` : 'ok: placement, clipping, timing');
+    process.exitCode = issues.some(i => i.kind === 'face' || i.kind === 'clip') ? 1 : 0;
   },
 
   async frames() {
-    const p = P(), [id] = p.match([argv.shift()]), pr = await probes(p, [id]), x = pr[id];
-    const movs = await renderOverlays(p, [id]);
-    let ts = argv.map(Number);
-    if (!ts.length) ts = [0.15, 0.4, 0.65, 0.92].map(k => +(x.start + (x.end - x.start) * k).toFixed(2));
-    console.log(frames(p, id, x, movs[id], ts, { faces: p.faces(), zones: !flag('--clean') }));
+    const p = P(), events = !!flag('--events'), clean = !!flag('--clean'), at = Number(flag('--at', true) ?? 0.85);
+    const args = [], ts = [];
+    const isBeat = v => !/^\d+(\.\d+)?$/.test(v) || (/^\d\d$/.test(v) && p.beatIds().some(b => b.startsWith(v)));
+    for (const v of argv) (args.length && !isBeat(v) ? ts : args).push(v);   // "12" = beat 12 if there is one; "12.0" = 12 s
+    const ids = args[0] === 'all' ? p.beatIds().filter(id => p.on(id)) : p.match(args);
+    if (!ids.length) throw new Error('retro frames <beat> [t ...] | --events | all | <beats...>');
+    const pr = await probes(p, ids), movs = await renderOverlays(p, ids);
+    let items;
+    if (ids.length > 1) items = ids.map(id => ({ id, t: +(pr[id].start + (pr[id].end - pr[id].start) * at).toFixed(2) }));
+    else {
+      const id = ids[0], x = pr[id];
+      let t = ts.map(Number);
+      if (events) {   // just after each sound = just after each thing happens; close ones merge
+        for (const c of [...x.cues].sort((m, n) => m.t - n.t)) { const v = Math.min(x.end - 0.05, c.t + 0.15); if (!t.length || v - t.at(-1) > 0.45) t.push(+v.toFixed(2)); }
+        if (t.length > 10) t = t.filter((_, i) => i % Math.ceil(t.length / 10) === 0);
+      }
+      if (!t.length) t = [0.15, 0.4, 0.65, 0.92].map(k => +(x.start + (x.end - x.start) * k).toFixed(2));
+      items = t.map(v => ({ id, t: v }));
+    }
+    const name = ids.length > 1 ? (args[0] === 'all' ? 'check-all' : `check-${ids.map(i => i.slice(0, 2)).join('-')}`) : `check-${ids[0]}`;
+    const out = sheet(p, items.map(i => ({ ...i, probe: pr[i.id], mov: movs[i.id] })), name, { faces: p.faces(), zones: !clean });
+    console.log(out);
+    console.log(items.map((i, k) => `${k + 1}: ${i.id} @${i.t}`).join('  '));
   },
 
   on() { const p = P(); p.match(argv).forEach(id => { p.beat(id).on = true; }); p.save(); cmds.ls(); },
@@ -220,7 +280,7 @@ const cmds = {
 
 function printLayout(p, f) {
   const end = p.words().at(-1)?.e ?? f.samples.at(-1).t;
-  console.log(`frame: 100 x ${f.height}u. Face no-go zone = face + brow + chin band. Free space (x0,y0 → x1,y1):`);
+  console.log(`frame: 100 x ${f.height}u. Face no-go zone = face + brow + chin band. Free space, worst case over each scene (x0,y0 → x1,y1); retro zones for it through time:`);
   for (const s of layout(f, Math.max(end, f.samples.at(-1).t))) {
     if (!s.face) { console.log(`${s.a.toFixed(2).padStart(6)}–${s.b.toFixed(2).padEnd(6)} no face`); continue; }
     const [x, y, w, h] = s.face, fr = s.free, r = ([a, b, c, d]) => `${a},${b}→${c},${d}`;

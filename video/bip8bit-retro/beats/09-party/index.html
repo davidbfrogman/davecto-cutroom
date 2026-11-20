@@ -1,0 +1,85 @@
+<!doctype html>
+<!-- 09 49.40–55.13 "And three, when somebody says that they use it, get their email. Otherwise, you're going to
+     throw a launch party without inviting anyone."
+     Pink. Above the head, Inbox: №3 · GET THEIR EMAIL on "three" (pop); a DM from @sam lands on
+     "says that they use it" (notify); the email field types sam@usesit.co on "get their email" and
+     ✓ list: 1 (success).
+     Below the chest (own layer), Party.exe opens on "throw a launch party": balloons bob, a disco
+     ball turns, LAUNCH PARTY banner; guests: 0, and invites sent: 0 flashes on "without inviting
+     anyone" (error), one sad blip. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>09-party</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #IN .win__body { background: var(--win-2); display: flex; flex-direction: column; gap: calc(var(--u) * .9); padding: calc(var(--u) * 1) calc(var(--u) * 1.4); }
+    #tp { visibility: hidden; align-self: flex-start; font-size: calc(var(--u) * 3.4); }
+    .dm { visibility: hidden; align-self: flex-start; background: var(--paper); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .7) calc(var(--u) * 1.2); font: 700 calc(var(--u) * 2.8)/1.2 var(--f-mono); }
+    .dm em { font: calc(var(--u) * 2.8)/1 var(--f-pixel); font-style: normal; color: var(--grey); margin-right: calc(var(--u) * 1); }
+    .em { visibility: hidden; display: flex; align-items: center; gap: calc(var(--u) * 1.2); font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    .em .fld { flex: 1; background: var(--paper); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .6) calc(var(--u) * 1); font: 700 calc(var(--u) * 2.9)/1 var(--f-mono); }
+    #ok { visibility: hidden; }
+    #PT .win__body { background: var(--ink); position: relative; overflow: hidden; color: var(--paper); }
+    .bn { position: absolute; left: 50%; top: calc(var(--u) * 6.5); transform: translateX(-50%); font: calc(var(--u) * 5)/1 var(--f-pixel); color: var(--accent); white-space: nowrap; }
+    .str { position: absolute; left: 0; right: 0; top: 0; height: var(--hair); background: var(--paper); }
+    .ball { position: absolute; left: 50%; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+    .ball i { width: var(--hair); height: calc(var(--u) * 1.4); background: var(--paper); }
+    .bl { position: absolute; bottom: calc(var(--u) * 5); display: flex; flex-direction: column; align-items: center; }
+    .bl i { width: var(--hair); height: calc(var(--u) * 4); background: var(--paper); }
+    .fl { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--u) * 4.6); border-top: var(--hair) solid var(--paper); display: flex; justify-content: space-between; align-items: center; padding: 0 calc(var(--u) * 1.4); font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    #iv { padding: 0 calc(var(--u) * .5); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 49.40;                                      // the scene cut
+    const END = 55.13, W = p => R.w(p, R.START - 0.1);
+
+    // Inbox
+    const IN = R.win({ title: 'Inbox', right: 'tip 3 of 3', x: 4, y: 20.5, w: 82, h: 23,
+      body: `<span class="chip-inv" id="tp">№3 · GET THEIR EMAIL</span>
+        <div class="dm" id="dm"><em>@sam</em>honestly I use this every day</div>
+        <div class="em" id="em"><span>email:</span><span class="fld"><span class="type" id="ad">sam@usesit.co</span></span><span class="chip chip--green" id="ok">✓ list: 1</span></div>` });
+    IN.id = 'IN';
+    R.open(IN, Math.max(W('and three'), R.START + 4 * R.F));
+    R.show(R.$('#tp'), W('three')); R.sfx('stab', W('three'), { vol: -3 });
+    const sy = W('says');
+    R.show(R.$('#dm'), sy); R.sfx('bell', sy, { vol: -4 });
+    const gt = W('get their');
+    R.show(R.$('#em'), gt); R.type(R.$('#ad'), gt + 0.05, 36);
+    const ok = R.we('email') + 0.05;
+    R.show(R.$('#ok'), ok); R.sfx('coin', ok, { vol: -3 });
+
+    // Party.exe
+    const balloon = c => R.pix(['.kkk.', `k${c}${c}${c}k`, `k${c}p${c}k`, `k${c}${c}${c}k`, '.kkk.', '..k..'], .9);
+    const disco = [R.pix(['.kkk.', 'kpwpk', 'kwpwk', 'kpwpk', '.kkk.'], .8), R.pix(['.kkk.', 'kwpwk', 'kpwpk', 'kwpwk', '.kkk.'], .8)];
+    const BX = [8, 20, 62, 74];
+    const PT = R.win({ title: 'Party.exe', right: 'launch night', layer: 'party', x: 4, y: 90, w: 82, h: 32,
+      body: `<i class="str"></i><div class="ball"><i></i><span class="d a">${disco[0]}</span><span class="d b" style="display:none">${disco[1]}</span></div>
+        <span class="bn">✣ LAUNCH PARTY ✣</span>
+        ${BX.map((x, i) => `<div class="bl" id="b${i}" style="left:calc(var(--u) * ${x})">${balloon(i % 2 ? 'g' : 'n')}<i></i></div>`).join('')}
+        <div class="fl"><span>guests: <span id="gs">0</span></span><span>invites sent: <span id="iv">0</span></span></div>` });
+    PT.id = 'PT';
+    const th = W('throw'), wo = W('without'), an = W('anyone');
+    R.open(PT, th);
+    const bls = BX.map((_, i) => R.$('#b' + i)), ds = R.$$('.d');
+    R.every(th, END, t => {
+      const f = Math.round(t * 15);
+      bls.forEach((b, i) => { b.style.marginBottom = R.u(((f >> 1) + i) % 4 < 2 ? 0 : .8); });
+      ds.forEach(d => { d.style.display = (f % 4 < 2) === d.classList.contains('a') ? 'inline-block' : 'none'; });
+    });
+    R.sfx('victory', W('party'), { vol: -6, layer: 'party' });
+    R.tl.set(R.$('#iv'), { backgroundColor: 'var(--warm)' }, R.T(wo));
+    R.flash(R.$('#iv'), an, 3); R.sfx('gameover', an, { layer: 'party', vol: -3 });
+    R.blink(R.$('.bn'), an, END, 0.5);
+    R.done(END);
+  </script>
+</body>
+</html>

@@ -41,7 +41,7 @@
     R.START = 33.10;                                      // the scene cut
     const END = 42.93, W = p => R.w(p, R.START - 0.1);
     const av = R.pix(['.kkk.', 'knnnk', 'kknkk', '.kkk.', 'kkkkk'], .55);
-    const FD = R.win({ title: 'Feed · how I post', right: 'tip 1 of 3', x: 4, y: 20.5, w: 82, h: 32,
+    const FD = R.win({ title: 'Feed · how I post', right: 'tip 1 of 3', x: 4, y: 20.5, w: 82, h: 33,
       body: `<span class="chip-inv" id="tp">№1 · TALK ABOUT THEIR PROBLEMS</span>
         <div class="posts">
           <div class="po" id="pa"><span class="who">${av}@dave · 2m</span><p>Our users do invoices at 2am. That's the headache we're killing.</p><span class="rx"><span>♥ <span id="ha">0</span></span><span>↺ <span id="ra">0</span></span></span></div>
@@ -65,7 +65,7 @@
     // Audience.db
     const founder = R.pix(['.kkk.', '.kwk.', '.kkk.', 'kkkkk', 'k.k.k', '..k..', '.k.k.'], .6);
     const magnet = R.pix(['kkk.kkk', 'knk.knk', 'knk.knk', 'knk.knk', 'knkkknk', '.knnnk.', '..kkk..'], .9);
-    const AU = R.win({ title: 'Audience.db', right: 'attracting…', layer: 'aud', x: 4, y: 54, w: 82, h: 13.5,
+    const AU = R.win({ title: 'Audience.db', right: 'attracting…', layer: 'aud', x: 4, y: 55, w: 82, h: 17,
       body: `${magnet}<div class="lane">${[...Array(5)].map((_, i) => `<div class="fo" id="o${i}"><b>$0</b>${founder}<span>founder</span></div>`).join('')}</div>
         <div class="rev"><span>revenue</span><span id="rv">$—</span></div>` });
     AU.id = 'AU';

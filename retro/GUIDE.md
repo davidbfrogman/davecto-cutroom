@@ -15,23 +15,38 @@ plumbing, and don't re-derive anything this file already says.
 2. `retro words`: the transcript, one phrase per line with start times. Split it into beats: one
    idea per beat, roughly 2–8 s, back to back so the whole video is covered. Scene cuts
    (`retro layout`) are good beat edges.
-3. Per beat: `retro beat 03-ton-smarter "a ton smarter"` makes the boilerplate; write the
-   animation. Land actions on words with `R.w('phrase')`, not hand-typed numbers.
-4. `retro lint` (about 1 s, no render). Fix every face issue by moving things, not by allowing them.
-5. `retro render` → `out/<video>-retro.mp4` (2K, sounds mixed in). Look at a few beats with
-   `retro frames <beat> [times]` (contact sheet, red box = face no-go zone). Don't render to check
-   placement; lint does that.
-6. Tell the user about `retro preview` for toggling and moving things themselves.
+3. Per beat: `retro beat 03-ton-smarter "a ton smarter" [--to "next phrase"|secs]`. It snaps the
+   start to a scene cut within 0.5 s, ends at the next cut (or `--to`), and writes into the file:
+   the beat's words with times, its cuts, and its **free space through time** (worst case, in u).
+   That comment is everything you need to write the beat: don't run `words`/`layout` again.
+   Land actions on words with `W('phrase')` (the skeleton defines it), not hand-typed numbers.
+   Delete the notes comment when the beat is done (keep the one-line description).
+4. `retro lint` (seconds, no render) checks four things. Fix all of them before looking at frames:
+   - **face**: covers the face/chin zone. Move or shrink the window, or close it before the lean-in.
+   - **safe**: in the Instagram UI zone.
+   - **clip**: content cut off by its window ("needs h ≥ 38"). Use `h: 'auto'`, raise h, or
+     shrink type. This was the commonest bug by far; trust it over your eye.
+   - **timing**: things scheduled after the beat ends (a word lookup matched a later word, or
+     an end phrase lands past the cut), sounds outside the beat, unknown sound names.
+5. Look once: `retro frames all` (one frame per beat, one sheet), then `retro frames <beat>
+   --events` for any beat you're unsure of (a frame just after each sound = each thing happening).
+   Red box = face no-go zone.
+6. `retro render --draft` once at the end, then tell the user about `retro preview` for toggling
+   and moving things themselves. Never undo their moves (retro.json `move`).
 
 ## Placement rules (the user's, non-negotiable)
 
 - **Never cover the face**, and never put anything **right under the chin**. The no-go zone is
-  the face box plus a brow band and a chin band of 0.45 face heights (`lib/faces.mjs`).
+  the face box plus a brow band of 0.2 and a chin band of 0.45 face heights (`lib/faces.mjs`;
+  faces.json boxes are `[x, y, w, h]` from the top-left, in u. Don't do this maths by hand:
+  `retro zones` and the `retro beat` notes do it).
 - **Prefer the space above the head.** Below the chest is fine. Covering an on-screen card or
   prop is fine. The sides work when the face is centred and small.
 - Instagram UI: keep graphics in x 0–86u and y 20u to (frame height − 37u) (bottom = 140u at 9:16).
 - `retro layout` prints, per scene, the face box and the free rectangles (above / below / left /
-  right) in u. Place windows inside those. `allow: ["face"]` in retro.json exists for a deliberate
+  right) in u, **worst case over the scene**. `retro zones [from] [to]` shows the same through time
+  (people lean in mid-scene: a window above the head may have to close before they do). Place
+  windows inside those. `allow: ["face"]` in retro.json exists for a deliberate
   gag the user asked for; don't add it yourself.
 
 Units: everything is in **u = 1% of the frame width**. The frame is 100u wide and 177.8u tall at 9:16.
@@ -47,15 +62,21 @@ All times are **absolute seconds in the video**.
 |---|---|
 | `R.START = R.w('phrase', 0)` | beat start (set first) |
 | `R.w(phrase, after?)` / `R.we(phrase, after?)` | start / end of a phrase in the transcript, first match after `after` (default START−1). Typos throw. |
-| `R.win({ title, right, variant, body, x, y, w, h, layer })` | a window (variants: paper, grey, pink, world, clear) |
+| `R.win({ title, right, variant, body, x, y, w, h, layer })` | a window (variants: paper, grey, pink, world, clear). `h: 'auto'` = as tall as its content (the lint checks the real box against the face). |
 | `R.box(cls, { x, y, w, h, html, id, layer, parent })` | any absolutely placed element (`.h` = starts hidden) |
-| `R.open(el, t, { from: {x,y}, sfx })` / `R.close(el, t, { to, sfx })` | System-1 zoom-rect open (lands at t) / close. Sound: open / close. |
+| `R.open(el, t, { from: {x,y}, sfx })` / `R.close(el, t, { to, sfx })` | System-1 zoom-rect open (lands at t; never earlier than START + 4 frames so the trail plays inside the beat; returns the landing time) / close. Sound: open / close. |
 | `R.show(el, t)` / `R.hide(el, t)` | 0 ms appear / vanish |
-| `R.type(el, t, cps, { sfx })` | pixel type-on (element gets class `type`). Sound: type clicks. |
+| `R.type(el, t, cps, { sfx })` | type-on, character by character (any glyphs: arrows, emoji). Element has class `type`. Sound: type clicks. Ends at t + chars/cps. |
 | `R.text(el, t, s)` | swap text |
 | `R.count(el, t, dur, from, to, fmt)` | stepped counter on twos |
 | `R.blink(el, a, b, period)` / `R.flash(el, t, n)` | 50% blink / invert flash |
-| `R.every(a, b, fn(t))` | call fn every frame (on twos), for procedural drawing |
+| `R.every(a, b, fn(t))` | call fn every frame (on twos), for procedural drawing. It also runs once at build with t = a. |
+| `R.stagger(els, a, b, { gap, sfx, vol, every })` | reveal elements one by one, evenly a→b (or every `gap` s), a tick each (`every: 2` = every other). `els`: selector, element or list. Returns the times. |
+| `R.press(el, t, { depth, sfx })` | a button pushed into its hard shadow for two frames. Sound: thunk. |
+| `R.path(el, [[t, x, y], ...], { move })` | move along keyframes (u, in its parent), linear on twos; `move` = seconds per leg (then it waits). Cursors, claws, flying papers. |
+| `R.flip(el, a, b, { fps })` + `R.pixAnim([rowsA, rowsB], cell)` | flip-book pixel art (fire, walking, waving), default 7.5 fps |
+| `R.marquee(el, a, b, text, { chars, cps })` | scrolling LCD/ticker text |
+| `R.lerp(a, b, k)` / `R.clamp(v, a, b)` / `R.measure(el)` | maths; an element's box in u |
 | `R.tl.set(el, {...}, R.T(t))` | anything else in GSAP (no `className`: set properties) |
 | `R.pix(rows, cell)` | pixel art: k ink, p paper, n accent, g green, w grey, `.` clear |
 | `R.seg(n)` | segmented bar (fill cells by setting their background) |
@@ -78,6 +99,24 @@ and `R.type` cue their own (`{ sfx: false }` to skip, `{ sfx: 'notify' }` to swa
 else with `R.sfx`. Sounds (lib/synth.mjs): **open close tick type pop success alert error strike
 lock thunk sweep crash sparkle boot notify blip** (blip takes `freq`; rising runs:
 `500 * 2 ** (i / 16)`).
+**8-bit game set** (NES-style, original): coin jump bigjump stomp powerup oneup shrink pipe fireball
+bump brick kick rev turbo secret fanfare sword hurt heart gem select confirm cancel pause zap explode
+warp gameover victory charge. Reach for them when the beat is playful: coin = money or a point
+scored, powerup/oneup = something upgraded or gained, shrink/gameover = it got worse or failed,
+secret = a reveal, fanfare/victory = a big win, select/confirm/cancel = menu choices, rev/turbo =
+speed, zap/fireball = a shot, stomp/bump/brick = an impact, warp/pipe = going somewhere else. They
+replace the plain sounds for that moment rather than stacking on top of them.
+**80s synth-pop set** (detuned saws, FM, gated reverb; all in A minor, so any two sit together):
+stab orchhit gated tomfill clap bell epiano sunset arpup arpdown swell filterup revcym tapestop
+pluck fmbass syntom choir shimmer drop. Momentary effects with a little more body, never a bed.
+stab/orchhit = a big reveal or a title landing; gated/clap/fmbass = a punchy accent (fmbass under
+a heavy landing); bell/pluck/shimmer = a light, shiny "ding"; epiano/sunset/choir = a warm win or a
+revelation; arpup/swell/filterup/tomfill = building into something (swell peaks ~0.8 s after
+its cue, so cue it early); arpdown/drop/tapestop = a letdown or "wait, what"; revcym = a
+transition into the next window.
+**Mix the three sets freely** to give each moment its own feeling: plain OS sounds for the
+machinery (ticks, typing, windows), 8-bit for playful wins and fails, synth-pop for the moments
+that should feel big or warm. Keep it sparse: the synth sounds are longer, so one per moment.
 What goes with what: windows open/close; each step, cell or counter jump = tick; labels and chips
 landing = pop; done/pass/saved = success; warnings = alert; wrong = error; strike-through = strike;
 padlocks/target lock = lock; big button press = thunk; build-ups = sweep then crash; dialogs asking
@@ -137,9 +176,16 @@ are real-time only, so build your own with `R.every` if you need them.
 ## Gotchas
 
 - Renders must be deterministic: no `Math.random`, `Date`, `setTimeout`, `requestAnimationFrame`.
-- Anything revealed later starts hidden (`.h` class, or `visibility:hidden` in CSS) and is shown with `R.show`/`R.open`.
-- `R.type` needs a monospace/pixel element with class `type`.
+- Anything revealed later starts hidden (`.h` class, or `visibility:hidden` in CSS) and is shown
+  with `R.show`/`R.open`. Windows, zoom rects and `.h` are opacity 0 too, so nothing inside an
+  unopened window can show through.
+- In `R.every`, toggle `display` (or opacity) for things that come and go; `visibility: visible`
+  on a child beats a `visibility: hidden` parent.
+- Content that should overflow on purpose (a conveyor running off the edge) goes inside its own
+  `overflow: hidden` box, or gets `data-bleed` so the clip check skips it.
+- A phrase can match a later sentence: pass `after` (`W('and', pa)`), and lint's timing check
+  catches the ones that land past the beat's end.
 - Keep windows inside the free space at their largest (the zoom trail starts at `from`; put
   `from` near where the attention is: the face or the previous window).
 - The render size is 1440x2560 (Instagram 2K). Size things in u and it just works.
-- Cost: write the beat, lint, render once, look at one contact sheet. Don't render per tweak.
+- Cost: write the beats, lint until clean, one `frames all`, one draft render. Don't render per tweak.
