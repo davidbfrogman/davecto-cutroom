@@ -64,7 +64,7 @@
       vt.textContent = (Math.floor((t - de) * 1373) + 12).toLocaleString('en-US');
     });
     [W('going on'), W('right now'), W('building')].forEach(t => R.sfx('tick', t, { vol: -7 }));
-    R.flash(R.$('#b2'), stp, 3); R.sfx('alert', stp, { vol: -3 });
+    R.flash(R.$('#b2'), stp, 3); R.sfx('shrink', stp, { vol: -3 });
 
     // Copy, below the chest
     const app = R.pix(['kkkkkkkkk', 'knnnnnnnk', 'knkkknnnk', 'knnnnnnnk', 'knkkkkknk', 'knnnnnnnk', 'kkkkkkkkk'], .8);
@@ -75,7 +75,7 @@
         <div class="tm"><span>time left: <span id="tl">48:00:00</span></span><span class="dy"><span class="chip" id="sa">SAT</span><span class="chip" id="su">SUN</span></span></div>` });
     CP.id = 'CP';
     const sb = W('somebody'), wk = Math.min(R.we('weekend'), END - 0.3);   // lands before the cut
-    R.open(CP, sb);
+    R.open(CP, sb); R.sfx('filterup', cl - 0.5, { vol: -6, layer: 'copy' });
     R.show(R.$('#c2'), W('with ai')); R.sfx('pop', W('with ai'), { vol: -4, layer: 'copy' });
     const pg = R.$('#pg'), tl = R.$('#tl');
     R.show(pg, cl);
@@ -92,7 +92,7 @@
     const mid = (cl + wk) / 2;
     R.tl.set(R.$('#sa'), { opacity: 1, backgroundColor: 'var(--accent)' }, R.T(cl));
     R.tl.set(R.$('#su'), { opacity: 1, backgroundColor: 'var(--accent)' }, R.T(mid));
-    R.text(tl, wk, '00:00:00 · ✓ cloned'); R.flash(R.$('.tm'), wk, 2); R.sfx('alert', wk, { layer: 'copy', vol: -3 });
+    R.text(tl, wk, '00:00:00 · ✓ cloned'); R.flash(R.$('.tm'), wk, 2); R.sfx('warp', wk, { layer: 'copy', vol: -3 });
     R.done(END);
   </script>
 </body>

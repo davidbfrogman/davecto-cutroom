@@ -45,13 +45,13 @@
     const op = Math.max(W('now'), R.START + 4 * R.F);
     R.open(CX, op);
     [0, 1].forEach(i => { const t = op + 0.15 + i * 3 * R.F; R.show(R.$('#r' + i), t); R.sfx('tick', t, { vol: -5 }); });
-    R.show(R.$('#hd'), W("can't copy")); R.sfx('pop', W("can't copy"), { vol: -3 });
+    R.show(R.$('#hd'), W("can't copy")); R.sfx('stab', W("can't copy"), { vol: -3 });
 
     // 50 customer conversations
     const fi = W('50'), cv = R.we('conversations'), hd = W('had');
-    R.show(R.$('#r2'), fi); R.sfx('tick', fi);
+    R.show(R.$('#r2'), fi); R.sfx('coin', fi);
     R.count(R.$('#n2'), fi, cv - fi, 0, 50);
-    const fail = (i, t) => { R.show(R.$('#x' + i), t); R.flash(R.$('#r' + i), t, 1); R.sfx('error', t, { vol: -4 }); };
+    const fail = (i, t) => { R.show(R.$('#x' + i), t); R.flash(R.$('#r' + i), t, 1); R.sfx('bump', t, { vol: -2 }); };
     fail(2, hd);
     // trust
     R.show(R.$('#r3'), W('trust')); R.sfx('tick', W('trust'));
@@ -69,7 +69,7 @@
       body: SIGNS.map((s, i) => `<div class="fan" id="fn${i}">${s ? `<span class="sg">${s}</span>` : ''}<div class="a">${fanA}</div><div class="b" style="display:none">${fanB}</div></div>`).join('') });
     CR.id = 'CR';
     const ro = W('rooting'), sc = W('succeed');
-    R.open(CR, ro);
+    R.open(CR, ro); R.sfx('clap', ro + 0.25, { vol: -4, layer: 'fans' });
     const fans = SIGNS.map((_, i) => R.$('#fn' + i));
     R.every(ro, END, t => {
       const f = Math.round(t * 15), fast = t >= sc;
@@ -81,7 +81,7 @@
       });
     });
     R.count(R.$('#cn'), sc, 0.6, 1204, 1311);
-    R.sfx('sparkle', sc, { layer: 'fans' });
+    R.sfx('victory', sc, { layer: 'fans' });
     R.done(END);
   </script>
 </body>

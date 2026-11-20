@@ -57,7 +57,7 @@
     R.tl.set(bt, { x: R.u(.6), y: R.u(.6), boxShadow: 'none' }, R.T(lc));
     R.tl.set(bt, { x: 0, y: 0, boxShadow: `${R.u(.6)} ${R.u(.6)} 0 var(--ink)`, backgroundColor: 'var(--green)', color: 'var(--ink)' }, R.T(lc) + 2 * R.F);
     R.text(bt, lc + 2 * R.F, 'LAUNCHED ✓'); R.text(R.$('#bs'), lc + 2 * R.F, 'live · 0.000s ago');
-    R.sfx('thunk', lc);
+    R.sfx('bigjump', lc); R.sfx('stab', lc + 2 * R.F, { vol: -5 });
 
     // ...crickets
     const nb = W('nobody'), kn = W('knows'), ex = W('exist');
@@ -65,7 +65,7 @@
     [nb, kn].forEach(t => { R.show(R.$('#ch'), t); R.hide(R.$('#ch'), t + 0.25); R.sfx('blip', t, { freq: 1800, vol: -10 }); R.sfx('blip', t + 0.1, { freq: 1800, vol: -12 }); });
     const cr = R.$('#cr');
     R.every(nb, END, t => { cr.style.marginBottom = R.u(Math.round(t * 15) % 3 === 0 ? .5 : 0); });
-    R.show(R.$('#pk'), ex); R.flash(R.$('#pk'), ex, 2);
+    R.show(R.$('#pk'), ex); R.sfx('drop', ex, { vol: -3 }); R.flash(R.$('#pk'), ex, 2);
     R.done(END);
   </script>
 </body>

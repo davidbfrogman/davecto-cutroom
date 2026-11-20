@@ -3,6 +3,7 @@
   retro: Retro OS motion graphics + sound effects over a finished vertical video.
   Run `retro help` (or `node retro/cli.mjs help`). GUIDE.md is how to write beats; README.md is how to use it.
 */
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { detect, fmtZone, freeOver, layout, zones } from './lib/faces.mjs';
@@ -31,7 +32,8 @@ Look
   retro frames <beat> [t ...]     contact sheet of a beat over the video (red box = face no-go zone)
   retro frames <beat> --events    a frame just after each moment something happens (from its sounds)
   retro frames all|<beats...>     one frame per beat in one sheet (--at 0.85 = how far into each beat)
-  retro preview [--port 4180]     browser preview: play, toggle beats, drag layers (saves to retro.json)
+  retro preview [--port 4180] [--no-open]
+                                  browser preview (opens it): play, toggle, move, retime (saves to retro.json)
 
 Tweak (all of this is retro.json; edit it by hand if you like)
   retro off <beats>  /  retro on <beats>
@@ -49,8 +51,9 @@ Tweak (all of this is retro.json; edit it by hand if you like)
                                   switch one animation (a layer) off or on, its sounds with it
 
 Render
-  retro render [beats] [--draft] [--no-sfx] [--video other.mov] [--size 1080x1920]
-                                  overlays (cached) + lint + SFX + the export: out/<video>-retro.mp4
+  retro render [beats] [--draft] [--no-sfx] [--no-open] [--video other.mov] [--size 1080x1920]
+                                  overlays (cached) + lint + SFX + the export: out/<video>-retro.mp4,
+                                  then shows it in Finder (--no-open to skip)
 
 Options: -p <project dir> (default: the nearest folder up with a retro.json)`;
 
@@ -292,7 +295,7 @@ ${info} -->
   async render() {
     checkDeps();
     const p = P();
-    const draft = !!flag('--draft'), noSfx = !!flag('--no-sfx');
+    const draft = !!flag('--draft'), noSfx = !!flag('--no-sfx'), noOpen = !!flag('--no-open');
     const video = flag('--video', true), sizeArg = flag('--size', true);
     const size = sizeArg ? sizeArg.split('x').map(Number) : p.size;
     const ids = p.match(argv).filter(id => p.on(id));
@@ -307,12 +310,15 @@ ${info} -->
     const movs = await renderOverlays(p, ids, size);
     const out = await exportVideo(p, pr, movs, { video: video ? resolve(video) : p.video, size, sfx: !noSfx, draft });
     console.log(`→ ${out}`);
-    console.log(`  done in ${secs((Date.now() - t0) / 1000)} · show it in Finder: open -R "${out}"`);
+    console.log(`  done in ${secs((Date.now() - t0) / 1000)}`);
+    // Show it in Finder (what you want next 99% of the time); --no-open to skip, e.g. in scripts
+    if (!noOpen && process.platform === 'darwin') spawnSync('open', ['-R', out]);
   },
 
   async preview() {
     const { serve } = await import('./lib/preview.mjs');
-    await serve(P(), Number(flag('--port', true)) || 4180);
+    const port = Number(flag('--port', true)) || 4180, noOpen = !!flag('--no-open');
+    await serve(P(), port, { open: !noOpen });
   },
 
   // Write only the SFX stem (out/sfx.wav), e.g. to drop into an editor.
