@@ -1,0 +1,60 @@
+<!doctype html>
+<!-- 03 7.77–11.40 "By the way, I'm Dave, your CTO on trying to help you build cool stuff with AI."
+     Below the chest (green). Terminal: "> whoami" types and answers dave on "Dave" (pop), "> cat
+     role.txt" answers your CTO on "CTO" (pop), then "> help --you --build cool_stuff --with ai"
+     types on "trying to help you", a build bar fills on "build cool stuff" (ticks) and reads
+     ✓ ready on "AI" (success). Block cursor blinks throughout. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03-login</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #TM .win__body { background: var(--ink); color: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * .7); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.8); font: 700 calc(var(--u) * 3)/1.15 var(--f-mono); }
+    .ln { display: flex; gap: calc(var(--u) * 1.4); align-items: center; }
+    .ln b { color: var(--accent); }
+    .o { visibility: hidden; color: var(--accent); font: calc(var(--u) * 4)/1 var(--f-pixel); }
+    .o.big { font-size: calc(var(--u) * 5); }
+    #bl { visibility: hidden; display: flex; align-items: center; gap: calc(var(--u) * 1.4); }
+    #bl .seg { flex: 1; }
+    #bl .seg i { height: calc(var(--u) * 2.4); border-color: var(--paper); }
+    #ok { font: calc(var(--u) * 3.6)/1 var(--f-pixel); color: var(--accent); min-width: calc(var(--u) * 14); }
+    #cu { display: inline-block; width: calc(var(--u) * 1.8); height: calc(var(--u) * 3); background: var(--accent); }
+  </style>
+</head>
+<body data-world="green">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 7.77;                                       // the scene cut
+    const END = 11.40, W = p => R.w(p, R.START - 0.1);
+    const TM = R.win({ title: 'Terminal', right: 'davecto · tty1', x: 4, y: 84, w: 82, h: 'auto',
+      body: `<div class="ln"><b>&gt;</b><span class="type" id="c1">whoami</span><span class="o big" id="o1">dave</span></div>
+        <div class="ln"><b>&gt;</b><span class="type" id="c2">cat role.txt</span><span class="o" id="o2">your CTO</span></div>
+        <div class="ln"><b>&gt;</b><span class="type" id="c3">help --you --build cool_stuff --with ai</span></div>
+        <div id="bl">${R.seg(14)}<span id="ok">building</span></div>
+        <div class="ln"><b>&gt;</b><i id="cu"></i></div>` });
+    TM.id = 'TM';
+    R.open(TM, Math.max(W('by the way'), R.START + 4 * R.F));
+    R.blink(R.$('#cu'), R.START, END, 0.5);
+
+    const st = Math.max(W('by the way'), R.START + 4 * R.F) + 0.03;
+    R.type(R.$('#c1'), st, 40);
+    R.show(R.$('#o1'), W('dave')); R.sfx('bell', W('dave'), { vol: -4 });
+    R.type(R.$('#c2'), W('dave') + 0.08, 40);
+    const ro = R.we('cto') + 0.02;
+    R.show(R.$('#o2'), ro); R.sfx('pop', ro, { vol: -3 });
+    R.type(R.$('#c3'), W('trying'), 44);
+    // build bar
+    const bu = W('build'), ai = W('ai', bu);
+    R.show(R.$('#bl'), bu);
+    TM.querySelectorAll('#bl .seg i').forEach((c, i) => { const t = bu + (ai - bu) * i / 13; R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(t)); if (i % 3 === 0) R.sfx('tick', t, { vol: -7 }); });
+    R.text(R.$('#ok'), ai, '✓ ready'); R.sfx('sunset', ai, { vol: -3 });
+    R.done(END);
+  </script>
+</body>
+</html>

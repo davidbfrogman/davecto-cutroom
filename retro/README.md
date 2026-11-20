@@ -34,8 +34,10 @@ retro move 06 save --reset
 retro sfx 04 off                      # mute one beat's sounds, keep its graphics
 retro sfx 04 -4                       # or turn them down 4 dB
 retro sfx all -3                      # the whole sound-effects stem
-retro lint                            # anything over your face or chin, or under Instagram's UI?
+retro lint                            # over your face or chin? under Instagram's UI? text cut off? mistimed?
 retro frames 06                       # contact sheet of beat 06 over the video → out/check-06-….jpg
+retro frames all                      # one frame from every beat in one sheet → out/check-all.jpg
+retro zones 20 30                     # where there's room around your head, moment by moment
 retro render --draft                  # quicker, lower quality export
 retro render --video ../OtherCut.mov  # same graphics over another cut (same timing)
 retro render --size 1080x1920

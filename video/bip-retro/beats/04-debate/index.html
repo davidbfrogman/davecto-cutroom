@@ -74,7 +74,7 @@
         <div class="pr">${R.seg(16)}</div>
         <div class="tm"><span>time left: <span id="tl">48:00:00</span></span><span class="dy"><span class="chip" id="sa">SAT</span><span class="chip" id="su">SUN</span></span></div>` });
     CP.id = 'CP';
-    const sb = W('somebody'), wk = R.we('weekend');
+    const sb = W('somebody'), wk = Math.min(R.we('weekend'), END - 0.3);   // lands before the cut
     R.open(CP, sb);
     R.show(R.$('#c2'), W('with ai')); R.sfx('pop', W('with ai'), { vol: -4, layer: 'copy' });
     const pg = R.$('#pg'), tl = R.$('#tl');

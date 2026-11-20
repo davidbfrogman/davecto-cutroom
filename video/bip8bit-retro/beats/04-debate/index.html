@@ -1,0 +1,99 @@
+<!doctype html>
+<!-- 04 11.40–17.53 "There's this whole debate going on right now that building in public is stupid because
+     somebody with AI can clone your app in a weekend."
+     Yellow. Above the head, Debate.live: a ● LIVE poll, "building in public is…" SMART vs STUPID
+     bars racing each other and a vote counter climbing on "debate going on right now"; on "stupid"
+     STUPID jumps ahead and flashes (alert).
+     Below the chest (own layer), Copy: opens on "somebody with AI", a page flies from YourApp.app to
+     YourApp copy.app, the bar fills and the time left runs 48:00:00 → 0 through SAT and SUN on "clone
+     your app in a weekend", ✓ cloned (alert) on "weekend". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>04-debate</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PL .win__body { background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * .9); padding: calc(var(--u) * .8) calc(var(--u) * 1.6); justify-content: center; }
+    .q { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    #lv { color: var(--warm); }
+    .bar { display: grid; grid-template-columns: calc(var(--u) * 14) 1fr calc(var(--u) * 8); align-items: center; gap: calc(var(--u) * 1.2); font: calc(var(--u) * 3.6)/1 var(--f-pixel); }
+    .bar .tr { height: calc(var(--u) * 3.4); border: var(--hair) solid var(--ink); position: relative; }
+    .bar .tr i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+    #b2 .tr i { background: var(--ink); }
+    .bar .pc { text-align: right; }
+    .vt { font: calc(var(--u) * 2.8)/1 var(--f-pixel); color: var(--grey); }
+    #CP .win__body { background: var(--win-2); display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.6); font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    .icons { position: relative; display: flex; justify-content: space-between; align-items: flex-end; height: calc(var(--u) * 9); }
+    .ic { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .4); font-size: calc(var(--u) * 2.8); }
+    #pg { position: absolute; bottom: calc(var(--u) * 4); visibility: hidden; }
+    .ic.cl { visibility: hidden; }
+    .pr .seg i { height: calc(var(--u) * 2.6); }
+    .tm { display: flex; align-items: center; justify-content: space-between; }
+    .dy { display: flex; gap: calc(var(--u) * 1); }
+    .dy .chip { opacity: .35; }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("There's", 11);
+    const END = 17.53, W = p => R.w(p, R.START - 0.1);
+    R.seed(4);
+
+    // Debate.live
+    const PL = R.win({ title: 'Poll: building in public is…', right: '<span id="lv">●</span> <span id="vt">0</span> votes', x: 4, y: 20.5, w: 82, h: 14,
+      body: `<div class="bar" id="b1"><span>SMART</span><span class="tr"><i id="p1"></i></span><span class="pc" id="n1">50%</span></div>
+        <div class="bar" id="b2"><span>STUPID</span><span class="tr"><i id="p2"></i></span><span class="pc" id="n2">50%</span></div>` });
+    PL.id = 'PL';
+    R.open(PL, Math.max(W('this whole'), R.START + 4 * R.F));
+    R.blink(R.$('#lv'), R.START, END, 0.6);
+    const de = W('debate'), stp = W('stupid'), cl = W('clone');
+    const p1 = R.$('#p1'), p2 = R.$('#p2'), n1 = R.$('#n1'), n2 = R.$('#n2'), vt = R.$('#vt');
+    const wob = [...Array(200)].map(() => Math.round((R.rnd() - .5) * 14));
+    R.every(de, END, t => {
+      const f = Math.floor((t - de) * 15);
+      let a = 50 + wob[Math.floor(f / 2) % wob.length];
+      if (t >= stp) a = 39 + (f % 4 < 2 ? 0 : 1);
+      p1.style.width = `${a}%`; p2.style.width = `${100 - a}%`;
+      n1.textContent = `${a}%`; n2.textContent = `${100 - a}%`;
+      vt.textContent = (Math.floor((t - de) * 1373) + 12).toLocaleString('en-US');
+    });
+    [W('going on'), W('right now'), W('building')].forEach(t => R.sfx('tick', t, { vol: -7 }));
+    R.flash(R.$('#b2'), stp, 3); R.sfx('shrink', stp, { vol: -3 });
+
+    // Copy, below the chest
+    const app = R.pix(['kkkkkkkkk', 'knnnnnnnk', 'knkkknnnk', 'knnnnnnnk', 'knkkkkknk', 'knnnnnnnk', 'kkkkkkkkk'], .8);
+    const page = R.pix(['kkkk.', 'kppkk', 'kpppk', 'kkkpk', 'kpppk', 'kkkkk'], .6);
+    const CP = R.win({ title: 'Copy', right: '<span id="ai">AI · turbo</span>', layer: 'copy', x: 4, y: 87, w: 82, h: 28,
+      body: `<div class="icons"><div class="ic">${app}<span>YourApp.app</span></div><div id="pg">${page}</div><div class="ic cl" id="c2">${app}<span>YourApp copy.app</span></div></div>
+        <div class="pr">${R.seg(16)}</div>
+        <div class="tm"><span>time left: <span id="tl">48:00:00</span></span><span class="dy"><span class="chip" id="sa">SAT</span><span class="chip" id="su">SUN</span></span></div>` });
+    CP.id = 'CP';
+    const sb = W('somebody'), wk = Math.min(R.we('weekend'), END - 0.3);   // lands before the cut
+    R.open(CP, sb); R.sfx('filterup', cl - 0.5, { vol: -6, layer: 'copy' });
+    R.show(R.$('#c2'), W('with ai')); R.sfx('pop', W('with ai'), { vol: -4, layer: 'copy' });
+    const pg = R.$('#pg'), tl = R.$('#tl');
+    R.show(pg, cl);
+    R.every(cl, wk, t => {
+      const k = ((t - cl) * 2.2) % 1;
+      pg.style.left = R.u((12 + k * 52).toFixed(1));
+      const left = Math.max(0, 48 * 3600 * (1 - (t - cl) / (wk - cl)));
+      const h = Math.floor(left / 3600), m = Math.floor(left / 60) % 60, s = Math.floor(left) % 60;
+      tl.textContent = [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+    });
+    R.hide(pg, wk);
+    const cells = CP.querySelectorAll('.pr .seg i');
+    cells.forEach((c, i) => { const t = cl + (wk - cl) * i / 15; R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(t)); if (i % 4 === 0) R.sfx('tick', t, { vol: -8, layer: 'copy' }); });
+    const mid = (cl + wk) / 2;
+    R.tl.set(R.$('#sa'), { opacity: 1, backgroundColor: 'var(--accent)' }, R.T(cl));
+    R.tl.set(R.$('#su'), { opacity: 1, backgroundColor: 'var(--accent)' }, R.T(mid));
+    R.text(tl, wk, '00:00:00 · ✓ cloned'); R.flash(R.$('.tm'), wk, 2); R.sfx('warp', wk, { layer: 'copy', vol: -3 });
+    R.done(END);
+  </script>
+</body>
+</html>

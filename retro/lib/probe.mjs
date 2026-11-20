@@ -2,14 +2,16 @@
      start, end      R.START / R.END (absolute seconds)
      cues            R.cues: the beat's sound effects
      layers          layer names
-     boxes           every 2 frames: the visible elements' boxes in u, per layer (for the lint)
+     boxes           every 2 frames: the visible elements' boxes in u, per layer (for the lint), and
+                     clips: windows whose visible content is cut off by the window body or title bar
+     warnings        the kit's timing warnings (things scheduled after the beat ends, stray sounds)
    Cached in out/.probe/<beat>.json by the stage key. */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { playwright } from './project.mjs';
 
-const VERSION = 2;   // bump when what the probe records changes
+const VERSION = 4;   // bump when what the probe records changes
 
 export async function probe(project, ids, size = project.size) {
   const dir = join(project.out, '.probe');
@@ -53,9 +55,44 @@ export async function probe(project, ids, size = project.size) {
                 ...[r.left / U, r.top / U, r.width / U, r.height / U].map(v => Math.round(v * 10) / 10)]);
             }
           }
-          boxes.push({ t: Math.round(t * 1000) / 1000, seen });
+          boxes.push({ t: Math.round(t * 1000) / 1000, seen, clips: clipped(U) });
         }
-        return { start: R.START, end: R.END, cues: R.cues, layers: R.layers(), boxes };
+        return { start: R.START, end: R.END, cues: R.cues, layers: R.layers(), boxes, warnings: R.warnings || [] };
+
+        // Visible content a window cuts off: [layer, window, side, u]. Content inside its own
+        // overflow:hidden box (a belt, a marquee) is that box's business, not the window's.
+        // data-bleed on a window (or an element) opts out.
+        function clipped(U) {
+          const out = [];
+          for (const win of document.querySelectorAll('.layer .win')) {
+            if (win.dataset.bleed != null) continue;
+            const ws = getComputedStyle(win);
+            if (ws.visibility === 'hidden' || +ws.opacity === 0 || ws.display === 'none') continue;
+            const name = [win.closest('.layer').dataset.layer, win.id || 'win'];
+            const bar = win.querySelector('.win__bar');
+            if (bar && bar.scrollWidth - bar.clientWidth > 2) out.push([...name, 'title', Math.round((bar.scrollWidth - bar.clientWidth) / U * 10) / 10]);
+            const body = win.querySelector('.win__body');
+            if (!body || getComputedStyle(body).overflow === 'visible') continue;   // it doesn't clip: spilling out is the point
+            const b = body.getBoundingClientRect();
+            const ix0 = b.left + body.clientLeft, iy0 = b.top + body.clientTop, ix1 = ix0 + body.clientWidth, iy1 = iy0 + body.clientHeight;
+            let worst = { bottom: 0, right: 0, top: 0, left: 0 };
+            for (const d of body.querySelectorAll('*')) {
+              if (d.closest('[data-bleed]')) continue;
+              const cs = getComputedStyle(d);
+              if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity === 0) continue;
+              let a = d.parentElement, own = false;
+              for (; a && a !== body; a = a.parentElement) if (getComputedStyle(a).overflow !== 'visible' || getComputedStyle(a).display === 'none' || +getComputedStyle(a).opacity === 0) { own = true; break; }
+              if (own) continue;
+              if (!d.children.length && !d.textContent.trim() && cs.backgroundColor === 'rgba(0, 0, 0, 0)' && cs.borderTopWidth === '0px') continue;
+              const r = d.getBoundingClientRect();
+              if (r.width < 1 || r.height < 1) continue;
+              worst.bottom = Math.max(worst.bottom, r.bottom - iy1); worst.right = Math.max(worst.right, r.right - ix1);
+              worst.top = Math.max(worst.top, iy0 - r.top); worst.left = Math.max(worst.left, ix0 - r.left);
+            }
+            for (const [side, px] of Object.entries(worst)) if (px / U >= 0.5) out.push([...name, side, Math.round(px / U * 10) / 10]);
+          }
+          return out;
+        }
       });
       await page.close();
       const out = { key, ...data };

@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- 02 4.40–7.77 "Then they launch six months later and nobody even knows that they exist."
+     Below the chest (coral). Launch.app: a desk calendar flips JAN → JUL on "six months later"
+     (ticks), the LAUNCH button slams on "later" (thunk) and reads LAUNCHED ✓ (success). Then
+     nothing: visitors 0, signups 0, a pixel cricket chirps on "nobody" and "knows" (low blips),
+     and "people who know: 0" flashes on "exist". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>02-launch</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #LA .win__body { background: var(--paper); display: grid; grid-template-columns: calc(var(--u) * 17) calc(var(--u) * 26) 1fr; gap: calc(var(--u) * 1.8); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .cal { border: var(--hair) solid var(--ink); display: flex; flex-direction: column; }
+    .cal .rings { height: calc(var(--u) * 2.4); background: var(--ink); }
+    #mo { flex: 1; display: flex; align-items: center; justify-content: center; font: calc(var(--u) * 6.4)/1 var(--f-pixel); background: var(--accent); }
+    .cal small { font: calc(var(--u) * 2.6)/1 var(--f-pixel); text-align: center; padding: calc(var(--u) * .5) 0; border-top: var(--hair) solid var(--ink); }
+    .mid { display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u) * 1.2); }
+    #bt { font: calc(var(--u) * 4.6)/1 var(--f-pixel); text-align: center; padding: calc(var(--u) * 1) 0 calc(var(--u) * 1.2); background: var(--warm); color: var(--paper); border: var(--hair) solid var(--ink); box-shadow: calc(var(--u) * .6) calc(var(--u) * .6) 0 var(--ink); }
+    .mid span { font: calc(var(--u) * 2.8)/1 var(--f-pixel); color: var(--grey); text-align: center; }
+    .st { display: flex; flex-direction: column; gap: calc(var(--u) * .7); font: calc(var(--u) * 3.2)/1 var(--f-pixel); position: relative; }
+    .st div { display: flex; justify-content: space-between; border-bottom: var(--hair) solid var(--ink); padding-bottom: calc(var(--u) * .4); }
+    .cr { position: absolute; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: calc(var(--u) * .6); visibility: hidden; }
+    .cr em { font: calc(var(--u) * 2.6)/1 var(--f-pixel); font-style: normal; visibility: hidden; }
+    #pk { visibility: hidden; }
+  </style>
+</head>
+<body data-world="coral">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 4.40;                                       // the scene cut
+    const END = 7.77, W = p => R.w(p, R.START - 0.1);
+    const cricket = R.pix(['....k.k.', '.....k..', '..kkkkk.', '.knnnnkk', 'knnnnnk.', '.k.k.k..', 'k..k..k.'], .55);
+    const LA = R.win({ title: 'Launch.app', right: 'v1.0 · stealth', x: 4, y: 90, w: 82, h: 25,
+      body: `<div class="cal"><i class="rings"></i><span id="mo">JAN</span><small id="yr">month 0</small></div>
+        <div class="mid"><span id="bt">LAUNCH ▶</span><span id="bs">ready when you are</span></div>
+        <div class="st"><div><span>visitors</span><span>0</span></div><div><span>signups</span><span>0</span></div>
+          <div id="pk"><span>who knows</span><span>0</span></div>
+          <div class="cr" id="cr"><em id="ch">chirp</em>${cricket}</div></div>` });
+    LA.id = 'LA';
+    R.open(LA, Math.max(W('then'), R.START + 4 * R.F));
+
+    // six months go by
+    const sx = W('six'), lt = R.we('later');
+    ['FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL'].forEach((m, i) => {
+      const t = sx + (lt - 0.1 - sx) * i / 5;
+      R.text(R.$('#mo'), t, m); R.text(R.$('#yr'), t, `month ${i + 1}`);
+      if (i % 2 === 1) R.sfx('tick', t, { vol: -5 });
+    });
+    // launch
+    const bt = R.$('#bt'), lc = lt + 0.02;
+    R.tl.set(bt, { x: R.u(.6), y: R.u(.6), boxShadow: 'none' }, R.T(lc));
+    R.tl.set(bt, { x: 0, y: 0, boxShadow: `${R.u(.6)} ${R.u(.6)} 0 var(--ink)`, backgroundColor: 'var(--green)', color: 'var(--ink)' }, R.T(lc) + 2 * R.F);
+    R.text(bt, lc + 2 * R.F, 'LAUNCHED ✓'); R.text(R.$('#bs'), lc + 2 * R.F, 'live · 0.000s ago');
+    R.sfx('bigjump', lc); R.sfx('stab', lc + 2 * R.F, { vol: -5 });
+
+    // ...crickets
+    const nb = W('nobody'), kn = W('knows'), ex = W('exist');
+    R.show(R.$('#cr'), nb);
+    [nb, kn].forEach(t => { R.show(R.$('#ch'), t); R.hide(R.$('#ch'), t + 0.25); R.sfx('blip', t, { freq: 1800, vol: -10 }); R.sfx('blip', t + 0.1, { freq: 1800, vol: -12 }); });
+    const cr = R.$('#cr');
+    R.every(nb, END, t => { cr.style.marginBottom = R.u(Math.round(t * 15) % 3 === 0 ? .5 : 0); });
+    R.show(R.$('#pk'), ex); R.sfx('drop', ex, { vol: -3 }); R.flash(R.$('#pk'), ex, 2);
+    R.done(END);
+  </script>
+</body>
+</html>

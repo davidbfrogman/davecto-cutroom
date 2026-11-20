@@ -44,7 +44,7 @@
     R.START = 55.13;                                      // the scene cut
     const END = 65.28, W = p => R.w(p, R.START - 0.1);
     const TAGS = [['SaaS app', '$49/mo', '$0.99'], ['your MVP', '$29/mo', 'FREE'], ['CRM', '$99/mo', '$0.99']];
-    const CL = R.win({ title: 'Clearance.rack', right: '<span class="chip chip--warm" id="pc">−99%</span>', x: 4, y: 20.5, w: 82, h: 15.5,
+    const CL = R.win({ title: 'Clearance.rack', right: '<span class="chip chip--warm" id="pc">−99%</span>', x: 4, y: 20.5, w: 82, h: 16.5,
       body: TAGS.map(([a, p, n], i) => `<div class="tag" id="t${i}"><span>${a}</span><span class="pr"><s>${p}</s><b>${n}</b></span></div>`).join('') });
     CL.id = 'CL';
     R.open(CL, Math.max(W('ai is'), R.START + 4 * R.F));

@@ -98,18 +98,23 @@ export async function exportVideo(project, probes, movs, { video = project.video
 }
 
 /** Contact sheet of one beat over the video at absolute times, with the face no-go zone outlined. */
-export function frames(project, id, probe, mov, times, { zones = true, faces } = {}) {
+export function frames(project, id, probe, mov, times, opts = {}) {
+  return sheet(project, times.map(t => ({ id, probe, mov, t })), `check-${id}`, opts);
+}
+
+/** A contact sheet: items [{ id, probe, mov, t }] (any beats), up to `cols` across. → out/<name>.jpg */
+export function sheet(project, items, name, { zones = true, faces, cols = 5 } = {}) {
   const [W, H] = project.size, U = W / 100, tmp = mkdtempSync(join(tmpdir(), 'retro-frames-'));
   try {
-    times.forEach((t, i) => {
+    items.forEach(({ probe, mov, t }, i) => {
       const rel = Math.max(0, t - probe.start - 0.2), src = probe.start + rel;
       const f = zones && faceAt(faces, t), z = f && noGo(f);
       const box = z ? `,drawbox=x=${(z[0] * U) | 0}:y=${(z[1] * U) | 0}:w=${(z[2] * U) | 0}:h=${(z[3] * U) | 0}:color=red@0.9:t=6` : '';
       sh('ffmpeg', ['-v', 'error', '-y', '-ss', String(src), '-i', project.video, '-ss', String(rel), '-i', mov, '-filter_complex',
-        `[0:v]scale=${W}:${H}[a];[a][1:v]overlay,select='gte(t\\,0.2)'${box},scale=432:768`, '-frames:v', '1', join(tmp, `${String(i).padStart(2, '0')}.png`)]);
+        `[0:v]scale=${W}:${H}[a];[a][1:v]overlay,select='gte(t\\,0.2)'${box},scale=432:768`, '-frames:v', '1', join(tmp, `${String(i).padStart(3, '0')}.png`)]);
     });
-    const out = join(project.out, `check-${id}.jpg`);
-    sh('ffmpeg', ['-v', 'error', '-y', '-pattern_type', 'glob', '-i', join(tmp, '*.png'), '-vf', `tile=${times.length}x1`, '-frames:v', '1', out]);
+    const out = join(project.out, `${name}.jpg`), c = Math.min(cols, items.length), r = Math.ceil(items.length / c);
+    sh('ffmpeg', ['-v', 'error', '-y', '-pattern_type', 'glob', '-i', join(tmp, '*.png'), '-vf', `tile=${c}x${r}:color=0x1E1E1E`, '-frames:v', '1', out]);
     return out;
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 }

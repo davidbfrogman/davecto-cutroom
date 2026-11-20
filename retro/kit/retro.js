@@ -9,7 +9,11 @@
    own sounds (pass { sfx: false } or another sound name to change that); anything else calls
    R.sfx(name, t). The renderer reads R.cues, so turning a beat off in retro.json silences it too.
    Sound names: lib/synth.mjs (open close tick type pop success alert error strike lock thunk sweep
-   crash sparkle boot notify blip).
+   crash sparkle boot notify blip, plus the 8-bit set: coin jump bigjump stomp powerup oneup shrink
+   pipe fireball bump brick kick rev turbo secret fanfare sword hurt heart gem select confirm cancel
+   pause zap explode warp gameover victory charge, plus the 80s synth-pop set: stab orchhit gated
+   tomfill clap bell epiano sunset arpup arpdown swell filterup revcym tapestop pluck fmbass syntom
+   choir shimmer drop).
 
    Layers: R.win/R.box take { layer: 'name' } (default 'main'). retro.json can move a layer
    ("move": { "save": [0, -4] }, in u) and the lint reports per layer.
@@ -37,13 +41,16 @@
       Returns the matched words; throws if it isn't there, so typos fail the build loudly. */
   R.find = (phrase, after) => {
     const q = norm(phrase).split(' ');
+    if (!q[0]) throw new Error(`R.w: "${phrase}" has no words in it`);
     const from = after ?? (R.START - 1);
     for (let i = 0; i < WORDS.length; i++) {
       if (WORDS[i].t < from - 1e-6) continue;
       let ok = true;
       for (let j = 0; j < q.length && ok; j++) {
         const w = WORDS[i + j]?.n ?? '';
-        ok = j === q.length - 1 ? w.startsWith(q[j]) || w.replace(/[^a-z0-9]/g, '').startsWith(q[j].replace(/[^a-z0-9]/g, '')) : w === q[j] || w.replace(/[^a-z0-9]/g, '') === q[j].replace(/[^a-z0-9]/g, '');
+        const a = w.replace(/[^a-z0-9]/g, ''), b = q[j].replace(/[^a-z0-9]/g, '');
+        // a punctuation-only query ("%", "$") compares raw text: stripped, it would match every word
+        ok = !b ? w.includes(q[j]) : j === q.length - 1 ? w.startsWith(q[j]) || a.startsWith(b) : w === q[j] || a === b;
       }
       if (ok) return WORDS.slice(i, i + q.length);
     }
@@ -100,42 +107,68 @@
     return el;
   };
 
-  /** A window. variant: paper | grey | pink | world | clear. */
-  R.win = ({ title, right = '', variant = '', body = '', ...g }) =>
-    R.box(`win ${variant ? 'win--' + variant : ''}`, {
-      ...g,
+  /** A window. variant: paper | grey | pink | world | clear.
+      h: 'auto' sizes the window to its content (measured once fonts load; the lint reports the real box). */
+  R.win = ({ title, right = '', variant = '', body = '', ...g }) => {
+    const auto = g.h === 'auto';
+    const el = R.box(`win ${variant ? 'win--' + variant : ''}${auto ? ' win--auto' : ''}`, {
+      ...g, h: auto ? null : g.h,
       html: `<div class="win__bar"><span class="t">${title}</span><span class="r">${right}</span></div><div class="win__body">${body}</div>`,
     });
+    if (auto) { el._g.auto = true; el._g.h = R.measure(el).h; }
+    return el;
+  };
+
+  /** An element's box in u, measured now (works while it's hidden). */
+  R.measure = el => {
+    const U = R.$('#root').getBoundingClientRect().width / 100 || 1, r = el.getBoundingClientRect(), L = el.closest('.layer')?.getBoundingClientRect() || { left: 0, top: 0 };
+    return { x: (r.left - L.left) / U, y: (r.top - L.top) / U, w: r.width / U, h: r.height / U };
+  };
+  // auto-height windows are re-measured once fonts are in, and their zoom trails follow
+  const remeasure = [];
+  if (document.fonts) document.fonts.ready.then(() => remeasure.forEach(f => f()));
 
   /** Open a window with the System-1 zoom-rect trail so it lands exactly at `at`. Sound: 'open'. */
+  /** Open a window with the System-1 zoom-rect trail so it lands exactly at `at`. Sound: 'open'.
+      If `at` is too close to R.START for the trail to play inside the beat, it lands a little later
+      (the trail needs `steps` frames on twos). Returns the landing time. */
   R.open = (el, at, { from, steps = 3, sfx } = {}) => {
     const tl = R.tl, g = el._g;
-    const o = from || { x: g.x + g.w / 2, y: g.y + g.h / 2 };
-    const t0 = R.T(at) - steps * R.F;
+    at = Math.max(at, R.START + (steps + 1) * R.F);
+    const t0 = R.T(at) - steps * R.F, zs = [];
+    const place = () => {
+      const o = from || { x: g.x + g.w / 2, y: g.y + g.h / 2 };
+      zs.forEach((z, k) => { const s = (k + 1) / (steps + 1); Object.assign(z.style, { left: R.u(o.x + (g.x - o.x) * s), top: R.u(o.y + (g.y - o.y) * s), width: R.u(g.w * s), height: R.u(g.h * s) }); });
+    };
     for (let i = 1; i <= steps; i++) {
-      const s = i / (steps + 1);
-      const z = R.box('zoom', {
-        x: o.x + (g.x - o.x) * s, y: o.y + (g.y - o.y) * s, w: g.w * s, h: g.h * s, parent: el.parentNode,
-      });
-      tl.set(z, { autoAlpha: 1 }, Math.max(0, t0 + (i - 1) * R.F));
-      tl.set(z, { autoAlpha: 0 }, Math.max(0, t0 + (i + 1) * R.F));
+      const z = R.box('zoom', { parent: el.parentNode });
+      zs.push(z);
+      tl.set(z, { autoAlpha: 1 }, t0 + (i - 1) * R.F);
+      tl.set(z, { autoAlpha: 0 }, t0 + (i + 1) * R.F);
     }
+    place();
+    if (g.auto) remeasure.push(() => { g.h = R.measure(el).h; place(); });
     tl.set(el, { autoAlpha: 1 }, R.T(at));
     R.sfx(auto(sfx, 'open'), at - 0.1, { layer: el._layer });
-    return el;
+    return at;
   };
 
   /** Close: window vanishes, zoom rects collapse toward a point. Sound: 'close'. */
   R.close = (el, at, { to, steps = 3, sfx } = {}) => {
-    const tl = R.tl, g = el._g;
-    const o = to || { x: g.x + g.w / 2, y: g.y + g.h / 2 };
+    const tl = R.tl, g = el._g, zs = [];
+    const place = () => {
+      const o = to || { x: g.x + g.w / 2, y: g.y + g.h / 2 };
+      zs.forEach((z, k) => { const s = 1 - (k + 1) / (steps + 1); Object.assign(z.style, { left: R.u(o.x + (g.x - o.x) * s), top: R.u(o.y + (g.y - o.y) * s), width: R.u(g.w * s), height: R.u(g.h * s) }); });
+    };
     tl.set(el, { autoAlpha: 0 }, R.T(at));
     for (let i = 1; i <= steps; i++) {
-      const s = 1 - i / (steps + 1);
-      const z = R.box('zoom', { x: o.x + (g.x - o.x) * s, y: o.y + (g.y - o.y) * s, w: g.w * s, h: g.h * s, parent: el.parentNode });
+      const z = R.box('zoom', { parent: el.parentNode });
+      zs.push(z);
       tl.set(z, { autoAlpha: 1 }, R.T(at) + (i - 1) * R.F);
       tl.set(z, { autoAlpha: 0 }, R.T(at) + i * R.F);
     }
+    place();
+    if (g.auto) remeasure.push(place);
     R.sfx(auto(sfx, 'close'), at, { layer: el._layer });
   };
 
@@ -145,9 +178,11 @@
   /** Pixel type-on (monospace): reveals characters in steps. Sound: a 'type' click per character
       (at most 15 a second). */
   R.type = (el, at, cps = 22, { sfx } = {}) => {
-    const n = [...el.textContent].length;
+    const chars = [...(el._full ??= el.textContent)], n = chars.length, o = { k: 0 };
+    el.style.width = 'auto';
+    el.textContent = '';
     R.tl.set(el, { autoAlpha: 1 }, R.T(at));
-    R.tl.fromTo(el, { width: '0ch' }, { width: `${n}ch`, duration: n / cps, ease: `steps(${n})` }, R.T(at));
+    R.tl.fromTo(o, { k: 0 }, { k: n, duration: n / cps, ease: `steps(${n})`, onUpdate: () => { el.textContent = chars.slice(0, Math.round(o.k)).join(''); } }, R.T(at));
     const s = auto(sfx, 'type');
     if (s) { const every = Math.max(1, Math.ceil(cps / 15)); for (let i = 0; i < n; i += every) R.sfx(s, at + i / cps, { layer: el.closest?.('.layer')?.dataset.layer }); }
   };
@@ -185,6 +220,63 @@
     R.tl.fromTo(o, { k: 0 }, { k: n, duration: R.T(b) - R.T(a), ease: `steps(${n})`, onUpdate: () => fn(a + o.k / fps) }, R.T(a));
   };
 
+  /* ---------- building blocks (the mechanics most beats end up needing) ---------- */
+  R.clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  R.lerp = (a, b, k) => a + (b - a) * R.clamp(k);
+  const arr = els => (typeof els === 'string' ? R.$$(els) : els instanceof Element ? [els] : [...els]);
+
+  /** Reveal elements one by one, evenly from a to b (or every `gap` s from a). Sound per item
+      (default tick; every: cue every nth; vol). Returns the times. */
+  R.stagger = (els, a, b, { gap, sfx = 'tick', vol = -5, every = 1, layer } = {}) => {
+    els = arr(els);
+    const n = els.length, ts = els.map((_, i) => gap != null ? a + i * gap : n < 2 ? a : a + (b - a) * i / (n - 1));
+    els.forEach((el, i) => {
+      R.show(el, ts[i]);
+      if (sfx && i % every === 0) R.sfx(sfx, ts[i], { vol, layer: layer || el.closest?.('.layer')?.dataset.layer });
+    });
+    return ts;
+  };
+
+  /** A button pressed in: shifts into its hard shadow for two frames. Sound: thunk. */
+  R.press = (el, t, { depth = .5, sfx = 'thunk', vol = 0 } = {}) => {
+    const sh = getComputedStyle(el).boxShadow;
+    R.tl.set(el, { x: R.u(depth), y: R.u(depth), boxShadow: 'none' }, R.T(t));
+    R.tl.set(el, { x: 0, y: 0, boxShadow: sh }, R.T(t) + 2 * R.F);
+    if (sfx) R.sfx(sfx, t, { vol, layer: el.closest?.('.layer')?.dataset.layer });
+  };
+
+  /** Move an element through keys [[t, x, y], ...] (u, relative to its offset parent), linear,
+      stepped on twos. move: seconds each leg takes (default: the whole gap). Holds at the ends. */
+  R.path = (el, keys, { move } = {}) => {
+    const at = t => {
+      let i = 0; while (i < keys.length - 2 && t >= keys[i + 1][0]) i++;
+      const [a, x0, y0] = keys[i], [b, x1, y1] = keys[Math.min(i + 1, keys.length - 1)];
+      const k = b === a ? 1 : R.clamp((t - a) / Math.max(R.F, move ? Math.min(move, b - a) : b - a));
+      return [x0 + (x1 - x0) * k, y0 + (y1 - y0) * k];
+    };
+    const put = t => { const [x, y] = at(t); el.style.left = R.u(x.toFixed(2)); el.style.top = R.u(y.toFixed(2)); };
+    put(keys[0][0]);
+    R.every(keys[0][0], keys.at(-1)[0], put);
+    return at;
+  };
+
+  /** Flip-book: cycle an element's children (one visible at a time) from a to b, `fps` frames a
+      second (7.5 = every other twos frame). Pair with R.pixAnim. */
+  R.flip = (el, a, b, { fps = 7.5 } = {}) => {
+    const kids = [...el.children];
+    const put = t => { const k = Math.floor((t - a) * fps + 1e-6) % kids.length; kids.forEach((c, i) => { c.style.display = i === k ? '' : 'none'; }); };
+    put(a);
+    R.every(a, b, put);
+  };
+  /** Pixel-art frames for R.flip: R.pixAnim([rowsA, rowsB], cell). */
+  R.pixAnim = (frames, cell) => `<span class="flip">${frames.map((f, i) => `<span${i ? ' style="display:none"' : ''}>${R.pix(f, cell)}</span>`).join('')}</span>`;
+
+  /** Scrolling marquee: el shows `chars` characters of text, scrolling `cps` characters a second. */
+  R.marquee = (el, a, b, text, { chars = 22, cps = 15 } = {}) => {
+    const loop = [...(text + text)], n = [...text].length;
+    R.every(a, b, t => { const k = Math.floor((t - a) * cps) % n; el.textContent = loop.slice(k, k + chars).join(''); });
+  };
+
   /** Seeded random, deterministic. */
   let seed = 11;
   R.rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -203,6 +295,12 @@
   R.done = end => {
     R.END = end;
     const total = R.T(end);
+    // anything timed after the beat ends never shows: usually a word lookup that matched too late
+    R.warnings = [];
+    const late = R.tl.getChildren(true, true, true).filter(c => c.startTime() > total + 1e-3);
+    if (late.length) R.warnings.push(`${late.length} animation(s) start after the beat ends (${end.toFixed(2)}s), first at ${(R.START + Math.min(...late.map(c => c.startTime()))).toFixed(2)}s`);
+    const lateSfx = R.cues.filter(c => c.t > end + 0.05 || c.t < R.START - 0.15);
+    if (lateSfx.length) R.warnings.push(`${lateSfx.length} sound(s) outside the beat: ${lateSfx.slice(0, 3).map(c => `${c.s}@${c.t.toFixed(2)}`).join(', ')}`);
     R.$$('.clip').forEach(c => c.setAttribute('data-duration', String(total)));
     R.tl.set({}, {}, total);
     window.__timelines = window.__timelines || {};

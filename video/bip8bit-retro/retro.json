@@ -1,0 +1,121 @@
+{
+  "video": "../bip.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-vault": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          33.5
+        ]
+      }
+    },
+    "02-launch": {
+      "on": true,
+      "move": {
+        "main": [
+          3.5,
+          39.5
+        ]
+      }
+    },
+    "03-login": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          5
+        ]
+      }
+    },
+    "04-debate": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -1.5
+        ],
+        "copy": [
+          5,
+          7
+        ]
+      }
+    },
+    "05-moat": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -2.5
+        ],
+        "fans": [
+          5,
+          -2.5
+        ]
+      }
+    },
+    "06-redact": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -2.5
+        ],
+        "mail": [
+          5,
+          23
+        ]
+      }
+    },
+    "07-problems": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -3.5
+        ],
+        "aud": [
+          5,
+          -4
+        ]
+      }
+    },
+    "08-story": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          3
+        ]
+      }
+    },
+    "09-party": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -2
+        ],
+        "party": [
+          5,
+          1
+        ]
+      }
+    },
+    "10-cheat": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -1
+        ],
+        "cac": [
+          5,
+          4
+        ]
+      }
+    }
+  }
+}

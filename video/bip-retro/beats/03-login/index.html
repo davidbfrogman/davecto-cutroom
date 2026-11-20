@@ -32,7 +32,7 @@
   <script>
     R.START = 7.77;                                       // the scene cut
     const END = 11.40, W = p => R.w(p, R.START - 0.1);
-    const TM = R.win({ title: 'Terminal', right: 'davecto · tty1', x: 4, y: 84, w: 82, h: 24,
+    const TM = R.win({ title: 'Terminal', right: 'davecto · tty1', x: 4, y: 84, w: 82, h: 'auto',
       body: `<div class="ln"><b>&gt;</b><span class="type" id="c1">whoami</span><span class="o big" id="o1">dave</span></div>
         <div class="ln"><b>&gt;</b><span class="type" id="c2">cat role.txt</span><span class="o" id="o2">your CTO</span></div>
         <div class="ln"><b>&gt;</b><span class="type" id="c3">help --you --build cool_stuff --with ai</span></div>
