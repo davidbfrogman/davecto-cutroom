@@ -1,0 +1,88 @@
+<!doctype html>
+<!-- 07 33.10–42.93 "Here's how I do it. First, I talk about your customer's problems and their headaches. They
+     don't care about your setting screen and I wouldn't want to attract other founders. They're never
+     going to pay for your product."
+     Above the head (orange); the face sits low in this scene. Feed opens on "here's how I do it",
+     №1 TALK ABOUT THEIR PROBLEMS on "first" (pop). Post A (a customer headache) lands on "customer's
+     problems" and its hearts count up through "headaches" (ticks). Post B (new settings screen ⚙) lands
+     on "setting screen" and sits at ♥ 0 (flash, low blip).
+     Audience.db (own layer) opens on "attract": a magnet pulls in founders one by one (ticks); on
+     "never going to pay" each gets $0 and revenue: $0.00 flashes (error). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-problems</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #FD .win__body { background: var(--win-2); display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1) calc(var(--u) * 1.4); }
+    #tp { visibility: hidden; align-self: flex-start; font-size: calc(var(--u) * 3.4); }
+    .posts { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 1.6); }
+    .po { visibility: hidden; background: var(--paper); border: var(--hair) solid var(--ink); display: flex; flex-direction: column; gap: calc(var(--u) * .8); padding: calc(var(--u) * 1) calc(var(--u) * 1.2); }
+    .po .who { display: flex; align-items: center; gap: calc(var(--u) * .8); font: calc(var(--u) * 2.8)/1 var(--f-pixel); color: var(--grey); }
+    .po p { margin: 0; flex: 1; font: 700 calc(var(--u) * 2.4)/1.2 var(--f-mono); }
+    .po .rx { display: flex; justify-content: space-between; font: calc(var(--u) * 3.4)/1 var(--f-pixel); border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * .6); }
+    #AU .win__body { background: var(--paper); display: flex; align-items: center; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * .6) calc(var(--u) * 1.4); }
+    .lane { position: relative; flex: 1; height: 100%; }
+    .fo { position: absolute; bottom: 0; display: none; flex-direction: column; align-items: center; gap: calc(var(--u) * .2); flex-direction: column; }
+    .fo span { font: calc(var(--u) * 2.4)/1 var(--f-pixel); }
+    .fo b { font: calc(var(--u) * 2.4)/1 var(--f-pixel); font-weight: normal; background: var(--warm); color: var(--paper); padding: 0 calc(var(--u) * .3); visibility: hidden; }
+    .rev { display: flex; flex-direction: column; align-items: flex-end; gap: calc(var(--u) * .4); font: calc(var(--u) * 2.8)/1 var(--f-pixel); }
+    #rv { font-size: calc(var(--u) * 4.2); }
+  </style>
+</head>
+<body data-world="orange">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 33.10;                                      // the scene cut
+    const END = 42.93, W = p => R.w(p, R.START - 0.1);
+    const av = R.pix(['.kkk.', 'knnnk', 'kknkk', '.kkk.', 'kkkkk'], .55);
+    const FD = R.win({ title: 'Feed · how I post', right: 'tip 1 of 3', x: 4, y: 20.5, w: 82, h: 32,
+      body: `<span class="chip-inv" id="tp">№1 · TALK ABOUT THEIR PROBLEMS</span>
+        <div class="posts">
+          <div class="po" id="pa"><span class="who">${av}@dave · 2m</span><p>Our users do invoices at 2am. That's the headache we're killing.</p><span class="rx"><span>♥ <span id="ha">0</span></span><span>↺ <span id="ra">0</span></span></span></div>
+          <div class="po" id="pb"><span class="who">${av}@dave · 1m</span><p>Shipped: a new settings screen ⚙ (12 toggles!)</p><span class="rx" id="rb"><span>♥ 0</span><span>↺ 0</span></span></div>
+        </div>` });
+    FD.id = 'FD';
+    R.open(FD, Math.max(W("here's how"), R.START + 4 * R.F));
+    const fi = W('first');
+    R.show(R.$('#tp'), fi); R.sfx('pop', fi, { vol: -3 });
+    // post A: their problems
+    const cp = W("customer's"), hd = R.we('headaches');
+    R.show(R.$('#pa'), cp); R.sfx('tick', cp);
+    R.count(R.$('#ha'), W('problems'), hd + 0.4 - W('problems'), 0, 248);
+    R.count(R.$('#ra'), W('problems') + 0.2, hd + 0.4 - W('problems'), 0, 37);
+    [W('problems'), W('their', W('problems')), W('headaches')].forEach(t => R.sfx('tick', t, { vol: -6 }));
+    // post B: the settings screen
+    const ss = W('setting'), sn = R.we('screen');
+    R.show(R.$('#pb'), ss); R.sfx('tick', ss);
+    R.flash(R.$('#rb'), sn + 0.05, 2); R.sfx('blip', sn + 0.05, { freq: 220, vol: -8 });
+
+    // Audience.db
+    const founder = R.pix(['.kkk.', '.kwk.', '.kkk.', 'kkkkk', 'k.k.k', '..k..', '.k.k.'], .6);
+    const magnet = R.pix(['kkk.kkk', 'knk.knk', 'knk.knk', 'knk.knk', 'knkkknk', '.knnnk.', '..kkk..'], .9);
+    const AU = R.win({ title: 'Audience.db', right: 'attracting…', layer: 'aud', x: 4, y: 54, w: 82, h: 13.5,
+      body: `${magnet}<div class="lane">${[...Array(5)].map((_, i) => `<div class="fo" id="o${i}"><b>$0</b>${founder}<span>founder</span></div>`).join('')}</div>
+        <div class="rev"><span>revenue</span><span id="rv">$—</span></div>` });
+    AU.id = 'AU';
+    const at = W('attract'), fo = R.we('founders'), nv = W('never'), py = W('pay');
+    R.open(AU, W('and i', sn));
+    const fs = [...Array(5)].map((_, i) => R.$('#o' + i));
+    const arr = fs.map((_, i) => at + (fo + 0.3 - at) * i / 4);
+    R.every(at, END, t => fs.forEach((el, i) => {
+      const k = Math.max(0, Math.min(1, (t - arr[i]) / 0.4));
+      el.style.left = R.u((50 - k * (48 - i * 9.5)).toFixed(1));
+      el.style.display = t >= arr[i] ? 'flex' : 'none';
+    }));
+    arr.forEach(t => R.sfx('tick', t, { vol: -6, layer: 'aud' }));
+    fs.forEach((el, i) => R.show(el.querySelector('b'), nv + i * 2 * R.F));
+    R.text(R.$('#rv'), py, '$0.00'); R.flash(R.$('#rv'), py, 3); R.sfx('error', py, { layer: 'aud', vol: -3 });
+    R.text(AU.querySelector('.win__bar .r'), py, 'paying: 0 of 5');
+    R.done(END);
+  </script>
+</body>
+</html>

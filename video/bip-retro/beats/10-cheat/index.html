@@ -1,0 +1,88 @@
+<!doctype html>
+<!-- 10 55.13–65.28 "AI is putting software on the clearance rack right now and finding customers is still going
+     to be one of your most expensive things. Building in public is the cheat code to finding them."
+     Lime. Above the head (closes on "finding", before he leans up into it), Clearance.rack: three price tags hang on
+     "putting software" (ticks) and get slashed to $0.99 / FREE on "clearance rack" (strike), −99%
+     blinks.
+     Below the chest (own layer), CAC.exe opens on "finding customers": cost per customer climbs
+     $12 → $1,280 and flashes on "expensive" (alert). On "building in public" it becomes the cheat
+     prompt: ↑↑↓↓←→←→BA types on "cheat code", CHEAT ON ✓ (success) and customers found counts up
+     on "finding them". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>10-cheat</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #CL .win__body { background: var(--paper); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: calc(var(--u) * 1.6); align-items: center; padding: calc(var(--u) * .5) calc(var(--u) * 1.4); }
+    .tag { visibility: hidden; display: flex; flex-direction: column; gap: calc(var(--u) * .5); border: var(--hair) solid var(--ink); background: var(--accent); padding: calc(var(--u) * .5) calc(var(--u) * .8) calc(var(--u) * .6) calc(var(--u) * 2.4); position: relative; transform-origin: 50% 0; }
+    .tag::before { content: ''; position: absolute; left: calc(var(--u) * .8); top: calc(var(--u) * .8); width: calc(var(--u) * .9); height: calc(var(--u) * .9); background: var(--ink); }
+    .tag > span { font: calc(var(--u) * 2.5)/1 var(--f-pixel); }
+    .tag .pr { display: flex; align-items: baseline; gap: calc(var(--u) * 1); white-space: nowrap; }
+    .tag s { font: calc(var(--u) * 2.8)/1 var(--f-pixel); text-decoration: none; position: relative; }
+    .tag s::after { content: ''; position: absolute; left: -6%; right: -6%; top: 50%; height: var(--hair); background: var(--warm); visibility: var(--cut, hidden); }
+    .tag b { font: calc(var(--u) * 3.8)/1 var(--f-pixel); font-weight: normal; color: var(--paper); background: var(--warm); padding: 0 calc(var(--u) * .4); visibility: hidden; }
+    #pc { visibility: hidden; }
+    #CA .win__body { background: var(--win-2); display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u) * 1); padding: calc(var(--u) * .8) calc(var(--u) * 1.6); font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .ln { display: flex; justify-content: space-between; align-items: center; }
+    #cc { font-size: calc(var(--u) * 5.2); }
+    #p2 { display: none; }
+    #p2 .ln { gap: calc(var(--u) * 1.2); justify-content: flex-start; }
+    #kd { font-size: calc(var(--u) * 5); letter-spacing: calc(var(--u) * .4); }
+    #on { visibility: hidden; }
+    #fd { margin-left: auto; font-size: calc(var(--u) * 4.4); }
+  </style>
+</head>
+<body data-world="lime">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 55.13;                                      // the scene cut
+    const END = 65.28, W = p => R.w(p, R.START - 0.1);
+    const TAGS = [['SaaS app', '$49/mo', '$0.99'], ['your MVP', '$29/mo', 'FREE'], ['CRM', '$99/mo', '$0.99']];
+    const CL = R.win({ title: 'Clearance.rack', right: '<span class="chip chip--warm" id="pc">−99%</span>', x: 4, y: 20.5, w: 82, h: 15.5,
+      body: TAGS.map(([a, p, n], i) => `<div class="tag" id="t${i}"><span>${a}</span><span class="pr"><s>${p}</s><b>${n}</b></span></div>`).join('') });
+    CL.id = 'CL';
+    R.open(CL, Math.max(W('ai is'), R.START + 4 * R.F));
+    const sw = W('software'), cr = W('clearance'), rk = R.we('rack');
+    TAGS.forEach((_, i) => { const t = sw + i * 3 * R.F; R.show(R.$('#t' + i), t); R.sfx('tick', t, { vol: -5 }); });
+    TAGS.forEach((_, i) => {
+      const t = cr + (rk - cr) * i / 2;
+      R.tl.set(R.$(`#t${i} s`), { '--cut': 'visible' }, R.T(t));
+      R.show(R.$(`#t${i} b`), t); R.sfx('strike', t, { vol: -5 });
+    });
+    // the tags sway on their hooks, on twos
+    const tags = TAGS.map((_, i) => R.$('#t' + i)), cz = W('and finding') + 0.25;   // closes before he leans up into it
+    R.every(sw, cz, t => { const f = Math.round(t * 15); tags.forEach((el, i) => { el.style.transform = `rotate(${[0, 1, 2, 1, 0, -1, -2, -1][((f >> 1) + i * 3) % 8]}deg)`; }); });
+    R.show(R.$('#pc'), rk); R.blink(R.$('#pc'), rk, cz, 0.4);
+    R.close(CL, cz);
+
+    // CAC.exe → the cheat prompt
+    const CA = R.win({ title: 'CAC.exe', right: '<span id="rt">cost per customer</span>', layer: 'cac', x: 4, y: 118.5, w: 82, h: 21,
+      body: `<div id="p1"><div class="ln"><span>finding 1 customer</span><span id="cc">$12</span></div></div>
+        <div id="p2"><div class="ln"><span>&gt; enter code:</span><span id="kd"></span></div>
+          <div class="ln"><span class="chip chip--green" id="on">CHEAT ON ✓ build in public</span><span id="fd"></span></div></div>` });
+    CA.id = 'CA';
+    const fc = W('finding customers'), ex = W('expensive'), th = R.we('things');
+    R.open(CA, fc);
+    R.count(R.$('#cc'), W('customers', fc) + 0.1, th - W('customers', fc), 12, 1280, v => `$${Math.round(v).toLocaleString('en-US')}`);
+    [W('still'), W('one of'), W('most')].forEach(t => R.sfx('tick', t, { vol: -7, layer: 'cac' }));
+    R.flash(R.$('#cc'), ex, 3); R.sfx('alert', ex, { layer: 'cac', vol: -3 });
+    // building in public is the cheat code
+    const bp = W('building in public'), ch = W('cheat'), fn = W('to finding');
+    R.tl.set(R.$('#p1'), { display: 'none' }, R.T(bp)); R.tl.set(R.$('#p2'), { display: 'block' }, R.T(bp));
+    R.text(R.$('#rt'), bp, 'secret menu'); R.sfx('blip', bp, { freq: 700, vol: -6, layer: 'cac' });
+    const KC = [...'↑↑↓↓←→←→BA'], k0 = W('is the', bp);
+    KC.forEach((_, k) => { const t = k0 + k / 14; R.text(R.$('#kd'), t, KC.slice(0, k + 1).join('')); R.sfx('tick', t, { vol: -8, layer: 'cac' }); });
+    const on = R.we('code') + 0.05;
+    R.show(R.$('#on'), on); R.sfx('success', on, { layer: 'cac', vol: -2 });
+    R.count(R.$('#fd'), fn, END - fn - 0.05, 0, 37, v => `+${Math.round(v)} customers`);
+    [0, 1, 2].forEach(k => R.sfx('blip', fn + k * 0.12, { freq: 500 * 2 ** (k * 4 / 16), vol: -7, layer: 'cac' }));
+    R.done(END);
+  </script>
+</body>
+</html>
