@@ -55,7 +55,22 @@ written `name@time` (`pop@12.40`, `#2` for repeats), so if you change a beat's o
 the user has edited them, those edits stop matching: check `retro ls`/retro.json first and carry
 them over. Added sounds are in the beat's written time, so they move with stretch/cut like the rest.
 Each sound's category and one-line use are in `INFO` (lib/synth.mjs): the preview's picker groups by it, and it's a quick way to choose. Timing in the preview is now done by dragging a beat's edges (trim/stretch).
-Never undo the user's timing, hidden layers, sound edits or moves; `retro ls` shows them all.
+Per animation: `"ltime": { "cac": { "retime": [57.76, 64.21], "crop": [c, d] } }` (beat seconds as written;
+the preview's Animations lane, one block per layer: drag to move it, edges trim/stretch). The kit
+shifts/stretches that layer's tweens (per-frame code included: R.every finds its layer by what it draws)
+and its sounds, and hides it outside crop. Moving a layer past the beat's edges makes the beat longer.
+Cue each sound on its layer (`{ layer: 'cac' }`) so it travels with it.
+The video's end is a hard stop: the build injects `videoEnd`, beats are cut there (lint says by how much),
+later sounds are dropped and the stem fades out over its last 20 ms.
+Behind the speaker: `"behind": ["main"]` (layers; the preview's **In front / Behind me** button, or
+`retro behind <beat> <layer>` / `retro front …`) draws that layer between the speaker and the
+background. The speaker is cut out with Cutroom's matte tool (Apple Vision person segmentation,
+`swift/matte.swift`): the render makes a matte for that beat's time (`out/mattes/`, cached) and
+composites video → behind layers → the speaker → everything else; `retro frames` shows it the same
+way, and the preview cuts out a light copy once per video. A behind layer may sit over the face (lint
+skips the face check for it). The matte is Vision's guess: fast hands blur at the edge and big objects
+near the speaker can get cut out too, so check `retro frames` before suggesting one.
+Never undo the user's timing, hidden layers, behind layers, sound edits or moves; `retro ls` shows them all.
 
 ## Placement rules (the user's, non-negotiable)
 

@@ -1,10 +1,11 @@
 /* retro preview: a local page that plays the video with every beat running live on top (no render),
    the sound effects mixed in the browser with the same synth as the export, and switches that
    write straight to retro.json. Plain node:http, no dependencies. */
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
+import { previewCut, startPreviewCut } from './cutout.mjs';
 import { duration, Project, RETRO } from './project.mjs';
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
@@ -19,6 +20,22 @@ function proxy(project) {
   if (r.status) throw new Error('ffmpeg failed making the preview copy');
   console.log('done');
   return out;
+}
+
+/* The filmstrip on the timeline: one small frame every `every` seconds, in one row (a sprite), made once
+   from the light copy in the background and cached next to it. */
+const TH = 120;                                       // frame height in the sprite (2× the row, for sharp screens)
+function filmstrip(project, light, len) {
+  const every = Math.max(0.5, Math.ceil(len / 400 * 10) / 10), n = Math.ceil(len / every);
+  const file = join(project.out, `.thumbs-${every}.jpg`);
+  const info = { every, n, h: TH };
+  if (existsSync(file) && statSync(file).mtimeMs > statSync(light).mtimeMs) return { ...info, ready: Promise.resolve(file) };
+  const ready = new Promise((res, rej) => {
+    const p = spawn('ffmpeg', ['-v', 'error', '-y', '-i', light, '-vf', `fps=1/${every}:start_time=0,scale=-2:${TH},tile=${n}x1`, '-frames:v', '1', '-q:v', '5', file]);
+    p.on('close', c => (c === 0 ? res(file) : rej(new Error('ffmpeg failed making the filmstrip'))));
+  });
+  ready.catch(e => console.error(e.message));
+  return { ...info, ready };
 }
 
 function sendFile(req, res, file) {
@@ -36,10 +53,10 @@ function sendFile(req, res, file) {
 
 /** What the page and this server agree on. Bump it whenever /api/beat learns a new kind of edit: a page
     that sees a different number warns that its edits may not save. */
-export const API = 3;
+export const API = 5;
 
 export async function serve(project, port, { open = true } = {}) {
-  const video = proxy(project), len = duration(project.video);
+  const video = proxy(project), len = duration(project.video), strip = filmstrip(project, video, len);
   const fresh = () => new Project(project.dir);                 // re-read retro.json each request (hand edits win)
   const server = createServer((req, res) => {
     const url = new URL(req.url, 'http://x'), p = decodeURIComponent(url.pathname);
@@ -47,24 +64,35 @@ export async function serve(project, port, { open = true } = {}) {
       if (p === '/') return sendFile(req, res, join(RETRO, 'preview', 'index.html'));
       if (p === '/synth.mjs') return sendFile(req, res, join(RETRO, 'lib', 'synth.mjs'));
       if (p === '/video.mp4') return sendFile(req, res, video);
+      if (p === '/thumbs.jpg') { strip.ready.then(f => sendFile(req, res, f), () => { res.writeHead(404); res.end(); }); return; }
+      // The preview copy with the speaker's matte stacked under it, for animations behind the speaker.
+      // GET /api/cutout says how it's going; ?make=1 starts it.
+      if (p === '/cut.mp4') { const c = previewCut(project, video); return c.state === 'ready' ? sendFile(req, res, c.file) : (res.writeHead(404), res.end()); }
+      if (p === '/api/cutout') {
+        const c = url.searchParams.get('make') ? startPreviewCut(project, video) : previewCut(project, video);
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        return res.end(JSON.stringify({ state: c.state, progress: c.progress, error: c.error || null }));
+      }
       if (p === '/api/state' && req.method === 'GET') {
         const pr = fresh();
         res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-        return res.end(JSON.stringify({ api: API, size: pr.size, duration: len, sfxGain: pr.cfg.sfxGain || 0, faces: pr.faces(),
+        return res.end(JSON.stringify({ api: API, size: pr.size, duration: len, thumbs: { every: strip.every, n: strip.n, h: strip.h }, sfxGain: pr.cfg.sfxGain || 0, faces: pr.faces(),
           beats: pr.beatIds().map(id => ({ id, ...pr.beat(id) })) }));
       }
       if (p === '/api/beat' && req.method === 'POST') {
         let body = '';
         req.on('data', c => { body += c; });
         req.on('end', () => {
-          const { id, on, move, sfx, time, hide, sounds, sfxGain } = JSON.parse(body), pr = fresh();
+          const { id, on, move, sfx, time, ltime, hide, behind, sounds, sfxGain } = JSON.parse(body), pr = fresh();
           if (!pr.beatIds().includes(id)) { res.writeHead(404, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: `no beat ${id}` })); }
           const b = pr.beat(id);
           if (on != null) b.on = on;
           if (sounds !== undefined) { if (sounds && (Object.keys(sounds.edit || {}).length || (sounds.add || []).length)) b.sounds = sounds; else delete b.sounds; }
           if (sfxGain !== undefined) { if (sfxGain) b.sfxGain = sfxGain; else delete b.sfxGain; }
           if (hide !== undefined) { if (hide?.length) b.hide = hide; else delete b.hide; }
+          if (behind !== undefined) { if (behind?.length) b.behind = behind; else delete b.behind; }
           if (time !== undefined) { if (time && Object.keys(time).length) b.time = time; else delete b.time; }
+          if (ltime !== undefined) { if (ltime && Object.keys(ltime).length) b.ltime = ltime; else delete b.ltime; }
           if (sfx != null) { if (sfx) delete b.sfx; else b.sfx = false; }
           if (move) {   // kept to 0.01u so a snapped centre stays dead centre
             b.move = Object.fromEntries(Object.entries(move).filter(([, v]) => v[0] || v[1]).map(([k, [x, y]]) => [k, [Math.round(x * 100) / 100, Math.round(y * 100) / 100]]));

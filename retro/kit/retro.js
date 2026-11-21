@@ -13,7 +13,8 @@
    Layers: R.win/R.box take { layer: 'name' } (default 'main'). retro.json can move a layer
    ("move": { "save": [0, -4] }, in u) and the lint reports per layer.
 
-   window.RETRO is injected by the build: { words: [{t,e,w}], move: {layer: [dx,dy]}, time: {retime, crop}, hide: [layer], sounds: {edit, add}, beat }.
+   window.RETRO is injected by the build: { words: [{t,e,w}], move: {layer: [dx,dy]}, time: {retime, crop}, hide: [layer], sounds: {edit, add}, beat,
+  pass: 'front'|'back' (render only), behind: [layer] }.
    Timing tweaks (retro.json "time", set in the preview or with `retro time`) are applied in R.done:
    write beats in their natural times; R.OUT says where the beat ends up. */
 (function () {
@@ -71,6 +72,18 @@
 
   /* ---------- layers ---------- */
   const layers = {};
+  const layerOfEl = el => (el && el.nodeType !== 1 ? el.parentElement : el)?.closest?.('.layer')?.dataset.layer || el?._layer || null;
+  /** Which layer does fn() draw into? (Runs it once and sees what it changed.) So per-frame code knows
+      whose clock it runs on when the user moves one animation in time. */
+  const touched = fn => {
+    const st = document.getElementById('stage'), mo = st && new MutationObserver(() => {});
+    if (mo) mo.observe(st, { attributes: true, childList: true, characterData: true, subtree: true });
+    fn();
+    const recs = mo ? mo.takeRecords() : [];
+    mo?.disconnect();
+    for (const r of recs) { const L = layerOfEl(r.target); if (L) return L; }
+    return null;
+  };
   /** The layer element for `name` (created on first use, moved by retro.json). */
   R.layer = (name = 'main') => {
     if (layers[name]) return layers[name];
@@ -175,7 +188,7 @@
   /** Pixel type-on (monospace): reveals characters in steps. Sound: a 'type' click per character
       (at most 15 a second). */
   R.type = (el, at, cps = 22, { sfx } = {}) => {
-    const chars = [...(el._full ??= el.textContent)], n = chars.length, o = { k: 0 };
+    const chars = [...(el._full ??= el.textContent)], n = chars.length, o = { k: 0, _layer: layerOfEl(el) };
     el.style.width = 'auto';
     el.textContent = '';
     R.tl.set(el, { autoAlpha: 1 }, R.T(at));
@@ -186,7 +199,7 @@
 
   /** Stepped counter, on twos. */
   R.count = (el, at, dur, from, to, fmt = v => Math.round(v).toLocaleString('en-US')) => {
-    const o = { v: from };
+    const o = { v: from, _layer: layerOfEl(el) };
     el.textContent = fmt(from);
     R.tl.to(o, { v: to, duration: dur, ease: `steps(${Math.max(1, Math.round(dur * R.FPS2))})`, onUpdate: () => { el.textContent = fmt(o.v); } }, R.T(at));
   };
@@ -213,7 +226,7 @@
   /** Run fn(t) on every frame between a and b (absolute times, stepped on twos by default).
       For canvases and anything drawn procedurally; fn gets absolute video time. */
   R.every = (a, b, fn, fps = R.FPS2) => {
-    const o = { k: 0 }, n = Math.max(1, Math.round((b - a) * fps));
+    const o = { k: 0, _layer: touched(() => { fn(a); fn((a + b) / 2); fn(a); }) }, n = Math.max(1, Math.round((b - a) * fps));
     R.tl.fromTo(o, { k: 0 }, { k: n, duration: R.T(b) - R.T(a), ease: `steps(${n})`, onUpdate: () => fn(a + o.k / fps) }, R.T(a));
   };
 
@@ -306,18 +319,61 @@
     // Everything downstream (lint, preview, render, the sound mix) reads R.OUT (where the beat shows,
     // in video seconds) and R.cues (rewritten to output times). R.START/R.END stay as written, so
     // per-frame code that reads them keeps working; R.SRC is the same pair.
-    const tm = CFG.time || {}, s0 = R.START, e0 = end;
-    R.SRC = { start: s0, end: e0 };
+    // Per-animation timing (retro.json "ltime": { layer: { retime: [a, b], crop: [c, d] } }, beat seconds as
+    // written): one layer's tweens are moved/stretched so its natural span lands on a..b, and it only shows
+    // inside c..d. Its sounds go with it. A layer moved past the beat's edges makes the beat longer.
+    const kids = R.tl.getChildren(false, true, true);
+    const layerOfTween = tw => { for (const x of tw.targets()) { const L = x instanceof Node ? layerOfEl(x) : x?._layer; if (L) return L; } return null; };
+    const spans = {}, lmap = {};
+    for (const tw of kids) { const L = layerOfTween(tw); tw._L = L; if (!L) continue; const sp = (spans[L] ||= [Infinity, -Infinity]); sp[0] = Math.min(sp[0], tw.startTime()); sp[1] = Math.max(sp[1], tw.startTime() + tw.totalDuration()); }
+    // still showing when the beat ends (never closes)? then it holds to the end of the beat
+    R.tl.seek(total, false);
+    const holds = {};
+    for (const [L, el] of Object.entries(layers)) holds[L] = [...el.children].some(ch => !ch.classList.contains('zoom') && getComputedStyle(ch).visibility !== 'hidden' && getComputedStyle(ch).display !== 'none');
+    R.tl.seek(0, false);
+    const LT = CFG.ltime || {};
+    for (const [L, sp] of Object.entries(spans)) {
+      const ls = R.START + sp[0], le = R.START + Math.max(sp[1], sp[0] + R.F), cfg = LT[L] || {};
+      const [la, lb] = cfg.retime && cfg.retime[1] - cfg.retime[0] > 0.05 ? cfg.retime : [ls, le];
+      lmap[L] = { ls, le, la, lb, k: (lb - la) / (le - ls), crop: cfg.crop || null, hold: holds[L] };
+    }
+    const moved = m => m && (Math.abs(m.la - m.ls) > 1e-6 || Math.abs(m.lb - m.le) > 1e-6);
+    const lm = (L, t) => { const m = lmap[L]; return moved(m) ? m.la + (t - m.ls) * m.k : t; };
+    for (const tw of kids) if (tw._L && moved(lmap[tw._L])) {
+      const m = lmap[tw._L];
+      tw.startTime(lm(tw._L, R.START + tw.startTime()) - R.START);
+      if (m.k !== 1) tw.timeScale(tw.timeScale() / m.k);
+    }
+    let lo = R.START, hi = end;
+    for (const m of Object.values(lmap)) { if (moved(m)) lo = Math.min(lo, m.la); if (moved(m) && !m.hold) hi = Math.max(hi, m.lb); }
+    lo = Math.max(lo, R.START - 30);
+    if (lo < R.START - 1e-6) { const pre = Math.round((R.START - lo) * 30) / 30; for (const tw of R.tl.getChildren(false, true, true)) tw.startTime(tw.startTime() + pre); lo = R.START - pre; }
+    else lo = R.START;
+    const base = lo;                                          // the timeline's time 0, as a beat time
+    const offPass = L => (CFG.hide || []).includes(L) || (CFG.pass && (CFG.pass === 'back') !== (CFG.behind || []).includes(L));
+    for (const [L, m] of Object.entries(lmap)) if (m.crop && !offPass(L)) {
+      const el = layers[L], c = Math.max(0, m.crop[0] - base), d = Math.max(c, m.crop[1] - base);
+      R.tl.set(el, { display: c > 1e-3 ? 'none' : '' }, 0); if (c > 1e-3) R.tl.set(el, { display: '' }, c); R.tl.set(el, { display: 'none' }, d);
+    }
+    R.tl.set({}, {}, hi - base);
+    const tm = CFG.time || {}, s0 = base, e0 = hi;
     const [a, b] = tm.retime && tm.retime[1] - tm.retime[0] > 0.1 ? tm.retime : [s0, e0];
     const k = (b - a) / (e0 - s0);
     let [c, d] = tm.crop || [a, b];
     c = Math.max(a, Math.min(c, b - R.F)); d = Math.min(b, Math.max(d, c + R.F));
+    // Nothing plays after the video ends (retro.json never needs to say so): the beat is cut there.
+    const vEnd = CFG.videoEnd || Infinity;
+    if (d > vEnd + 1e-3) { R.warnings.push(`runs ${(d - vEnd).toFixed(2)}s past the end of the video: cut at ${vEnd.toFixed(2)}s`); d = Math.max(c + R.F, vEnd); }
     const out = t => a + (t - s0) * k;                        // a beat time → output time
     // Layers the user switched off (retro.json "hide": [layer, ...]): gone, sounds included
     const hide = CFG.hide || [];
     hide.forEach(L => { if (layers[L]) layers[L].style.display = 'none'; });
+    // A render pass for a beat with layers behind the speaker (retro.json "behind": [layer]): the back pass
+    // draws only those, the front pass the rest. Pictures only: the sounds stay as they are.
+    if (CFG.pass) for (const [L, el] of Object.entries(layers)) if ((CFG.pass === 'back') !== (CFG.behind || []).includes(L)) el.style.display = 'none';
     R.map = out;
-    R.unmap = t => s0 + (t - a) / k;                         // output time → beat time (for added sounds)
+    // output time → beat time (for added and moved sounds); with a layer, undoes that layer's own timing too
+    R.unmap = (t, L) => { const w = s0 + (t - a) / k, m = L && lmap[L]; return moved(m) ? m.ls + (w - m.la) / m.k : w; };
 
     // Sounds. Each written cue gets a stable key ("pop@12.40", "#2" for repeats) so the user's edits
     // in retro.json "sounds": { edit: { key: { s, gain, off, dur, shift } }, add: [{ t, s, vol, layer, dur }] } find it.
@@ -330,14 +386,24 @@
       const ed = cfg.edit || {}, adds = (cfg.add || []).map((q, i) => ({ layer: 'main', ...q, key: `add:${i}`, added: true }));
       return [...R.cuesWritten, ...adds].map(q => {
         const e = ed[q.key] || {};
-        const tb = Math.max(s0, Math.min(e0, q.t + (e.shift || 0)));     // shift: the user slid it along the timeline (beat seconds)
+        const L = q.layer || 'main', lc = lmap[L]?.crop;
+        const tb = Math.max(s0, Math.min(e0, lm(L, q.t + (e.shift || 0))));     // shift: the user slid it along the timeline (beat seconds); then its layer's timing
+        if (lc && (tb < lc[0] - 0.02 || tb > lc[1])) return null;
         return { ...q, s: e.s || q.s, vol: (q.vol || 0) + (e.gain || 0), off: !!e.off, dur: e.dur || q.dur, shift: e.shift || 0,
           edited: !!(e.s || e.gain || e.off || e.dur || e.shift), t0: tb, t: Math.round(out(tb) * 1000) / 1000 };
-      }).filter(q => q.t >= c - 0.15 && q.t <= d && !hide.includes(q.layer || 'main'));
+      }).filter(q => q && q.t >= c - 0.15 && q.t <= Math.min(d, vEnd - 0.02) && !hide.includes(q.layer || 'main'));
     };
     R.cuesAll = R.sfxApply(CFG.sounds);                       // muted ones included (the preview shows them)
     R.cues = R.cuesAll.filter(q => !q.off);
     R.OUT = { start: c, end: d };
+    R.SRC = { start: s0, end: e0 };
+    // Where each animation shows (video seconds), for the preview's animation lane
+    R.LAYERS = Object.fromEntries(Object.entries(lmap).map(([L, m]) => {
+      let x = out(m.la), y = m.hold ? d : out(m.lb);
+      if (m.crop) { x = Math.max(x, out(m.crop[0])); y = Math.min(y, out(m.crop[1])); }
+      x = Math.max(c, x); y = Math.min(d, y);
+      return [L, { start: x, end: Math.max(x, y), nat: [m.ls, m.le], retime: [m.la, m.lb], crop: m.crop, hold: m.hold, title: layers[L]?.querySelector('.win__bar .t')?.textContent || '' }];
+    }));
     let root = R.tl;
     if (k !== 1 || c !== a || d !== b) {
       root = gsap.timeline({ paused: true });

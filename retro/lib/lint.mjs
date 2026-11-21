@@ -14,7 +14,7 @@ export function lint(project, probes, faces) {
   const issues = [];
   const bottom = (faces?.height ?? 177.78) - SAFE.bottom;
   for (const [id, p] of Object.entries(probes)) {
-    const allow = project.beat(id).allow || [];
+    const allow = project.beat(id).allow || [], behind = project.beat(id).behind || [];   // behind you: over the face is fine
     const open = new Map();                                  // key → issue being extended
     const hit = (key, mk, t, v) => {
       const cur = open.get(key);
@@ -35,7 +35,7 @@ export function lint(project, probes, faces) {
       const f = faceAt(faces, t), zone = f && noGo(f);
       for (const [layer, el, x, y, w, h] of seen) {
         const r = [x, y, w, h];
-        if (zone && !allow.includes('face')) {
+        if (zone && !allow.includes('face') && !behind.includes(layer)) {
           const pct = overlap(r, zone) / (zone[2] * zone[3]) * 100;
           if (pct >= 1) hit(`f${layer}${el}`, { beat: id, layer, el, kind: 'face' }, t, Math.round(pct));
         }
