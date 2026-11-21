@@ -34,6 +34,10 @@ function sendFile(req, res, file) {
   createReadStream(file).pipe(res);
 }
 
+/** What the page and this server agree on. Bump it whenever /api/beat learns a new kind of edit: a page
+    that sees a different number warns that its edits may not save. */
+export const API = 3;
+
 export async function serve(project, port, { open = true } = {}) {
   const video = proxy(project), len = duration(project.video);
   const fresh = () => new Project(project.dir);                 // re-read retro.json each request (hand edits win)
@@ -46,15 +50,19 @@ export async function serve(project, port, { open = true } = {}) {
       if (p === '/api/state' && req.method === 'GET') {
         const pr = fresh();
         res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-        return res.end(JSON.stringify({ size: pr.size, duration: len, sfxGain: pr.cfg.sfxGain || 0, faces: pr.faces(),
+        return res.end(JSON.stringify({ api: API, size: pr.size, duration: len, sfxGain: pr.cfg.sfxGain || 0, faces: pr.faces(),
           beats: pr.beatIds().map(id => ({ id, ...pr.beat(id) })) }));
       }
       if (p === '/api/beat' && req.method === 'POST') {
         let body = '';
         req.on('data', c => { body += c; });
         req.on('end', () => {
-          const { id, on, move, sfx, time, hide } = JSON.parse(body), pr = fresh(), b = pr.beat(id);
+          const { id, on, move, sfx, time, hide, sounds, sfxGain } = JSON.parse(body), pr = fresh();
+          if (!pr.beatIds().includes(id)) { res.writeHead(404, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: `no beat ${id}` })); }
+          const b = pr.beat(id);
           if (on != null) b.on = on;
+          if (sounds !== undefined) { if (sounds && (Object.keys(sounds.edit || {}).length || (sounds.add || []).length)) b.sounds = sounds; else delete b.sounds; }
+          if (sfxGain !== undefined) { if (sfxGain) b.sfxGain = sfxGain; else delete b.sfxGain; }
           if (hide !== undefined) { if (hide?.length) b.hide = hide; else delete b.hide; }
           if (time !== undefined) { if (time && Object.keys(time).length) b.time = time; else delete b.time; }
           if (sfx != null) { if (sfx) delete b.sfx; else b.sfx = false; }
@@ -64,7 +72,7 @@ export async function serve(project, port, { open = true } = {}) {
           }
           pr.save();
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ id, ...b }));
+          res.end(JSON.stringify({ id, api: API, ...b }));
         });
         return;
       }

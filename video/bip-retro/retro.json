@@ -22,7 +22,7 @@
       }
     },
     "03-login": {
-      "on": false,
+      "on": true,
       "move": {
         "main": [
           5,
@@ -57,6 +57,38 @@
           5,
           -2.5
         ]
+      },
+      "sounds": {
+        "edit": {
+          "coin@19.34": {
+            "gain": 1
+          },
+          "bump@21.30": {
+            "gain": 1
+          },
+          "tick@22.54": {
+            "gain": 1
+          },
+          "bump@23.24": {
+            "gain": 1
+          },
+          "tick@24.44": {
+            "gain": 1
+          },
+          "bump@25.10": {
+            "gain": 1
+          },
+          "open@25.78": {
+            "gain": 1
+          },
+          "clap@26.13": {
+            "gain": 1
+          },
+          "victory@26.92": {
+            "gain": 1
+          }
+        },
+        "add": []
       }
     },
     "06-redact": {
@@ -73,7 +105,30 @@
       },
       "hide": [
         "mail"
-      ]
+      ],
+      "sounds": {
+        "edit": {
+          "pop@28.12": {
+            "gain": 1
+          },
+          "strike@29.14": {
+            "gain": 1
+          },
+          "strike@29.59": {
+            "gain": 1
+          },
+          "strike@30.03": {
+            "gain": 1
+          },
+          "gated@30.48": {
+            "gain": 1
+          },
+          "open@27.54": {
+            "gain": 1
+          }
+        },
+        "add": []
+      }
     },
     "07-problems": {
       "on": true,
@@ -87,9 +142,56 @@
           -4
         ]
       },
-      "hide": [
-        "aud"
-      ]
+      "sounds": {
+        "edit": {
+          "open@33.27": {
+            "gain": 1
+          },
+          "stab@34.16": {
+            "gain": 1
+          },
+          "tick@35.10": {
+            "gain": 1
+          },
+          "coin@35.66": {
+            "gain": 1
+          },
+          "coin@36.32": {
+            "gain": 1
+          },
+          "tick@38.16": {
+            "gain": 1
+          },
+          "open@38.68": {
+            "gain": 1
+          },
+          "tapestop@38.83": {
+            "gain": 1
+          },
+          "jump@39.58": {
+            "gain": 1
+          },
+          "jump@39.95": {
+            "gain": 1
+          },
+          "jump@40.33": {
+            "gain": 1
+          },
+          "jump@40.70": {
+            "gain": 1
+          },
+          "jump@41.08": {
+            "gain": 1
+          },
+          "gameover@41.94": {
+            "gain": 1
+          },
+          "coin@36.52": {
+            "gain": 1
+          }
+        },
+        "add": []
+      }
     },
     "08-story": {
       "on": true,
@@ -98,6 +200,41 @@
           5,
           3
         ]
+      },
+      "sounds": {
+        "edit": {
+          "open@43.10": {
+            "gain": 1
+          },
+          "stab@43.28": {
+            "gain": 1
+          },
+          "fanfare@44.84": {
+            "gain": 1
+          },
+          "jump@45.92": {
+            "gain": 1
+          },
+          "tick@47.88": {
+            "gain": 1
+          },
+          "tick@48.21": {
+            "gain": 1
+          },
+          "tick@48.53": {
+            "gain": 1
+          },
+          "tick@48.86": {
+            "gain": 1
+          },
+          "fireball@43.98": {
+            "gain": 1
+          },
+          "shimmer@48.86": {
+            "gain": 1
+          }
+        },
+        "add": []
       }
     },
     "09-party": {
@@ -111,6 +248,17 @@
           5,
           -79
         ]
+      },
+      "sounds": {
+        "edit": {
+          "open@49.57": {
+            "gain": 1
+          },
+          "stab@49.60": {
+            "gain": 1
+          }
+        },
+        "add": []
       }
     },
     "10-cheat": {
@@ -125,9 +273,26 @@
           4
         ]
       },
-      "hide": [
-        "cac"
-      ]
+      "sounds": {
+        "edit": {
+          "sunset@64.58": {
+            "shift": -3.755
+          },
+          "secret@64.63": {
+            "shift": -0.467
+          },
+          "coin@64.73": {
+            "shift": -0.432
+          },
+          "coin@65.09": {
+            "shift": -0.934
+          },
+          "coin@64.91": {
+            "shift": -1.624
+          }
+        },
+        "add": []
+      }
     }
   }
 }

@@ -21,6 +21,8 @@ Setup
   retro faces                     find faces and scene cuts again (after a re-cut)
   retro layout                    each scene's face and the free space around it (in u, worst case)
   retro zones [from] [to]         free space through time (every 0.5 s, merged): where a window fits when
+  retro sounds [words...]         the sound catalogue (98 sounds): what each is for, its set, length, tags;
+                                  with words, ranked matches (★ = matches every word): retro sounds win warm
   retro beat <NN-name> [phrase] [--to phrase|secs]
                                   start a beat: snaps to a nearby scene cut, and writes the words, cuts
                                   and free space for its span into the file as a comment
@@ -178,6 +180,29 @@ ${info} -->
     console.log(info.replace(/^ {5}/gm, ''));
   },
 
+  async sounds() {
+    const { INFO, CATEGORIES, PACKS, SOUNDS, RATE } = await import('./lib/synth.mjs');
+    const set = {}; for (const [p, ns] of Object.entries(PACKS)) for (const n of ns) set[n] = p;
+    const q = argv.join(' ').toLowerCase().split(/\s+/).filter(Boolean);   // 'win warm' or win warm
+    // whole words ("win" isn't "window"); words of 4+ letters also match as a start ("celebr" → celebrate)
+    const toks = n => `${n} ${INFO[n].join(' ')} ${set[n]}`.toLowerCase().split(/[^a-z0-9]+/);
+    const has = (n, w) => toks(n).some(t => t === w || (w.length >= 4 && t.startsWith(w)));
+    // ranked: sounds matching more of the words first (all of them = the best fits), partial matches after
+    const score = n => q.filter(w => has(n, w)).length;
+    const hits = Object.keys(INFO).filter(n => !q.length || score(n) > 0).sort((a, b) => score(b) - score(a));
+    if (!hits.length) { console.log(`no sound matches "${q.join(' ')}". Try other words, or: retro sounds`); return; }
+    if (q.length > 1) {
+      const best = hits.filter(n => score(n) === q.length);
+      console.log(best.length ? `best fits (all of "${q.join(' ')}"): ${best.join(', ')}` : `nothing matches all of "${q.join(' ')}"; closest below`);
+    }
+    for (const c of CATEGORIES) {
+      const ns = hits.filter(n => INFO[n][0] === c).sort((a, b) => score(b) - score(a)); if (!ns.length) continue;
+      console.log(`\n${c}`);
+      for (const n of ns) console.log(`${q.length > 1 && score(n) === q.length ? '★ ' : '  '}${n.padEnd(10)} ${set[n].padEnd(9)} ${(SOUNDS[n] ? (SOUNDS[n].length / RATE).toFixed(2) + 's' : ' ~0s').padStart(5)}  ${INFO[n][1]}  [${INFO[n][2]}]`);
+    }
+    console.log(`\n${hits.length} sound(s). Cue one with R.sfx(name, t, { vol, layer }).`);
+  },
+
   zones() {
     const p = P(), f = p.faces(); if (!f) throw new Error('No faces.json: run retro faces');
     const [a = 0, b = Math.max(p.words().at(-1)?.e ?? 0, f.samples.at(-1).t)] = argv.map(Number);
@@ -315,10 +340,30 @@ ${info} -->
     if (!noOpen && process.platform === 'darwin') spawnSync('open', ['-R', out]);
   },
 
+  // The preview runs as a child process that this one restarts whenever retro's own code changes, so a
+  // long-running preview never keeps serving old code (an old server silently ignored new kinds of
+  // edits once). The browser tab stays put: the page retries a save while the server restarts.
   async preview() {
-    const { serve } = await import('./lib/preview.mjs');
     const port = Number(flag('--port', true)) || 4180, noOpen = !!flag('--no-open');
-    await serve(P(), port, { open: !noOpen });
+    if (process.env.RETRO_PREVIEW_CHILD) { const { serve } = await import('./lib/preview.mjs'); await serve(P(), port, { open: !noOpen }); return; }
+    const { spawn } = await import('node:child_process'), { readdirSync, statSync } = await import('node:fs');
+    const dir = P().dir, files = () => [join(RETRO, 'cli.mjs'), ...readdirSync(join(RETRO, 'lib')).filter(f => f.endsWith('.mjs')).map(f => join(RETRO, 'lib', f))];
+    const stamp = () => files().map(f => statSync(f).mtimeMs).join();
+    let child = null, first = true, last = stamp();
+    const start = () => {
+      child = spawn(process.execPath, [join(RETRO, 'cli.mjs'), 'preview', '-p', dir, '--port', String(port), ...(first && !noOpen ? [] : ['--no-open'])],
+        { stdio: 'inherit', env: { ...process.env, RETRO_PREVIEW_CHILD: '1' } });
+      first = false;
+      child.on('exit', code => { if (code && !child.restarting) { console.error(`retro preview stopped (exit ${code})`); process.exit(code); } });
+    };
+    start();
+    setInterval(() => {
+      const now = stamp(); if (now === last) return;
+      last = now; console.log('… retro was updated: restarting the preview server (your browser tab keeps working)');
+      child.restarting = true; child.once('exit', start); child.kill();
+    }, 1000);
+    for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { child?.kill(); process.exit(0); });
+    await new Promise(() => {});
   },
 
   // Write only the SFX stem (out/sfx.wav), e.g. to drop into an editor.

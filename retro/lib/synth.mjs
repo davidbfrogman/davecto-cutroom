@@ -186,11 +186,202 @@ Object.assign(SOUNDS, {
   drop:     peak(synth([220, 110], .55, { voices: 3, detune: 14, glide: -12, c0: 5000, c1: 160, env: { a: .002, d: 1, sus: 1, r: .08 } }), .26),  // filter + pitch fall: the downlifter, out of a moment
 });
 
+/* ---- Adventure set: an original sound world in the style of the classic 8-bit adventure games: NES-like
+   pulse (12.5% / 25%) and triangle voices, noise-channel hits, notes articulated one by one with their own
+   quick decay, and chords "faked" by cycling their notes every 1/60 s (frame arpeggios). Heroic keys
+   (G and D major). Every phrase is our own: no melody from any existing game. ---- */
+const tri = (steps, o = {}) => tone(steps, { wave: 'tri', ...o });
+const m2f = m => 440 * Math.pow(2, (m - 69) / 12);                 // MIDI note → Hz (60 = middle C)
+/** Feedback delay (an echo): `time` s between repeats, `fb` level of each repeat, `n` repeats. */
+function echo(dry, { time = .18, fb = .45, n = 4, mix = .6 } = {}) {
+  const d = N(time), out = new Float32Array(dry.length + d * n);
+  for (let i = 0; i < dry.length; i++) out[i] += dry[i];
+  for (let r = 1, g = fb; r <= n; r++, g *= fb) for (let i = 0; i < dry.length; i++) out[i + d * r] += dry[i] * g * mix;
+  return out;
+}
+/** Notes played one by one like a game's sound driver: each its own short decay. hold = the last note's length. */
+const nes = (midis, { len = .07, duty = .25, decay = 12, wave = 'square', vol = .28, hold } = {}) =>
+  lay(midis.map((m, i) => [m == null ? new Float32Array(1) : tone([[m2f(m), i === midis.length - 1 && hold ? hold : len]], { duty, wave, decay: i === midis.length - 1 && hold ? 3 : decay, vol, lp: .6 }), i * len]));
+/** A chord the NES way: its notes cycled every 1/60 s. */
+const frameArp = (midis, dur, { duty = .25, decay = 2.5, vol = .26 } = {}) =>
+  tone(Array.from({ length: Math.round(dur * 60) }, (_, i) => [m2f(midis[i % midis.length]), 1 / 60]), { duty, decay, vol, lp: .6 });
+/** NES noise channel: bright, gritty; lp lower = deeper. */
+const nnoise = (dur, { lp = .5, decay = 10, vol = .3 } = {}) => hiss(dur, { lp, decay, vol });
+// G major: G3 55 · B3 59 · D4 62 · G4 67 · A4 69 · B4 71 · D5 74 · E5 76 · F#5 78 · G5 79 · A5 81 · B5 83 · D6 86 · G6 91
+Object.assign(SOUNDS, {
+  dungeon:   peak(lay([[nnoise(1.0, { lp: .06, decay: 1.6 }), 0, .9], [tone(Array.from({ length: 24 }, (_, i) => [m2f(31 + (i % 2)), .04]), { wave: 'tri', vol: .4 }), 0],
+               [nes([43, 38], { len: .22, wave: 'tri', decay: 5, vol: .45 }), .55], [lay([[nnoise(.18, { lp: .2, decay: 18 }), 0], [tri([[m2f(31), .25, m2f(26)]], { vol: .5, decay: 10 }), 0]]), 1.0]]), .34),  // the dungeon door grinds open, a low triangle groan, thud
+  chest:     peak(lay([[tone(Array.from({ length: 12 }, (_, i) => [[m2f(55 + i), .028], [m2f(62 + i), .028]]).flat(), { duty: .125, vol: .24, lp: .6 }), 0],
+               [frameArp([67, 71, 74, 79], .7, { duty: .25, decay: 2.2 }), .68], [nes([43], { len: .7, wave: 'tri', decay: 2.5, vol: .4 }), .68]]), .3),  // tremolo build climbs, then a shimmering G-major chord
+  keyget:    peak(echo(nes([74, 78, 81, 86], { len: .055, duty: .125, decay: 16, hold: .22 }), { time: .09, fb: .35, n: 2 }), .26),  // a key: quick bright run up a D chord
+  itemget:   peak(lay([[nes([67, 71, 74], { len: .11, duty: .25, decay: 10 }), 0], [frameArp([79, 83, 86], .7, { duty: .25, decay: 1.8 }), .33],
+               [nes([43, 47, 50, 55], { len: .11, wave: 'tri', decay: 6, vol: .42, hold: .7 }), 0]]), .3),  // found it: three steps up, then the chord held high
+  fairy:     peak(echo(nes([67, 71, 74, 79, 83, 86, 91, 95, 98], { len: .045, duty: .125, decay: 18, vol: .22 }), { time: .12, fb: .5, n: 4 }), .22),  // a fairy's sparkle: a fast pulse arpeggio rising three octaves, echoing
+  container: peak(lay([[nes([62, 66, 69, 74, 78, 81], { len: .05, duty: .125, decay: 16 }), 0], [frameArp([74, 78, 81, 86], .8, { duty: .125, decay: 2 }), .3],
+               [nes([50], { len: .8, wave: 'tri', decay: 2.2, vol: .42 }), .3]]), .28),  // heart container: a run, then a bright D-major shimmer
+  magic:     peak(lay([[tri([[m2f(55), .5, m2f(79)]], { vol: .32, decay: 1.8 }), 0],                                   // a smooth glide rising underneath
+               [echo(nes([79, 81, 83, 86, 88, 91, 95], { len: .055, duty: .25, decay: 20, vol: .16 }), { time: .11, fb: .4, n: 3 }), .18],   // sparkles climbing, echoing
+               [frameArp([86, 91, 95], .5, { duty: .25, decay: 4.5, vol: .12 }), .58]]), .24),  // a spell is cast: glide, sparkle, shimmer
+  boomerang: peak(tone(Array.from({ length: 22 }, (_, i) => [m2f(79 + 5 * Math.sin(i * .9)), .03]), { duty: .125, vol: .24, lp: .55 }), .22),  // thrown: a whirring pulse that circles
+  bomb:      peak(lay([[tone(Array.from({ length: 8 }, () => [[0, .03], [1, .012]]).flat().map(([f, d]) => [f ? 3000 : 0, d]), { noise: 1, vol: .3, lp: .7 }), 0],
+               [nnoise(.7, { lp: .22, decay: 5.5, vol: .5 }), .34], [tri([[m2f(36), .3, m2f(24)]], { vol: .45, decay: 8 }), .34]]), .36),  // fuse crackles, then an 8-bit boom
+  pushblock: peak(lay([[lay(Array.from({ length: 7 }, (_, i) => [nnoise(.07, { lp: .1, decay: 8 }), i * .075])), 0], [nes([38], { len: .25, wave: 'tri', decay: 9, vol: .45 }), .55]]), .32),  // a stone block scrapes, then settles
+  cave:      peak(echo(nes([43, null, 38, 37], { len: .2, wave: 'tri', decay: 3.5, vol: .45, hold: .5 }), { time: .3, fb: .4, n: 3 }), .3),  // into a dark cave: low triangle steps, echoing
+  ocarina:   peak(echo(nes([76, 79, 84, 83, 79], { len: .17, wave: 'tri', decay: 1.2, vol: .4, hold: .45 }), { time: .2, fb: .3, n: 2 }), .26),  // a little wind-instrument phrase (our own tune)
+  solved:    peak(lay([[nes([62, 66, 69, 74, 78], { len: .075, duty: .25, decay: 9 }), 0], [frameArp([81, 86, 90], .6, { duty: .25, decay: 2 }), .375],
+               [nes([38, 42, 45, 50], { len: .095, wave: 'tri', decay: 5, vol: .4, hold: .6 }), 0]]), .3),  // puzzle solved: a confident run up D major to a held chord (our own)
+  bossdoor:  peak(lay([[tri([[m2f(31), .35, m2f(19)]], { vol: .6, decay: 6 }), 0], [nnoise(.3, { lp: .18, decay: 10, vol: .5 }), 0], [nes([26], { len: .4, wave: 'tri', decay: 4, vol: .4 }), .1]]), .36),  // the boss door slams shut
+  lowhealth: peak(tone([[m2f(86), .06], [0, .07], [m2f(86), .06], [0, .07], [m2f(86), .06], [0, .07], [m2f(86), .06]], { duty: .5, vol: .2, lp: .55 }), .2),  // low-health beeps
+  poof:      peak(lay([[nnoise(.22, { lp: .55, decay: 16 }), 0, .9], [tone([[m2f(91), .16, m2f(67)]], { duty: .125, vol: .2, decay: 10, lp: .55 }), .02]]), .26),  // an enemy vanishes in a puff
+  talk:      peak(lay([76, 79, 76, 81, 79, 76, 83].map((m, i) => [tone([[m2f(m), .025]], { duty: .125, vol: .18, decay: 30, lp: .6 }), i * .055])), .18),  // dialogue text ticking by
+});
+
+/* ---- Synthwave set: neon 1980s TV-cop-show night drive (detuned saws, gated toms, echoes). A minor. ---- */
+const AM7 = [220, 261.6, 329.6, 392], AM9 = [110, 261.6, 329.6, 392, 493.9];
+Object.assign(SOUNDS, {
+  neon:      peak(echo(synth([880, 1318.5], .18, { voices: 5, detune: 18, c0: 6000, c1: 1500, ftime: .15, env: { a: .002, d: .1, sus: .3, r: .05 } }), { time: .19, fb: .45, n: 4 }), .26),  // a bright neon lead stab, echoing
+  polysweep: peak(verb(synth(AM9, 1.1, { voices: 4, detune: 16, c0: 300, c1: 5000, ftime: .9, env: { a: .05, d: 1, sus: 1, r: .2 } }), { time: 1, mix: .35 }), .26),  // a big poly chord, filter opening
+  brass:     peak(verb(synth([220, 329.6, 440], .9, { voices: 4, detune: 12, c0: 600, c1: 3200, ftime: .25, env: { a: .12, d: .5, sus: .6, r: .2 } }), { time: .9, mix: .3 }), .28),  // synth brass swell: the theme-song moment
+  chordhit:  peak(echo(synth(AM7.map(f => f * 2), .16, { voices: 3, detune: 10, c0: 4500, c1: 1200, env: { a: .002, d: .08, sus: .2, r: .04 } }), { time: .25, fb: .5, n: 3 }), .26),  // minor-seventh chord stab with an echo
+  arpwave:   peak(echo(lay([220, 261.6, 329.6, 392, 440, 523.3, 659.3, 784].map((f, i) => [synth([f], .09, { voices: 2, detune: 9, c0: 3500, c1: 900, env: { a: .002, d: .05, sus: .2, r: .03 } }), i * .07])), { time: .21, fb: .35, n: 2 }), .26),  // a sequenced arpeggio, night-drive style
+  riser:     peak(lay([[synth([110, 165], 1.2, { voices: 4, detune: 20, glide: 12, c0: 200, c1: 7000, env: { a: .6, d: 1, sus: 1, r: .05 } }), 0], [hiss(1.2, { lp: .6, hp: .2, rise: true }), 0, .5]]), .26),  // everything rises into the drop
+  pulse:     peak(lay(Array.from({ length: 6 }, (_, i) => [synth([55], .12, { voices: 2, detune: 6, c0: 900, c1: 250, env: { a: .002, d: .06, sus: .4, r: .03 } }), i * .14])), .32),  // a driving eighth-note bassline
+  echostab:  peak(echo(synth([659.3, 784, 987.8], .12, { voices: 4, detune: 14, c0: 5000, c1: 1800, env: { a: .002, d: .06, sus: .2, r: .04 } }), { time: .28, fb: .55, n: 6, mix: .7 }), .24),  // one stab, a long trail of echoes
+  glide:     peak(echo(synth([659.3], .7, { voices: 3, detune: 8, glide: 5, c0: 3500, env: { a: .03, d: .6, sus: .7, r: .15 } }), { time: .22, fb: .35, n: 2 }), .24),  // a lead that slides up into the note
+  gatetom:   peak(verb(synth([98], .3, { voices: 1, wave: 'sine', glide: -14, c0: 3000, env: { a: .001, d: .14, sus: 0, r: .04 } }), { time: 1, mix: .55, gate: .32 }), .34),  // a huge gated tom
+  starfall:  peak(echo(lay([2093, 1760, 1568, 1318.5, 1046.5].map((f, i) => [fm(f, .25, { ratio: 2, index: 1, idecay: .06, env: { a: .002, d: .1, sus: 0, r: .06 } }), i * .07])), { time: .17, fb: .45, n: 4 }), .18),  // sparkles falling with echoes
+  cowbell:   peak(lay([[tone([[540, .25]], { vol: .3, duty: .5, decay: 14, lp: .3 }), 0], [tone([[800, .25]], { vol: .3, duty: .5, decay: 14, lp: .3 }), 0]]), .24),  // the 808 cowbell
+  vhs:       peak(synth([220, 261.6, 329.6], .9, { voices: 3, detune: 10, c0: 2200, env: { a: .02, d: 1, sus: .9, r: .1 } }).map((x, i) => x * (1 + .25 * Math.sin(i / RATE * 9))), .22),  // a chord on a worn tape, wobbling
+  sunrise:   peak(verb(synth([329.6, 415.3, 493.9, 659.3], 1.0, { voices: 5, detune: 14, c0: 1200, c1: 5000, ftime: .6, env: { a: .25, d: .6, sus: .5, r: .3 } }), { time: 1.1, mix: .35 }), .24),  // a bright major chord blooming: hope
+});
+
 const blips = new Map();
 /** A short tick at any pitch (rising runs: freq = 500 * 2 ** (i / 16)). */
 const blip = f => blips.get(f) || blips.set(f, tone([[f, .014]], { vol: .2, decay: 220, lp: .5 })).get(f);
 
 export const NAMES = [...Object.keys(SOUNDS), 'blip'];
+/** The sound catalogue: name → [category, what it is, tags]. Tags say how big it is (tiny · light ·
+    medium · big), its mood, and the moments it suits, so a sound can be found by what's happening on
+    screen: `retro sounds` lists them all, `retro sounds win warm` searches (the preview's picker
+    searches the same words). Every name in SOUNDS (and blip) appears exactly once. */
+export const INFO = {
+  // ---- Interface: the machinery (quiet, frequent, never the star)
+  open:      ['Interface', 'window opens: a quick rising blip', 'light techy window appear start show'],
+  close:     ['Interface', 'window closes: a quick falling blip', 'light techy window disappear end hide'],
+  tick:      ['Interface', 'a step: a cell filling, a row appearing, a counter ticking', 'tiny techy step count progress list row'],
+  type:      ['Interface', 'one key press (R.type cues these itself)', 'tiny techy typing keyboard text'],
+  pop:       ['Interface', 'a label, chip or badge lands', 'light playful label chip badge appear land'],
+  select:    ['Interface', '8-bit menu cursor moving', 'tiny playful menu choice hover step'],
+  confirm:   ['Interface', '8-bit menu OK', 'light playful choice ok yes accept'],
+  cancel:    ['Interface', '8-bit menu back', 'light playful no back cancel undo fail'],
+  pause:     ['Interface', '8-bit pause jingle', 'light playful stop wait pause hold'],
+  blip:      ['Interface', 'a tiny tick at any pitch (freq); rising runs: freq = 500 * 2 ** (i / 16)', 'tiny techy step run count pitch'],
+  notify:    ['Interface', 'a dialog asks for attention', 'light techy notification message alert dm'],
+  lock:      ['Interface', 'a padlock clicks shut', 'light techy lock secure locked closed'],
+  talk:      ['Interface', 'dialogue text ticking by, 8-bit adventure style', 'light playful message speech text dm chat'],
+  // ---- Good news: wins, money, upgrades, nice discoveries
+  success:   ['Good news', 'done / passed / saved: a bright three-note rise', 'medium techy done pass check saved win small'],
+  coin:      ['Good news', 'a point scored, money in, a small win', 'light playful money revenue win point sale small'],
+  gem:       ['Good news', 'a small sparkly pickup', 'tiny playful collect pickup small win'],
+  heart:     ['Good news', 'health refilled, a little love', 'light playful love like heal refill'],
+  oneup:     ['Good news', 'extra life, a bonus, a nice surprise', 'medium playful bonus surprise extra win'],
+  powerup:   ['Good news', 'upgraded, growing, levelled up', 'medium playful upgrade grow level improve'],
+  fanfare:   ['Good news', 'an item held up high, a small triumph', 'medium playful triumphant win announce'],
+  victory:   ['Good news', 'stage clear: the full win jingle', 'big playful triumphant win finish complete'],
+  sparkle:   ['Good news', 'a little glint', 'tiny magical shine polish new'],
+  shimmer:   ['Good news', 'a glittery bell run', 'light magical shine polish reveal'],
+  bell:      ['Good news', 'a DX7 bell "ding"', 'light warm notification ding idea win small'],
+  epiano:    ['Good news', 'an electric-piano chord: a warm "yes"', 'medium warm yes agree good win'],
+  sunset:    ['Good news', 'a bright synth chord: the feel-good moment', 'big warm happy payoff feelgood win'],
+  chest:     ['Good news', 'a treasure chest: tremolo build, then a shining chord', 'big magical discovery reveal treasure unlock win'],
+  keyget:    ['Good news', 'got a key: a quick bright run', 'medium magical unlock access key win'],
+  itemget:   ['Good news', 'found an item, held up high', 'big triumphant discovery found win'],
+  fairy:     ['Good news', 'a fairy\'s sparkle: three-octave pulse arpeggio', 'medium magical help heal sparkle'],
+  container: ['Good news', 'max health up: a run and a shimmer', 'medium magical upgrade grow capacity'],
+  solved:    ['Good news', 'puzzle solved: a confident run to a held chord', 'big triumphant solved answer figured fix win'],
+  starfall:  ['Good news', 'sparkles falling, echoing', 'medium cool magical shine dreamy'],
+  sunrise:   ['Good news', 'a bright chord blooming slowly: hope', 'big warm hope new beginning payoff win'],
+  // ---- Bad news: fails, warnings, losses, letdowns
+  error:     ['Bad news', 'wrong / failed: a low two-note buzz', 'medium techy wrong fail error no'],
+  alert:     ['Bad news', 'the system beep: a warning', 'medium techy warning attention danger fail'],
+  hurt:      ['Bad news', 'took a hit', 'light playful pain hit damage oops fail'],
+  shrink:    ['Bad news', 'power down, downgraded, shrinking', 'medium playful downgrade lose shrink worse fail'],
+  gameover:  ['Bad news', 'you lose: a slow sad descent', 'big funny sad lose fail end zero'],
+  drop:      ['Bad news', 'pitch and filter fall out of a moment', 'medium cool letdown fall end out fail'],
+  tapestop:  ['Bad news', 'a record stops: "wait, what?"', 'medium funny surprise stop wait confused fail'],
+  arpdown:   ['Bad news', 'an arpeggio winding down', 'medium cool letdown decline end fail'],
+  bossdoor:  ['Bad news', 'a heavy door slams shut behind you', 'big ominous trapped locked doom'],
+  lowhealth: ['Bad news', 'low-health warning beeps', 'light tense warning running out low fail'],
+  vhs:       ['Bad news', 'a chord on worn, wobbly tape', 'medium nostalgic old worn broken dated'],
+  // ---- Big moments: reveals, titles, entrances
+  orchhit:   ['Big moments', 'orchestra HIT: the dramatic reveal', 'big dramatic reveal title announce'],
+  stab:      ['Big moments', 'brass stab: a title or card lands', 'medium dramatic title card land announce'],
+  secret:    ['Big moments', 'a hidden thing found: an 8-bit discovery phrase', 'big playful discovery secret reveal'],
+  choir:     ['Big moments', 'an "aah" pad: wonder, a revelation', 'big magical wonder revelation awe'],
+  crash:     ['Big moments', 'something breaks', 'big dramatic break crash destroy'],
+  explode:   ['Big moments', 'a big 8-bit boom', 'big playful explosion boom destroy'],
+  boot:      ['Big moments', 'a startup chord', 'medium techy start launch boot begin'],
+  dungeon:   ['Big moments', 'a dungeon door grinds open, groan, thud', 'big ominous enter open start quest'],
+  cave:      ['Big moments', 'entering a dark cave: low steps, echoing', 'medium ominous enter dark unknown'],
+  ocarina:   ['Big moments', 'a little wind-instrument phrase (our own tune)', 'medium magical story memory song'],
+  neon:      ['Big moments', 'a bright neon lead stab, echoing', 'medium cool entrance title stylish'],
+  brass:     ['Big moments', 'synth brass swell: the theme-song moment', 'big cool triumphant entrance hero'],
+  echostab:  ['Big moments', 'one stab, a long trail of echoes', 'medium cool reveal stylish dramatic'],
+  // ---- Build-ups: something is coming (cue them early)
+  sweep:     ['Build-ups', 'a rising whoosh', 'light techy rise build incoming'],
+  charge:    ['Build-ups', 'powering up a shot', 'medium playful charge build power'],
+  arpup:     ['Build-ups', 'an arpeggio climbing', 'medium cool rise build grow'],
+  swell:     ['Build-ups', 'a pad swells in (peaks ~0.8 s after the cue: cue it early)', 'medium warm build anticipation'],
+  filterup:  ['Build-ups', 'a synth sweep: here it comes', 'medium cool build rise incoming'],
+  revcym:    ['Build-ups', 'a reverse cymbal sucking into the next thing', 'medium cool transition into next'],
+  tomfill:   ['Build-ups', 'a drum fill lead-in', 'medium cool lead-in transition next'],
+  rev:       ['Build-ups', 'an engine revving up', 'medium playful speed ready go'],
+  polysweep: ['Build-ups', 'a big poly chord with the filter opening', 'big cool build open reveal'],
+  arpwave:   ['Build-ups', 'a night-drive arpeggio', 'medium cool build momentum'],
+  riser:     ['Build-ups', 'everything rises into the drop', 'big cool build tension drop'],
+  // ---- Hits: impacts and accents
+  thunk:     ['Hits', 'a heavy button press', 'medium techy press button click commit'],
+  stomp:     ['Hits', 'a squash', 'medium playful squash crush defeat'],
+  bump:      ['Hits', 'hit a wall', 'light playful blocked stuck cant fail'],
+  brick:     ['Hits', 'something smashed', 'medium playful smash break blocked'],
+  kick:      ['Hits', 'kicked away', 'light playful kick away dismiss'],
+  gated:     ['Hits', 'a gated 80s snare: a punchy accent', 'medium cool accent punch hit'],
+  clap:      ['Hits', 'a drum-machine clap', 'light cool applause accent celebrate'],
+  fmbass:    ['Hits', 'deep weight under a landing', 'medium cool weight land heavy'],
+  strike:    ['Hits', 'a pen scratch, a strike-through', 'light techy cross out delete redact strike'],
+  sword:     ['Hits', 'a swish', 'light playful slash cut swipe'],
+  syntom:    ['Hits', 'a laser tom "pew-oom"', 'medium cool zap accent'],
+  bomb:      ['Hits', 'a fuse crackles, then an 8-bit boom', 'big playful explode destroy surprise'],
+  pushblock: ['Hits', 'a stone block scrapes into place', 'medium playful move place heavy'],
+  poof:      ['Hits', 'an enemy vanishes in a puff', 'light playful gone vanish delete remove fail'],
+  chordhit:  ['Hits', 'a minor-seventh chord stab with an echo', 'medium cool accent stylish'],
+  gatetom:   ['Hits', 'a huge gated tom', 'big cool impact accent drama'],
+  cowbell:   ['Hits', 'an 808 cowbell', 'light funny accent groove'],
+  // ---- Motion: things moving, speed, shots
+  jump:      ['Motion', 'a hop', 'light playful up jump hop appear'],
+  bigjump:   ['Motion', 'a big leap', 'medium playful launch leap up big'],
+  warp:      ['Motion', 'teleport, warp somewhere else', 'medium playful teleport jump transition'],
+  pipe:      ['Motion', 'down a tube', 'medium playful down enter exit'],
+  turbo:     ['Motion', 'full throttle', 'medium playful speed fast rush'],
+  zap:       ['Motion', 'a laser', 'light playful shoot zap fast'],
+  fireball:  ['Motion', 'a shot', 'light playful shoot fire mistake'],
+  pluck:     ['Motion', 'a light shiny tick', 'light cool tag land small'],
+  magic:     ['Motion', 'a spell: glide, sparkle, shimmer', 'medium magical transform change spell'],
+  boomerang: ['Motion', 'thrown, whirring round and back', 'light playful throw return back'],
+  pulse:     ['Motion', 'a driving bassline', 'medium cool momentum drive go'],
+  glide:     ['Motion', 'a lead sliding up into the note', 'medium cool smooth arrive'],
+};
+export const CATEGORIES = ['Interface', 'Good news', 'Bad news', 'Big moments', 'Build-ups', 'Hits', 'Motion'];
+
+/** The sets, for the preview's library (names in the order they were added). */
+const ALL = Object.keys(SOUNDS), at = n => ALL.indexOf(n);
+export const PACKS = {
+  'Retro OS': [...ALL.slice(0, at('coin')), 'blip'],
+  '8-bit': ALL.slice(at('coin'), at('stab')),
+  'Synth-pop': ALL.slice(at('stab'), at('dungeon')),
+  'Adventure': ALL.slice(at('dungeon'), at('neon')),
+  'Synthwave': ALL.slice(at('neon')),
+};
 
 /** Gain that puts the reference mix (PromptGuideNoText, all beats) at -19 dBFS peak, the level the
     user signed off on. Fixed, so turning beats off doesn't make the others louder. */
@@ -204,7 +395,9 @@ export function mix(cues, len, gainDb = 0) {
     const buf = c.s === 'blip' ? blip(c.freq || 1000) : SOUNDS[c.s];
     if (!buf) throw new Error(`unknown sound "${c.s}" (${NAMES.join(' ')})`);
     const o = Math.round(c.t * RATE), v = g * Math.pow(10, (c.vol || 0) / 20);
-    for (let i = 0; i < buf.length && o + i < N; i++) if (o + i >= 0) out[o + i] += buf[i] * v;
+    // dur: the user trimmed the sound's tail; a 12 ms fade so the cut doesn't click
+    const len = c.dur ? Math.min(buf.length, Math.round(c.dur * RATE)) : buf.length, fade = c.dur ? Math.min(576, len) : 0;
+    for (let i = 0; i < len && o + i < N; i++) if (o + i >= 0) out[o + i] += buf[i] * v * (fade && i > len - fade ? (len - i) / fade : 1);
   }
   return out;
 }
