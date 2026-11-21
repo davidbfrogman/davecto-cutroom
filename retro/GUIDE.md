@@ -47,7 +47,15 @@ beats in their natural times; `R.START`/`R.END` stay as written and `R.OUT` is w
 The user can also switch off single animations: `"hide": ["copy"]` (layers; the preview's 👁, or
 `retro hide <beat> <layer>`). A hidden layer is gone from lint, preview and render, and so are the
 sounds cued on it, so cue each sound on the layer it belongs to (`{ layer: 'copy' }`).
-Never undo the user's timing, hidden layers or moves; `retro ls` shows them all.
+The user tunes sounds in the preview too (sound lanes under the timeline, a library of all three
+sets). Stored per beat as `"sounds": { "edit": { "<key>": { "s": "coin", "gain": -3, "off": true, "dur": 0.3, "shift": 0.12 } },
+"add": [{ "t", "s", "vol", "layer", "dur" }] }` (dur = the user shortened it; shift = they slid it, in
+beat seconds) and `"sfxGain"` (the beat's level). A cue's key is its
+written `name@time` (`pop@12.40`, `#2` for repeats), so if you change a beat's own sound cues after
+the user has edited them, those edits stop matching: check `retro ls`/retro.json first and carry
+them over. Added sounds are in the beat's written time, so they move with stretch/cut like the rest.
+Each sound's category and one-line use are in `INFO` (lib/synth.mjs): the preview's picker groups by it, and it's a quick way to choose. Timing in the preview is now done by dragging a beat's edges (trim/stretch).
+Never undo the user's timing, hidden layers, sound edits or moves; `retro ls` shows them all.
 
 ## Placement rules (the user's, non-negotiable)
 
@@ -111,31 +119,32 @@ Other classes: `.dots`, `.crop` (4 `<b>`), `.rule`, `.micro`, `.disp` (Inter Tig
 
 Sounds belong to the beat that makes them, so switching a beat off silences it. `R.open`, `R.close`
 and `R.type` cue their own (`{ sfx: false }` to skip, `{ sfx: 'notify' }` to swap); cue everything
-else with `R.sfx`. Sounds (lib/synth.mjs): **open close tick type pop success alert error strike
-lock thunk sweep crash sparkle boot notify blip** (blip takes `freq`; rising runs:
-`500 * 2 ** (i / 16)`).
-**8-bit game set** (NES-style, original): coin jump bigjump stomp powerup oneup shrink pipe fireball
-bump brick kick rev turbo secret fanfare sword hurt heart gem select confirm cancel pause zap explode
-warp gameover victory charge. Reach for them when the beat is playful: coin = money or a point
-scored, powerup/oneup = something upgraded or gained, shrink/gameover = it got worse or failed,
-secret = a reveal, fanfare/victory = a big win, select/confirm/cancel = menu choices, rev/turbo =
-speed, zap/fireball = a shot, stomp/bump/brick = an impact, warp/pipe = going somewhere else. They
-replace the plain sounds for that moment rather than stacking on top of them.
-**80s synth-pop set** (detuned saws, FM, gated reverb; all in A minor, so any two sit together):
-stab orchhit gated tomfill clap bell epiano sunset arpup arpdown swell filterup revcym tapestop
-pluck fmbass syntom choir shimmer drop. Momentary effects with a little more body, never a bed.
-stab/orchhit = a big reveal or a title landing; gated/clap/fmbass = a punchy accent (fmbass under
-a heavy landing); bell/pluck/shimmer = a light, shiny "ding"; epiano/sunset/choir = a warm win or a
-revelation; arpup/swell/filterup/tomfill = building into something (swell peaks ~0.8 s after
-its cue, so cue it early); arpdown/drop/tapestop = a letdown or "wait, what"; revcym = a
-transition into the next window.
-**Mix the three sets freely** to give each moment its own feeling: plain OS sounds for the
-machinery (ticks, typing, windows), 8-bit for playful wins and fails, synth-pop for the moments
-that should feel big or warm. Keep it sparse: the synth sounds are longer, so one per moment.
-What goes with what: windows open/close; each step, cell or counter jump = tick; labels and chips
-landing = pop; done/pass/saved = success; warnings = alert; wrong = error; strike-through = strike;
-padlocks/target lock = lock; big button press = thunk; build-ups = sweep then crash; dialogs asking
-for attention = notify. Keep it sparse: one sound per visible event, nothing on decoration.
+else with `R.sfx(name, t, { vol, layer })` (always pass the layer the sound belongs to).
+
+**Finding the right sound:** `retro sounds` prints the whole catalogue (98 sounds, five sets): what
+each is for, its set, its length and its tags. `retro sounds <words>` searches it by what's happening
+on screen and ranks the results (★ = matches every word): `retro sounds win warm`, `retro sounds fail
+funny`, `retro sounds reveal`, `retro sounds delete`, `retro sounds transition`. The tags use one
+small vocabulary, so search with these words:
+- size: tiny · light · medium · big
+- mood: techy · playful · warm · cool · magical · dramatic · ominous · funny · sad · tense · nostalgic · triumphant
+- moment: window · typing · step · label · menu · notification · lock / unlock · money · win · upgrade ·
+  discovery · reveal · title · build · transition · impact · accent · delete · fail · warning · wrong ·
+  speed · momentum · start · end
+The catalogue lives in `INFO` in lib/synth.mjs; the preview's sound picker searches the same words.
+When you add a sound, give it an `INFO` entry with tags from that vocabulary.
+
+**The sets, and how to mix them** (each beat can use all five):
+- **Retro OS** (open close tick type pop success alert error …): the machinery. Windows, typing, steps,
+  labels. Quiet and frequent; never the star.
+- **8-bit** (coin jump powerup oneup gameover secret victory …): playful wins and fails.
+- **Synth-pop** (stab orchhit gated bell sunset tapestop swell …): moments that should feel big or warm.
+- **Adventure** (dungeon chest keyget itemget fairy solved bossdoor …): quests, discoveries, unlocks,
+  something entered or found, in a classic 8-bit adventure-game style (our own phrases).
+- **Synthwave** (neon brass polysweep riser sunrise vhs gatetom …): cinematic, cool, 1980s night drive.
+Rules of thumb: one sound per visible event, nothing on decoration; the machinery stays Retro OS and
+the 2–4 moments per beat that matter get a sound from the other sets; build-ups (swell, riser, polysweep)
+peak late, so cue them early; big sounds are long, so leave them room.
 Levels are calibrated (the user turned them down twice); don't raise them. Per beat: `retro sfx <beat> -3`.
 
 ## Brand (brand/)
