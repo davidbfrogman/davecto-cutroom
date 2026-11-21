@@ -8,17 +8,12 @@
    Sound: sound effects live with the animation that makes them. R.open/R.close/R.type cue their
    own sounds (pass { sfx: false } or another sound name to change that); anything else calls
    R.sfx(name, t). The renderer reads R.cues, so turning a beat off in retro.json silences it too.
-   Sound names: lib/synth.mjs (open close tick type pop success alert error strike lock thunk sweep
-   crash sparkle boot notify blip, plus the 8-bit set: coin jump bigjump stomp powerup oneup shrink
-   pipe fireball bump brick kick rev turbo secret fanfare sword hurt heart gem select confirm cancel
-   pause zap explode warp gameover victory charge, plus the 80s synth-pop set: stab orchhit gated
-   tomfill clap bell epiano sunset arpup arpdown swell filterup revcym tapestop pluck fmbass syntom
-   choir shimmer drop).
+   Sound names and what each is for: `retro sounds` (the catalogue, searchable; INFO in lib/synth.mjs).
 
    Layers: R.win/R.box take { layer: 'name' } (default 'main'). retro.json can move a layer
    ("move": { "save": [0, -4] }, in u) and the lint reports per layer.
 
-   window.RETRO is injected by the build: { words: [{t,e,w}], move: {layer: [dx,dy]}, time: {retime, crop}, hide: [layer], beat }.
+   window.RETRO is injected by the build: { words: [{t,e,w}], move: {layer: [dx,dy]}, time: {retime, crop}, hide: [layer], sounds: {edit, add}, beat }.
    Timing tweaks (retro.json "time", set in the preview or with `retro time`) are applied in R.done:
    write beats in their natural times; R.OUT says where the beat ends up. */
 (function () {
@@ -318,12 +313,30 @@
     let [c, d] = tm.crop || [a, b];
     c = Math.max(a, Math.min(c, b - R.F)); d = Math.min(b, Math.max(d, c + R.F));
     const out = t => a + (t - s0) * k;                        // a beat time → output time
-    R.cues = R.cues.map(q => ({ ...q, t: Math.round(out(q.t) * 1000) / 1000 })).filter(q => q.t >= c - 0.15 && q.t <= d);
     // Layers the user switched off (retro.json "hide": [layer, ...]): gone, sounds included
     const hide = CFG.hide || [];
     hide.forEach(L => { if (layers[L]) layers[L].style.display = 'none'; });
-    R.cues = R.cues.filter(q => !hide.includes(q.layer || 'main'));
     R.map = out;
+    R.unmap = t => s0 + (t - a) / k;                         // output time → beat time (for added sounds)
+
+    // Sounds. Each written cue gets a stable key ("pop@12.40", "#2" for repeats) so the user's edits
+    // in retro.json "sounds": { edit: { key: { s, gain, off, dur, shift } }, add: [{ t, s, vol, layer, dur }] } find it.
+    // Added sounds are in beat time, so like every cue they move with retime and drop with crop/hide.
+    // R.sfxApply(cfg) is also what the preview calls to hear an edit without rebuilding the beat.
+    const seen = {};
+    R.cuesWritten = R.cues.map(q => { const k0 = `${q.s}@${q.t.toFixed(2)}`, n = (seen[k0] = (seen[k0] || 0) + 1); return { ...q, key: n > 1 ? `${k0}#${n}` : k0 }; });
+    R.sfxApply = cfg => {
+      cfg = cfg || {};
+      const ed = cfg.edit || {}, adds = (cfg.add || []).map((q, i) => ({ layer: 'main', ...q, key: `add:${i}`, added: true }));
+      return [...R.cuesWritten, ...adds].map(q => {
+        const e = ed[q.key] || {};
+        const tb = Math.max(s0, Math.min(e0, q.t + (e.shift || 0)));     // shift: the user slid it along the timeline (beat seconds)
+        return { ...q, s: e.s || q.s, vol: (q.vol || 0) + (e.gain || 0), off: !!e.off, dur: e.dur || q.dur, shift: e.shift || 0,
+          edited: !!(e.s || e.gain || e.off || e.dur || e.shift), t0: tb, t: Math.round(out(tb) * 1000) / 1000 };
+      }).filter(q => q.t >= c - 0.15 && q.t <= d && !hide.includes(q.layer || 'main'));
+    };
+    R.cuesAll = R.sfxApply(CFG.sounds);                       // muted ones included (the preview shows them)
+    R.cues = R.cuesAll.filter(q => !q.off);
     R.OUT = { start: c, end: d };
     let root = R.tl;
     if (k !== 1 || c !== a || d !== b) {
