@@ -11,7 +11,8 @@ import { describe, lint } from './lib/lint.mjs';
 import { probe } from './lib/probe.mjs';
 import { secs } from './lib/progress.mjs';
 import { checkDeps, createProject, duration, findProject, Project, PYTHON, RETRO, sh } from './lib/project.mjs';
-import { exportVideo, frames, renderOverlays, sheet, writeSfx } from './lib/render.mjs';
+import { rangeMatte } from './lib/cutout.mjs';
+import { exportVideo, renderOverlays, sheet, writeSfx } from './lib/render.mjs';
 
 const HELP = `retro: Retro OS overlays + sound effects for a finished video
 
@@ -51,6 +52,9 @@ Tweak (all of this is retro.json; edit it by hand if you like)
   retro time <beat> --reset [stretch|cut]
   retro hide <beat> <layer>  /  retro show <beat> <layer>
                                   switch one animation (a layer) off or on, its sounds with it
+  retro behind <beat> <layer>  /  retro front <beat> <layer>
+                                  put an animation behind you (you're cut out of the video and drawn
+                                  over it) or back in front
 
 Render
   retro render [beats] [--draft] [--no-sfx] [--no-open] [--video other.mov] [--size 1080x1920]
@@ -215,7 +219,7 @@ ${info} -->
     for (const id of p.beatIds()) {
       const b = p.beat(id), x = pr[id];
       const mv = Object.entries(b.move || {}).map(([k, [dx, dy]]) => `${k}:${dx},${dy}`).join(' ');
-      console.log(`${p.on(id) ? 'on ' : 'off'}  ${id.padEnd(20)} ${x.start.toFixed(2).padStart(6)}–${x.end.toFixed(2).padEnd(6)} layers: ${x.layers.join(',').padEnd(18)} sfx: ${b.sfx === false ? 'muted' : `${x.cues.length}${b.sfxGain ? ` @${b.sfxGain}dB` : ''}`}${mv ? `  move ${mv}` : ''}${b.time ? `  time ${JSON.stringify(b.time)}` : ''}${b.hide ? `  hidden ${b.hide.join(',')}` : ''}${b.allow ? `  allow ${b.allow.join(',')}` : ''}`);
+      console.log(`${p.on(id) ? 'on ' : 'off'}  ${id.padEnd(20)} ${x.start.toFixed(2).padStart(6)}–${x.end.toFixed(2).padEnd(6)} layers: ${x.layers.join(',').padEnd(18)} sfx: ${b.sfx === false ? 'muted' : `${x.cues.length}${b.sfxGain ? ` @${b.sfxGain}dB` : ''}`}${mv ? `  move ${mv}` : ''}${b.time ? `  time ${JSON.stringify(b.time)}` : ''}${b.ltime ? `  ltime ${JSON.stringify(b.ltime)}` : ''}${b.hide ? `  hidden ${b.hide.join(',')}` : ''}${b.behind ? `  behind ${b.behind.join(',')}` : ''}${b.allow ? `  allow ${b.allow.join(',')}` : ''}`);
     }
   },
 
@@ -250,7 +254,9 @@ ${info} -->
       items = t.map(v => ({ id, t: v }));
     }
     const name = ids.length > 1 ? (args[0] === 'all' ? 'check-all' : `check-${ids.map(i => i.slice(0, 2)).join('-')}`) : `check-${ids[0]}`;
-    const out = sheet(p, items.map(i => ({ ...i, probe: pr[i.id], mov: movs[i.id] })), name, { faces: p.faces(), zones: !clean });
+    const mattes = {};
+    for (const id of ids) if (movs[id].back) mattes[id] = await rangeMatte(p.video, p.out, pr[id].start, pr[id].end, p.size);
+    const out = sheet(p, items.map(i => ({ ...i, probe: pr[i.id], mov: movs[i.id], matte: mattes[i.id] })), name, { faces: p.faces(), zones: !clean });
     console.log(out);
     console.log(items.map((i, k) => `${k + 1}: ${i.id} @${i.t}`).join('  '));
   },
@@ -306,6 +312,16 @@ ${info} -->
     if (h.size) b.hide = [...h]; else delete b.hide;
     p.save();
     console.log(`${id}: ${b.hide ? `hidden: ${b.hide.join(', ')}` : 'all layers showing'}`);
+  },
+
+  front() { cmds.behind(false); },
+  behind(back = true) {
+    const p = P(), [id] = p.match([argv.shift()]), b = p.beat(id), L = argv[0];
+    if (!L) throw new Error(`retro ${back ? 'behind' : 'front'} <beat> <layer>   (retro ls lists the layers)`);
+    const h = new Set(b.behind || []); back ? h.add(L) : h.delete(L);
+    if (h.size) b.behind = [...h]; else delete b.behind;
+    p.save();
+    console.log(`${id}: ${b.behind ? `behind you: ${b.behind.join(', ')}` : 'everything in front'}`);
   },
 
   sfx() {

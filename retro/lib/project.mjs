@@ -53,6 +53,8 @@ export class Project {
   }
   save() { writeFileSync(this.file, JSON.stringify(this.cfg, null, 2) + '\n'); }
   get video() { return resolve(this.dir, this.cfg.video); }
+  /** The video's length: nothing plays past it (the kit cuts beats and sounds there). */
+  get length() { return (this._len ??= Math.round(duration(this.video) * 1000) / 1000); }
   get size() { return (this.cfg.size || '1440x2560').split('x').map(Number); }
   beatIds() {
     const d = join(this.dir, 'beats');
@@ -74,15 +76,18 @@ export class Project {
 
   /** Write a beat's render folder (index.html with size + RETRO injected, kit, brand scripts, fonts).
       Returns { work, key }: key changes whenever anything that affects its pixels changes.
-      live: for the preview, which applies moves itself (own folder, no moves baked in). */
-  stage(id, [W, H] = this.size, { live = false } = {}) {
+      live: for the preview, which applies moves itself (own folder, no moves baked in).
+      pass: 'front' | 'back' for a beat with layers behind the speaker: the render draws those layers
+      (back) and the rest (front) as two overlays, with the speaker cut out between them. */
+  stage(id, [W, H] = this.size, { live = false, pass = null } = {}) {
     const src = readFileSync(join(this.dir, 'beats', id, 'index.html'), 'utf8');
     const move = live ? {} : this.beat(id).move || {};
-    const inject = { beat: id, words: this.words(), move, time: this.beat(id).time || null, hide: this.beat(id).hide || [], sounds: this.beat(id).sounds || null };   // timing applies live too
+    const inject = { beat: id, words: this.words(), move, time: this.beat(id).time || null, ltime: this.beat(id).ltime || null, hide: this.beat(id).hide || [], sounds: this.beat(id).sounds || null, videoEnd: this.length };   // timing applies live too
+    if (pass) Object.assign(inject, { pass, behind: this.beat(id).behind || [] });
     const kit = ['retro.css', 'retro.js', 'ships.js'].map(f => readFileSync(join(KIT, f), 'utf8'));
     const brandJs = ['retro-os.js', 'retro-os-critters.js', 'retro-os-starships.js'].map(f => readFileSync(join(BRAND, 'assets', 'js', f), 'utf8'));
     const key = createHash('sha1').update(src).update(kit.join('')).update(brandJs.join('')).update(JSON.stringify(inject)).update(`${W}x${H}`).digest('hex').slice(0, 12);
-    const work = join(this.out, live ? '.live' : '.work', id);
+    const work = join(this.out, live ? '.live' : '.work', pass ? `${id}~${pass}` : id);
     if (existsSync(join(work, '.key')) && readFileSync(join(work, '.key'), 'utf8') === key) return { work, key };
     rmSync(work, { recursive: true, force: true });
     mkdirSync(join(work, 'assets', 'fonts'), { recursive: true });

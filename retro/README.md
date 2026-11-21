@@ -41,6 +41,8 @@ retro zones 20 30                     # where there's room around your head, mom
 retro time 01 cut +2 -                # start beat 01 two seconds later (cut), same speed
 retro time 04 stretch - 17.2          # squeeze beat 04 so it ends at 17.2 s (sounds move with it)
 retro time 04 --reset                 # back to the beat's own timing
+retro behind 01 main                  # put beat 01's animation behind you (you're cut out of the video)
+retro front 01 main                   # back in front
 retro render --draft                  # quicker, lower quality export
 retro render --video ../OtherCut.mov  # same graphics over another cut (same timing)
 retro render --size 1080x1920
@@ -64,6 +66,8 @@ retro render --size 1080x1920
 - `<video>-retro.mp4`: the export.
 - `overlays/<beat>.mov`: each beat as ProRes 4444 with transparency, plus `placements.csv`
   (where each goes on the timeline), if you'd rather finish in an editor.
+  A beat with an animation behind you renders as `<beat>~back.mov` and `<beat>~front.mov`;
+  `mattes/` holds your cutout (gray, white = you) for those stretches of the video.
 - `sfx.wav`: the sound effects stem on its own, plus `sfx-cues.csv`.
 
 ## What's where

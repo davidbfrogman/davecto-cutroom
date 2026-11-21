@@ -399,6 +399,9 @@ export function mix(cues, len, gainDb = 0) {
     const len = c.dur ? Math.min(buf.length, Math.round(c.dur * RATE)) : buf.length, fade = c.dur ? Math.min(576, len) : 0;
     for (let i = 0; i < len && o + i < N; i++) if (o + i >= 0) out[o + i] += buf[i] * v * (fade && i > len - fade ? (len - i) / fade : 1);
   }
+  // the video's end: anything still ringing fades out over the last 20 ms instead of clicking off
+  const F = Math.min(N, Math.round(0.02 * RATE));
+  for (let i = 0; i < F; i++) out[N - 1 - i] *= i / F;
   return out;
 }
 
