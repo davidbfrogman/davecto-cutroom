@@ -253,6 +253,7 @@
   .pk-item .p { font-size: 11px; color: var(--muted); }
   .pk-empty { color: var(--faint); padding: 14px; }
 
+  .pill:disabled { opacity: .35; cursor: default; }
   /* reset menu + undo toast */
   #resetMenu { position: fixed; z-index: 40; top: 58px; width: 440px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px;
                box-shadow: 0 22px 60px rgba(0,0,0,.6); padding: 12px; display: none; }
@@ -280,6 +281,8 @@
   <button class="pill" id="pSnapV" title="While dragging, pull an animation's centre onto the vertical centre line (hold ⌥ to drag past)"><span class="dot"></span>Snap centre</button>
   <button class="pill" id="pSnapH" title="Same for the horizontal middle line"><span class="dot"></span>Snap middle</button>
   <span id="status"></span>
+  <button class="pill" id="pUndo" title="Undo (⌘Z)" disabled>↶ Undo</button>
+  <button class="pill" id="pRedo" title="Redo (⇧⌘Z)" disabled>↷ Redo</button>
   <button class="pill" id="pReset" title="Put things back the way they were written (asks first, and you can undo)">↺ Reset…</button>
 </header>
 
@@ -492,7 +495,6 @@ const RESETS = [
 ];
 let resetScope = 'all', resetAsk = null, undoT = null;
 const scopeBeats = () => (resetScope === 'beat' && cur ? [cur] : beats);
-const snapshot = bs => bs.map(b => ({ b, v: JSON.parse(JSON.stringify({ move: b.move, time: b.time ?? null, ltime: b.ltime, hide: b.hide, behind: b.behind, on: b.on, sounds: b.sounds, sfxGain: b.sfxGain ?? null, sfx: b.sfx ?? null })) }));
 function persist(b) {                                  // write a beat's whole editable state, then rebuild it
   for (const [k, e] of Object.entries(b.sounds.edit || {})) if (!Object.keys(e).length) delete b.sounds.edit[k];
   save(b, { on: b.on !== false, move: b.move, time: b.time || null, ltime: b.ltime, hide: b.hide, behind: b.behind, sounds: b.sounds, sfxGain: b.sfxGain || 0, sfx: b.sfx !== false });
@@ -527,15 +529,12 @@ $('#resetMenu').addEventListener('click', e => {
   if (r !== 'yes') { resetAsk = r; renderReset(); return; }
   // confirmed
   const kinds = resetAsk === 'all' ? RESETS : RESETS.filter(x => x[0] === resetAsk), label = resetAsk === 'all' ? 'everything' : kinds[0][1].toLowerCase();
-  const bs = scopeBeats().filter(b => kinds.some(([, , , count]) => count(b))), snap = snapshot(bs);
+  const bs = scopeBeats().filter(b => kinds.some(([, , , count]) => count(b)));
   const n = bs.reduce((a, b) => a + kinds.reduce((c, k) => c + k[3](b), 0), 0);
   for (const b of bs) { for (const k of kinds) k[4](b); persist(b); }
   if (snd && !findCue(snd)) snd = null;
   sel = null; closeReset(); renderAll(); buildSfxSoon();
-  toast(`Reset ${label} · ${n} change${n > 1 ? 's' : ''} in ${bs.length} beat${bs.length > 1 ? 's' : ''}`, () => {
-    for (const { b, v } of snap) { Object.assign(b, v); if (v.time == null) delete b.time; if (v.sfxGain == null) delete b.sfxGain; if (v.sfx == null) delete b.sfx; persist(b); }
-    renderAll(); buildSfxSoon(); status('Undone');
-  });
+  toast(`Reset ${label} · ${n} change${n > 1 ? 's' : ''} in ${bs.length} beat${bs.length > 1 ? 's' : ''}`, undo);
 });
 function toast(msg, undo) {
   const t = $('#toast'); clearTimeout(undoT);
@@ -687,6 +686,7 @@ const API = 5;                                         // must match lib/preview
 const pending = new Map();                             // beat id → patch waiting to be saved
 let saveT = null;
 function save(b, patch, delay = 0) {
+  record(b, patch);
   pending.set(b.id, { ...(pending.get(b.id) || {}), ...patch });
   clearTimeout(saveT);
   saveT = setTimeout(flush, delay);
@@ -709,7 +709,7 @@ async function flushNow() {
     const lost = Object.entries(p).filter(([k, v]) => !stored(k, v, got)).map(([k]) => k);
     if (got.api !== API || lost.length) { alarm(`This preview server is out of date and didn't save ${lost.join(', ') || 'everything'}. Stop it (Ctrl-C) and run retro preview again, then make the edit once more.`); continue; }
   }
-  if (all.length) status(`Saved ${all.map(([id]) => id).join(', ')}`);
+  if (all.length && performance.now() - undoNote > 2500) status(`Saved ${all.map(([id]) => id).join(', ')}`);
 }
 function stored(k, v, got) {                           // did the server keep what we sent? (empty values = "remove it")
   const empty = v == null || v === false && k !== 'on' || v === 0 || (Array.isArray(v) && !v.length) || (typeof v === 'object' && v && !Array.isArray(v) && !Object.keys(v).length)
@@ -724,6 +724,64 @@ function alarm(msg) {
   if (!el) { el = document.createElement('div'); el.id = 'alarm'; document.body.append(el); }
   el.innerHTML = `<span>⚠ ${esc(msg)}</span><button class="btn sm" onclick="this.parentNode.remove()">OK</button>`;
 }
+
+/* ---------- undo / redo ----------
+   Every edit goes through save(), so that's where history is kept: each step is the before/after of the
+   beats it touched (their whole editable state). Edits made in the same moment (a reset, a bulk change)
+   are one step; repeated saves of the same kind on the same beat in quick succession (a drag, a slider,
+   arrow-key nudges) fold into one. Undo/redo write the state back through save() like any other edit. */
+const editable = b => JSON.stringify({ on: b.on ?? null, move: b.move, time: b.time ?? null, ltime: b.ltime, hide: b.hide, behind: b.behind,
+  sounds: b.sounds, sfxGain: b.sfxGain ?? null, sfx: b.sfx ?? null });
+const known = new Map(beats.map(b => [b.id, editable(b)]));     // each beat as of the last recorded step
+const undos = [], redos = [];
+let moment = null, restoring = false, undoNote = -1e9;
+const WHAT = { move: 'move', time: 'beat timing', ltime: 'animation timing', sounds: 'sound edit', hide: 'show / hide', behind: 'behind me', on: 'beat on/off', sfxGain: 'beat level', sfx: 'beat sound on/off' };
+function record(b, patch) {
+  if (restoring) return;
+  const before = known.get(b.id), after = editable(b);
+  if (before === after) return;
+  known.set(b.id, after);
+  const kind = Object.keys(patch).sort().join(), now = performance.now();
+  if (moment) { const it = moment.items.find(i => i.id === b.id); if (it) it.after = after; else moment.items.push({ id: b.id, before, after }); return; }
+  const top = undos.at(-1);
+  if (top && !redos.length && top.items.length === 1 && top.items[0].id === b.id && top.kind === kind && now - top.t < 700) { top.items[0].after = after; top.t = now; return; }
+  moment = { items: [{ id: b.id, before, after }], kind, t: now, label: Object.keys(patch).length > 3 ? 'reset' : (WHAT[Object.keys(patch)[0]] || 'edit') };
+  undos.push(moment); if (undos.length > 300) undos.shift();
+  redos.length = 0;
+  queueMicrotask(() => { moment = null; renderUndo(); });
+}
+function restore(step, back) {
+  restoring = true;
+  try {
+    for (const it of step.items) {
+      const b = beats.find(x => x.id === it.id); if (!b) continue;
+      const was = JSON.parse(known.get(b.id)), to = JSON.parse(back ? it.before : it.after);
+      Object.assign(b, to);
+      for (const k of ['on', 'time', 'sfxGain', 'sfx']) if (to[k] == null) delete b[k];
+      known.set(b.id, back ? it.before : it.after);
+      const changed = Object.keys(to).filter(k => JSON.stringify(to[k]) !== JSON.stringify(was[k]));
+      if (changed.some(k => ['time', 'ltime', 'hide'].includes(k))) { persist(b); continue; }   // the beat's own timeline changes: rebuild it
+      save(b, { on: b.on !== false, move: b.move, time: b.time || null, ltime: b.ltime, hide: b.hide, behind: b.behind, sounds: b.sounds, sfxGain: b.sfxGain || 0, sfx: b.sfx !== false });
+      applyMove(b); applyDepth(b); if (b.ready) refreshCues(b);
+      if (changed.includes('behind')) ensureCut();
+    }
+  } finally { restoring = false; }
+  if (snd && !findCue(snd)) snd = null;
+  if (sel && !beats.includes(sel.beat)) sel = null;
+  renderAll(); buildSfxSoon(); renderUndo();
+  const ids = [...new Set(step.items.map(i => i.id))];
+  undoNote = performance.now();
+  status(`${back ? 'Undid' : 'Redid'} ${step.label} · ${ids.length > 2 ? ids.length + ' beats' : ids.join(', ')}`);
+}
+function undo() { const s = undos.pop(); if (!s) return status('Nothing to undo'); redos.push(s); restore(s, true); }
+function redo() { const s = redos.pop(); if (!s) return status('Nothing to redo'); undos.push(s); restore(s, false); }
+function renderUndo() {
+  const u = undos.at(-1), r = redos.at(-1);
+  Object.assign($('#pUndo'), { disabled: !u, title: u ? `Undo ${u.label} (⌘Z)` : 'Nothing to undo' });
+  Object.assign($('#pRedo'), { disabled: !r, title: r ? `Redo ${r.label} (⇧⌘Z)` : 'Nothing to redo' });
+}
+$('#pUndo').onclick = undo;
+$('#pRedo').onclick = redo;
 addEventListener('beforeunload', e => { if (pending.size) { flush(); e.preventDefault(); } });
 
 /* ---------- side panel: beat list ---------- */
@@ -746,7 +804,7 @@ $('#list').addEventListener('click', e => {
   const row = e.target.closest('.brow'); if (!row) return;
   const b = beats[+row.dataset.i];
   if (e.target.dataset.a === 'on') { b.on = b.on === false; save(b, { on: b.on }); buildSfx(); renderAll(); return; }
-  pick(b, true);
+  pick(b);
 });
 function pick(b, jump) {
   if (cur !== b) { sel = null; snd = null; }
@@ -825,10 +883,22 @@ function beatAt(t) {                                   // which beat a new sound
 function addSoundAt(t, name) {
   const b = beatAt(t);
   if (!b) { status('No animation plays here, so there is nothing to attach a sound to'); return; }
-  const layer = sel && sel.beat === b && sel.layer !== '*' ? sel.layer : (b.layers || ['main']).find(L => !b.hide.includes(L)) || 'main';
+  const layer = soundLayer(b, t);
   b.sounds.add.push({ t: r3(b.win.R.unmap(t, layer)), s: name, vol: 0, layer });
   cur = b; snd = { beat: b, key: `add:${b.sounds.add.length - 1}` };
   soundsChanged(b); audition(name);
+  if (!findCue(snd)) status(`Added ${name}, but ${layer} isn't playing at ${f2(t)} s, so it won't be heard there. Undo (⌘Z) and add it where an animation shows.`);
+}
+/* A sound belongs to an animation (layer): it moves with it, and goes when the animation is hidden or cut.
+   So attach a new one to an animation that's actually playing at t: the selected one if it is, else the first
+   that is, else one that isn't cut (an uncut animation keeps its sounds anywhere in the beat). */
+function soundLayer(b, t) {
+  const shown = (b.layers || ['main']).filter(L => !b.hide.includes(L));
+  const first = sel && sel.beat === b && shown.includes(sel.layer) ? [sel.layer] : [];
+  const covers = L => { const s = b.L?.[L]; return !s || (t >= s.start - 0.02 && t <= s.end); };
+  const uncut = L => !b.ltime[L]?.crop;
+  const order = [...first, ...shown];
+  return order.find(covers) || order.find(uncut) || shown[0] || 'main';
 }
 $('#addSnd').onclick = e => openPicker(e.currentTarget, { title: `at ${f2(v.currentTime)} s`, onPick: n => addSoundAt(v.currentTime, n) });
 function selectSound(b, key, { hear = true, reveal = true } = {}) {   // select a sound and put the playhead exactly on its start
@@ -1026,7 +1096,6 @@ $('#insp').addEventListener('click', e => {
   if (row && !btn) {                                 // select an animation to move it
     const L = row.dataset.l;
     sel = sel && sel.beat === b && sel.layer === L ? null : { beat: b, layer: L };
-    if (sel && b.ready && !showing(b)) seek(Math.max(b.start + 0.05, Math.min(b.end - 0.05, (b.start + b.end) / 2)));
     renderAll();
   }
 });
@@ -1298,9 +1367,12 @@ tlInner.addEventListener('pointerup', () => {
     if (got.length) selectMany(got, d.add); else if (!d.add) { msel = new Map(); bulk = null; renderAll(); }
     return;
   }
-  if (d.kind === 'lmove') { if (d.moved) moveLayer(d.b, d.L, d.t - d.x.start); else seek(d.x.start, { reveal: false }); return; }
+  if (d.kind === 'lmove') {                            // a click just selects the animation (for moving it); the playhead stays put
+    if (d.moved) moveLayer(d.b, d.L, d.t - d.x.start);
+    else { if (cur !== d.b) snd = null; cur = d.b; sel = { beat: d.b, layer: d.L }; renderAll(); }
+    return;
+  }
   if (d.kind === 'ledge') { if (d.t != null) layerEdge(d.b, d.L, d.edge, d.t, d.mode); else renderTimeline(); return; }
-  if (d.kind === 'beat' && d.b.ready) seek(d.b.start);
   if (d.kind === 'edge') { d.el.classList.remove('dragging'); if (d.t != null) applyEdge(d.b, d.edge, d.t, d.mode); else renderTimeline(); }
   if (d.kind === 'slen' && d.d) setDur(d.b, d.q, d.d);
   if (d.kind === 'smove' && d.moved) {                 // the dropped sound finds a clear lane; nothing else moves
@@ -1391,6 +1463,8 @@ addEventListener('keydown', e => {
     return;
   }
   if (e.target.tagName === 'INPUT' && e.target.type !== 'range') { if (e.key === 'Enter') e.target.blur(); return; }
+  const z = e.key.toLowerCase();
+  if ((e.metaKey || e.ctrlKey) && (z === 'z' || z === 'y')) { e.preventDefault(); (z === 'y' || e.shiftKey ? redo : undo)(); return; }
   const s = e.shiftKey ? 5 : 0.5;
   const keys = { ArrowLeft: [-s, 0], ArrowRight: [s, 0], ArrowUp: [0, -s], ArrowDown: [0, s] };
   if (e.key === ' ') { e.preventDefault(); togglePlay(); }

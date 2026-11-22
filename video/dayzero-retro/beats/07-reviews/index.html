@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- 07-reviews: "Three, get an AI to read 100 of your competitor's one-star reviews. Their customers are
+     handing you a roadmap of the things they would pay you money to fix.": a feed of one-star reviews
+     scrolls past an AI counter to 100, then turns into a ranked roadmap with $ on every row. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-reviews</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #RV .win__body { overflow: hidden; }
+    #feed { position: absolute; left: calc(var(--u) * 1.4); top: calc(var(--u) * 1.4); width: calc(var(--u) * 52); bottom: calc(var(--u) * 1.4); overflow: hidden; border: var(--hair) solid var(--ink); background: var(--paper); }
+    #feed .in { position: absolute; left: 0; right: 0; top: 0; }
+    #feed p { margin: 0; height: calc(var(--u) * 4.2); display: flex; align-items: center; gap: calc(var(--u) * 1); padding: 0 calc(var(--u) * 1); border-bottom: var(--hair) solid var(--win-2); font: 400 calc(var(--u) * 2.1)/1 var(--f-mono); white-space: nowrap; }
+    #feed p b { font: normal calc(var(--u) * 3)/1 var(--f-pixel); color: var(--accent); background: var(--ink); padding: 0 calc(var(--u) * .4); }
+    #ai { position: absolute; left: calc(var(--u) * 55.5); right: calc(var(--u) * 1.6); top: calc(var(--u) * 1.4); bottom: calc(var(--u) * 1.4); display: flex; flex-direction: column; gap: calc(var(--u) * 1); }
+    #cnt { font-size: calc(var(--u) * 9); }
+    #cnt small { font: 400 calc(var(--u) * 2.4)/1 var(--f-mono); letter-spacing: 0; }
+    #ai .seg i { height: calc(var(--u) * 1.8); }
+    #RM .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1.1); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.8); }
+    .row { display: grid; grid-template-columns: calc(var(--u) * 5) calc(var(--u) * 30) 1fr calc(var(--u) * 6); gap: calc(var(--u) * 1); align-items: center; font: 400 calc(var(--u) * 2.4)/1 var(--f-mono); white-space: nowrap; }
+    .row .px { font-size: calc(var(--u) * 3.6); }
+    .bar { height: calc(var(--u) * 2.4); border: var(--hair) solid var(--ink); position: relative; }
+    .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); }
+    .row .chip { justify-self: end; }
+    #first { align-self: flex-end; }
+  </style>
+</head>
+<body data-world="magenta">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 30.47;                         // the scene cut
+    const END = 38.93, W = p => R.w(p, R.START - 0.1);
+
+    // an AI reading 100 one-star reviews (layer: read)
+    const RV0 = ['export is broken. again.', 'support never replied', 'cant share with my team', 'so slow i gave up', 'paying $79 for THIS?', 'csv export still broken', 'lost a week of data', 'no way to cancel online'];
+    const list = RV0.map(r => `<p><b>★☆☆☆☆</b>${r}</p>`).join('');
+    const RV = R.win({ title: 'Reviews.ai', right: 'competitor × 3', x: 4, y: 21, w: 82, h: 31, layer: 'read',
+      body: `<div id="feed"><div class="in">${list}${list}</div></div>
+        <div id="ai"><span class="chip-inv">AI · reading</span><span class="disp" id="cnt"><span id="n">0</span><small> /100</small></span>${R.seg(10)}</div>` });
+    RV.id = 'RV';
+    const op = R.open(RV, W('get an AI'), { from: { x: 50, y: 70 } });
+    const r0 = W('read'), r1 = W('reviews.'), feed = R.$('#feed .in');
+    R.every(op, W('roadmap'), t => { const k = Math.max(0, Math.floor((t - r0) * 10)) % RV0.length; feed.style.top = R.u(-k * 4.2); });
+    R.count(R.$('#n'), r0, r1 - r0, 0, 100);
+    RV.querySelectorAll('#ai .seg i').forEach((s, i) => { const t = r0 + (r1 - r0) * (i + 1) / 10; R.tl.set(s, { backgroundColor: 'var(--ink)' }, R.T(t)); R.sfx('tick', t, { vol: -7, layer: 'read' }); });
+    R.sfx('success', r1 + 0.1, { vol: -5, layer: 'read' });
+    R.close(RV, W('roadmap') - 0.1);
+
+    // the roadmap they hand you (layer: map)
+    const T = [['csv export broken', 41], ['support never replies', 23], ['no team sharing', 17]];
+    const RM = R.win({ title: 'Roadmap.md', right: 'from 100 reviews', variant: 'paper', x: 4, y: 21, w: 82, h: 'auto', layer: 'map',
+      body: T.map(([s, n], i) => `<div class="row"><span class="px">0${i + 1}</span><span>${s}</span><div class="bar"><i></i></div><span class="chip h">$$$</span></div>`).join('') +
+        `<span class="chip-inv h" id="first">▲ build this first</span>` });
+    RM.id = 'RM';
+    const rm = R.open(RM, W('roadmap'), { from: { x: 45, y: 36 } });
+    const bars = RM.querySelectorAll('.bar i');
+    T.forEach(([, n], i) => { const t = W('things') + i * 0.25; R.tl.to(bars[i], { width: `${n / 41 * 100}%`, duration: 0.4, ease: 'steps(6)' }, R.T(t)); R.sfx('tick', t, { vol: -5, layer: 'map' }); });
+    R.stagger(RM.querySelectorAll('.row .chip'), W('pay you'), W('money') + 0.15, { sfx: 'coin', vol: -7 });
+    R.show(R.$('#first'), W('fix.')); R.sfx('itemget', W('fix.'), { vol: -7, layer: 'map' });
+    R.done(END);
+  </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<!-- 01-day-one: "Most first-time founders start building their app on the first day": a hard-hat founder
+     hammers away while a phone app is built brick by brick (lines of code racing up, customers stuck at
+     0); beside it a tear-off calendar rips its page on "the first day" to show DAY 1. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01-day-one</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #BD .win__body { overflow: hidden; background: var(--paper); }
+    #dude { position: absolute; left: calc(var(--u) * 2); bottom: calc(var(--u) * 1.4); line-height: 0; }
+    .brick { position: absolute; display: flex; }
+    .brick i { display: block; width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8); }
+    .brick i.k { background: var(--ink); } .brick i.p { background: var(--paper); } .brick i.n { background: var(--accent); } .brick i.w { background: var(--win-2); }
+    #ground { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--u) * 1.4); background: var(--ink); }
+    #stats { position: absolute; left: calc(var(--u) * 39); top: calc(var(--u) * 1.2); display: flex; flex-direction: column; gap: calc(var(--u) * .6); }
+    #stats .micro { text-transform: none; }
+    #stats .v { font: calc(var(--u) * 5)/1 var(--f-pixel); }
+    #ver { position: absolute; left: calc(var(--u) * 22.3); top: calc(var(--u) * 9.4); font: calc(var(--u) * 2.6)/1 var(--f-pixel); background: var(--ink); color: var(--accent); padding: 0 calc(var(--u) * .4); }
+    #CL .win__body { background: var(--paper); overflow: hidden; }
+    .pg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; background: var(--paper); }
+    .pg .mo { align-self: stretch; text-align: center; background: var(--accent); border-bottom: var(--hair) solid var(--ink); font: calc(var(--u) * 3)/1.3 var(--f-pixel); }
+    .pg .d { font-size: calc(var(--u) * 12); margin-top: calc(var(--u) * 2.4); }
+    .pg .s { font: 400 calc(var(--u) * 2)/1 var(--f-mono); margin-top: calc(var(--u) * 1.2); }
+    #old .d { color: var(--win-2); }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("Most first", 0);
+    const END = 3.93, W = p => R.w(p, R.START - 0.1);
+
+    // the founder, building (layer: build)
+    const dude = [[
+      '....nnn....',
+      '...nnnnn...',
+      '..nnnnnnn..',
+      '...ppppp.ww',
+      '...pkpkp.ww',
+      '...ppppp.k.',
+      '....ppp.k..',
+      '..kkkkkkk..',
+      '..kkkkk....',
+      '..kkkkk....',
+      '...k...k...',
+      '...k...k...'], [
+      '....nnn....',
+      '...nnnnn...',
+      '..nnnnnnn..',
+      '...ppppp...',
+      '...pkpkp...',
+      '...ppppp...',
+      '....ppp....',
+      '..kkkkkkk..',
+      '..kkkkk.kk.',
+      '..kkkkk..ww',
+      '...k...k.ww',
+      '...k...k...']];
+    const BD = R.win({ title: 'Founder.exe', right: 'build mode', x: 9, y: 112, w: 58, h: 28.5, layer: 'build',
+      body: `<div id="dude">${R.pixAnim(dude, 1.45)}</div><div id="ground"></div>
+        <div id="stats"><span class="micro">lines</span><span class="v" id="loc">0</span><span class="micro">users</span><span class="v" id="cust">0</span></div>
+        <span class="h" id="ver">v0.1</span>` });
+    BD.id = 'BD';
+    const body = BD.querySelector('.win__body');
+    const op = R.open(BD, Math.max(W('-time'), R.START + 4 * R.F), { from: { x: 52, y: 100 } });
+
+    // the app: a phone, built from the ground up, two cells per brick
+    const PHONE = [
+      'kkkkkkkk',
+      'kppppppk',
+      'kpnnnnpk',
+      'kppppppk',
+      'kpnppnpk',
+      'kppppppk',
+      'kpnnnnpk',
+      'kppppppk',
+      'kppppppk',
+      'kkkkkkkk',
+      'kkkwwkkk'];
+    const X0 = 21.5, Y0 = 2.2, C = 1.8, b0 = W('start building'), b1 = W('their app') + 0.1;
+    const bricks = [];
+    for (let r = PHONE.length - 1; r >= 0; r--) for (let c = 0; c < 8; c += 2)
+      bricks.push({ r, c, el: R.box('brick', { parent: body, x: X0 + c * C, y: -4, style: { }, html: `<i class="${PHONE[r][c]}"></i><i class="${PHONE[r][c + 1]}"></i>` }) });
+    const gap = (b1 - b0 - 0.15) / bricks.length;
+    bricks.forEach((b, i) => { b.t = b0 + i * gap; b.el.style.visibility = 'hidden'; b.el.dataset.bleed = ''; });   // they fall in from above
+    R.every(b0, END, t => bricks.forEach(b => {
+      const k = R.clamp((t - b.t) / 0.15), y = R.lerp(-4, Y0 + b.r * C, k);
+      b.el.style.visibility = t >= b.t ? 'visible' : 'hidden';
+      b.el.style.top = R.u(y.toFixed(2));
+    }));
+    for (let r = 0; r < PHONE.length; r++) R.sfx('tick', b0 + (r * 4 + 3) * gap + 0.15, { vol: -4, layer: 'build' });
+    R.flip(R.$('#dude .flip'), b0 - 0.1, b1 + 0.4, { fps: 7.5 });
+    R.count(R.$('#loc'), b0, b1 - b0 + 0.6, 0, 1284);
+    R.sfx('arpup', b0, { vol: -9, layer: 'build' });
+
+    // their app: done, and nobody's there
+    const ap = W('their app') + 0.2;
+    R.show(R.$('#ver'), ap); R.sfx('powerup', ap, { vol: -6, layer: 'build' });
+    R.blink(R.$('#cust'), ap + 0.3, END, 0.4);
+    R.sfx('lowhealth', ap + 0.35, { vol: -9, layer: 'build' });
+
+    // on the first day: the calendar rips its page (layer: day)
+    const CL = R.win({ title: 'Cal', right: '', x: 69, y: 112, w: 22, h: 28.5, layer: 'day',
+      body: `<div class="pg" id="new"><span class="mo">DAY</span><span class="disp d">1</span><span class="s">first day</span></div>
+        <div class="pg" id="old" data-bleed><span class="mo">DAY</span><span class="disp d">0</span><span class="s">&nbsp;</span></div>` });
+    CL.id = 'CL';
+    R.open(CL, W('founders'), { from: { x: 47, y: 100 } });
+    const fd = W('first day'), old = R.$('#old');
+    R.every(fd, fd + 0.35, t => { const k = R.clamp((t - fd) / 0.3); old.style.transform = `translate(${R.u(k * 6)}, ${R.u(k * 30)})`; });
+    R.hide(old, fd + 0.35);
+    R.sfx('sword', fd, { vol: -3, layer: 'day' });
+    R.sfx('stab', fd + 0.12, { vol: -5, layer: 'day' });
+    R.flash(R.$('#new .d'), fd + 0.4, 2);
+    R.done(END);
+  </script>
+</body>
+</html>

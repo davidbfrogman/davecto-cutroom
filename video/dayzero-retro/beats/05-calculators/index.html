@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- 05-calculators: "build them calculators and resources so they're coming to your website for the
+     answers": a calculator works out a retirement number, the site lists its free resources, then
+     visitors count up and the answer chip lands. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05-calculators</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #CA .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * .8); padding: calc(var(--u) * 1); }
+    #disp { background: var(--ink); color: var(--accent); font: calc(var(--u) * 4)/1 var(--f-pixel); text-align: right; padding: calc(var(--u) * .5) calc(var(--u) * .8); }
+    .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u) * .6); }
+    .keys i { font: normal calc(var(--u) * 2.6)/1 var(--f-pixel); text-align: center; padding: calc(var(--u) * .3) 0; background: var(--paper); border: var(--hair) solid var(--ink); box-shadow: calc(var(--u) * .4) calc(var(--u) * .4) 0 var(--ink); }
+    .keys i.eq { background: var(--accent); }
+    #SW .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * .7); padding: calc(var(--u) * 1) calc(var(--u) * 1.6); font: 400 calc(var(--u) * 2.3)/1 var(--f-mono); white-space: nowrap; }
+    .res { display: flex; gap: calc(var(--u) * 1); align-items: center; }
+    .res b { font: calc(var(--u) * 3.2)/1 var(--f-pixel); color: var(--accent); background: var(--ink); padding: 0 calc(var(--u) * .5); }
+    #vis { display: flex; align-items: center; gap: calc(var(--u) * 1); margin-top: calc(var(--u) * .4); }
+    #vis .seg { flex: 1; }
+    #vis .seg i { height: calc(var(--u) * 2); }
+    #vn { font: calc(var(--u) * 4)/1 var(--f-pixel); min-width: calc(var(--u) * 9); text-align: right; }
+    
+  </style>
+</head>
+<body data-world="teal">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("Build them calculators", 0);
+    const END = 24.17, W = p => R.w(p, R.START - 0.1);
+
+    // the calculator (its own layer)
+    const keys = ['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '='];
+    const CA = R.win({ title: 'Calc', right: 'v1', x: 4, y: 21, w: 27, h: 'auto', layer: 'calc',
+      body: `<div id="disp">$0</div><div class="keys">${keys.map(k => `<i class="${k === '=' ? 'eq' : ''}">${k}</i>`).join('')}</div>` });
+    CA.id = 'CA';
+    const op = R.open(CA, W('calculators'), { from: { x: 50, y: 60 } });
+    const K = CA.querySelectorAll('.keys i');
+    [5, 6, 7, 1, 11].forEach((k, i) => R.press(K[k], op + 0.1 + i * 0.13, { sfx: i === 4 ? 'thunk' : 'blip', vol: -6 }));
+    R.count(R.$('#disp'), op + 0.72, 0.5, 0, 1412000, v => '$' + Math.round(v).toLocaleString('en-US'));
+    R.sfx('bell', op + 1.22, { vol: -8, layer: 'calc' });
+
+    // the website and its free resources (layer: site)
+    const SW = R.win({ title: 'yoursite.com', right: 'free', variant: 'paper', x: 34, y: 21, w: 52, h: 'auto', layer: 'site',
+      body: `<div class="res h"><b>CALC</b>retire at 55?</div>
+        <div class="res h"><b>PDF</b>the 401k guide</div>
+        <div class="res h"><b>XLS</b>savings template</div>
+        <div class="h" id="vis">${R.seg(8)}<span id="vn">0</span><span class="chip-inv h" id="ans">✓</span></div>` });
+    SW.id = 'SW';
+    const rs = W('resources');
+    R.open(SW, rs, { from: { x: 18, y: 34 } });
+    R.stagger(SW.querySelectorAll('.res'), rs + 0.12, W('so that') + 0.2, { sfx: 'pop', vol: -6 });
+
+    // they're coming to your website: visitors fill the bar
+    const c = W('coming'), an = W('answers');
+    R.show(R.$('#vis'), c);
+    R.count(R.$('#vn'), c, an - c, 0, 2481);
+    SW.querySelectorAll('#vis .seg i').forEach((s, i) => { const t = c + (an - c) * i / 7; R.tl.set(s, { backgroundColor: 'var(--accent)' }, R.T(t)); if (i % 2 === 0) R.sfx('tick', t, { vol: -7, layer: 'site' }); });
+    R.show(R.$('#ans'), an); R.sfx('solved', an, { vol: -6, layer: 'site' });
+    R.done(END);
+  </script>
+</body>
+</html>

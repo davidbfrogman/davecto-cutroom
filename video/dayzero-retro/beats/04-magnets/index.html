@@ -1,0 +1,75 @@
+<!doctype html>
+<!-- 04-magnets: "One, build some lead magnets… use Google's keyword planner to find questions your
+     customers are already asking": a pixel magnet, a planner search typing a question, three real
+     searches with monthly volumes, then the magnet pulls each one in as a lead. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>04-magnets</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #MG .win__body { overflow: hidden; }
+    #num { position: absolute; left: calc(var(--u) * 2); top: calc(var(--u) * 1.6); font-size: calc(var(--u) * 9); }
+    #mag { position: absolute; left: calc(var(--u) * 2); top: calc(var(--u) * 13); }
+    #bar { position: absolute; left: calc(var(--u) * 21); right: calc(var(--u) * 2); top: calc(var(--u) * 1.6); height: calc(var(--u) * 5.4); border: var(--hair) solid var(--ink); background: var(--paper);
+      display: flex; align-items: center; gap: calc(var(--u) * 1); padding: 0 calc(var(--u) * 1.2); font: 400 calc(var(--u) * 2.6)/1 var(--f-mono); white-space: nowrap; }
+    #bar b { font: calc(var(--u) * 3.6)/1 var(--f-pixel); color: var(--accent); background: var(--ink); padding: 0 calc(var(--u) * .5); }
+    .q { display: flex; gap: calc(var(--u) * 1.2); align-items: center; white-space: nowrap; }
+    .q .chip { font-size: calc(var(--u) * 3.4); }
+    .q .vol { font: 400 calc(var(--u) * 2.2)/1 var(--f-mono); }
+    #lead { color: var(--ink); background: var(--accent); padding: 0 calc(var(--u) * .6); }
+  </style>
+</head>
+<body data-world="orange">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 12.27;                         // the scene cut
+    const END = 19.52, W = p => R.w(p, R.START - 0.1);
+    const magnet = R.pix([
+      '.kkkkkkknn',
+      'kkkkkkkknn',
+      'kk........',
+      'kk........',
+      'kk........',
+      'kkkkkkkknn',
+      '.kkkkkkknn'], 1.8);
+    const MG = R.win({ title: 'Lead Magnet.app', right: 'leads <span id="lead">0</span>', variant: 'paper', x: 4, y: 21, w: 82, h: 33,
+      body: `<span class="disp h" id="num">01</span><div class="h" id="mag">${magnet}</div>
+        <div class="h" id="bar"><b>KW</b><span class="type" id="qq">how much to retire at 55</span></div>` });
+    MG.id = 'MG';
+    const body = MG.querySelector('.win__body');
+    const op = R.open(MG, W('One,'), { from: { x: 50, y: 66 } });
+    R.show(R.$('#num'), op); R.sfx('stab', op, { vol: -7 });
+
+    // lead magnets
+    const lm = W('lead magnets');
+    R.show(R.$('#mag'), lm); R.sfx('powerup', lm, { vol: -6 });
+
+    // Google's keyword planner: the search bar, then a question typed in
+    R.show(R.$('#bar'), W("Google's")); R.sfx('pop', W("Google's"), { vol: -4 });
+    R.type(R.$('#qq'), W('find'), 32);
+
+    // the questions and searches customers already make, with monthly volume
+    const Q = [['how much to retire at 55', '12.1K/mo'], ['retirement calculator', '40.5K/mo'], ['401k vs roth ira', '18.1K/mo']];
+    const rows = Q.map(([q, v], i) => R.box('q h', { parent: body, x: 21, y: 9.6 + i * 5.6, html: `<span class="chip">${q}</span><span class="vol">${v}</span>` }));
+    R.stagger(rows, W('questions'), W('that your'), { sfx: 'tick', vol: -3 });
+
+    // already asking: the magnet pulls them in, one by one
+    const a = W('already'), lead = R.$('#lead');
+    rows.forEach((r, i) => {
+      const t = a + i * 0.22;
+      R.path(r, [[t, 21, 9.6 + i * 5.6], [t + 0.2, 16, 18.5]]);
+      R.hide(r, t + 0.2);
+      R.text(lead, t + 0.2, String(i + 1));
+      R.sfx('gem', t + 0.2, { vol: -5 });
+    });
+    R.flash(R.$('#mag'), a + 0.66, 2); R.sfx('coin', a + 0.7, { vol: -4 });
+    R.done(END);
+  </script>
+</body>
+</html>

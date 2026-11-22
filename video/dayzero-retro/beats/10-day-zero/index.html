@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- 10-day-zero: "five more insider moves I'd start on day zero, comment START below and I'll send them
+     to you for free, and follow along…": Day0.sys shows five locked moves; a comment box types START and
+     posts it, the reply unlocks them, and the Follow button gets pressed. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>10-day-zero</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #DZ .win__body { display: flex; align-items: center; gap: calc(var(--u) * 3); padding: calc(var(--u) * 1.8) calc(var(--u) * 2.2); }
+    #d0 { font-size: calc(var(--u) * 13); }
+    .mv { flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 1); font: 400 calc(var(--u) * 2.4)/1 var(--f-mono); white-space: nowrap; }
+    .mv .seg i { height: calc(var(--u) * 3); background: var(--win-2); }
+    #lk { align-self: flex-start; }
+    #CM .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.8); }
+    .in { display: flex; gap: calc(var(--u) * 1.2); align-items: stretch; }
+    .fld { flex: 1; border: var(--hair) solid var(--ink); background: var(--paper); padding: calc(var(--u) * .8) calc(var(--u) * 1.2); font: calc(var(--u) * 4)/1 var(--f-pixel); white-space: nowrap; }
+    .ph { color: var(--grey); }
+    .btn { font: calc(var(--u) * 3.4)/1 var(--f-pixel); background: var(--accent); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .8) calc(var(--u) * 1.6); box-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 var(--ink); white-space: nowrap; }
+    .rep { display: flex; gap: calc(var(--u) * 1.2); align-items: center; font: 400 calc(var(--u) * 2.4)/1 var(--f-mono); white-space: nowrap; }
+    #fol { margin-left: auto; background: var(--paper); }
+    #cu { display: inline-block; width: calc(var(--u) * 1.4); height: calc(var(--u) * 3.2); background: var(--ink); vertical-align: middle; }
+  </style>
+</head>
+<body data-world="lavender">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 49.83;                         // the scene cut
+    const END = 58.1, W = p => R.w(p, R.START - 0.1);   // the video ends at 58.10
+
+    // five more insider moves, locked (layer: boot)
+    const DZ = R.win({ title: 'Day0.sys', right: 'insider · 5', variant: 'paper', x: 4, y: 21, w: 82, h: 'auto', layer: 'boot',
+      body: `<span class="disp h" id="d0">Day 0</span>
+        <div class="mv"><span>+5 insider moves</span>${R.seg(5)}<span class="chip-inv" id="lk">LOCKED</span></div>` });
+    DZ.id = 'DZ';
+    R.open(DZ, W('five more'), { from: { x: 52, y: 90 } });
+    const cellsM = DZ.querySelectorAll('.seg i');
+    const im = W('insider');
+    cellsM.forEach((c, i) => { const t = im + i * 0.1; R.tl.set(c, { backgroundColor: 'var(--ink)' }, R.T(t)); R.sfx('tick', t, { vol: -6, layer: 'boot' }); });
+    const dz = W('day zero');
+    R.show(R.$('#d0'), dz); R.sfx('boot', dz, { vol: -5, layer: 'boot' });
+
+    // comment START below (layer: comment)
+    const CM = R.win({ title: 'Comments', right: '@davecto', x: 4, y: 48, w: 82, h: 'auto', layer: 'comment',
+      body: `<div class="in"><div class="fld"><span class="ph" id="ph">Add a comment…</span><span class="type" id="st">START</span><i id="cu"></i></div><span class="btn" id="post">Post</span></div>
+        <div class="rep h" id="rp"><span class="chip chip--world">@davecto</span><span>sent you all 5 ✓</span><span class="btn" id="fol">+ Follow</span></div>` });
+    CM.id = 'CM';
+    const cm = W('comment');
+    R.open(CM, cm - 0.1, { from: { x: 44, y: 34 } });
+    R.blink(R.$('#cu'), cm, END, 0.5);
+    R.hide(R.$('#ph'), cm + 0.25);
+    R.type(R.$('#st'), cm + 0.3, 12);
+    R.press(R.$('#post'), W('below'), { vol: -2 });
+
+    // I'll send them to you for free: the reply lands and the moves unlock
+    const sd = W('send');
+    R.show(R.$('#rp'), sd); R.sfx('notify', sd, { vol: -4, layer: 'comment' });
+    const fr = W('free');
+    R.text(R.$('#lk'), fr, 'UNLOCKED · free');
+    cellsM.forEach((c, i) => R.tl.set(c, { backgroundColor: 'var(--accent)' }, R.T(fr + i * 0.06)));
+    R.sfx('keyget', fr, { vol: -5, layer: 'boot' });
+
+    // follow along for more tips
+    const fo = W('follow');
+    R.press(R.$('#fol'), fo, { vol: -2 });
+    R.text(R.$('#fol'), fo + 0.07, '✓ Following');
+    R.sfx('heart', fo + 0.07, { vol: -4, layer: 'comment' });
+    R.flash(R.$('#d0'), W('AI.'), 2); R.sfx('sunrise', W('building with') - 0.2, { vol: -9, layer: 'boot' });
+    R.done(END);
+  </script>
+</body>
+</html>

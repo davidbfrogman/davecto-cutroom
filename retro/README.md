@@ -22,7 +22,11 @@ retro render                          # → out/MyReel-retro.mp4 (1440x2560, sou
 
 ## Tweaking
 
-Everything lives in `retro.json`, so you can edit it by hand, use the preview page, or run commands:
+Everything lives in `retro.json`, so you can edit it by hand, use the preview page, or run commands.
+In the preview, every edit can be undone: ⌘Z undoes, ⇧⌘Z (or ⌘Y) redoes, or use the ↶ ↷ buttons. A drag
+or a slider counts as one step; the history lasts until you reload the page.
+
+Commands:
 
 ```bash
 retro ls                              # beats, times, layers, moves, sound counts

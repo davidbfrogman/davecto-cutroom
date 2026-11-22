@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- 08-price: "Four, get a price on your website… find out if people will actually pay… 1,000 free signups
+     is never gonna pay for a single hosting bill": a pricing page gets real prices and a real click;
+     below, a ledger counts 1,000 free signups to $0.00 and the hosting bill pushes it negative. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08-price</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PR .win__body { display: flex; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6); }
+    .tier { flex: 1; border: var(--hair) solid var(--ink); background: var(--paper); display: flex; flex-direction: column; gap: calc(var(--u) * .9); padding: calc(var(--u) * 1) calc(var(--u) * 1.2); }
+    .tier .nm { font: 400 calc(var(--u) * 2.2)/1 var(--f-mono); }
+    .tier .pr { font-size: calc(var(--u) * 6); }
+    .tier .pr small { font: 400 calc(var(--u) * 2)/1 var(--f-mono); letter-spacing: 0; }
+    .tier .bt { font: calc(var(--u) * 2.8)/1 var(--f-pixel); text-align: center; background: var(--win); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .5) 0; box-shadow: calc(var(--u) * .4) calc(var(--u) * .4) 0 var(--ink); white-space: nowrap; }
+    .tier.hot { background: var(--accent); }
+    .tier.hot .bt { background: var(--paper); }
+    #cur { position: absolute; }
+    #LG .win__body { display: flex; flex-direction: column; padding: calc(var(--u) * 1) calc(var(--u) * 1.8); font: 400 calc(var(--u) * 2.6)/1 var(--f-mono); }
+    .lr { display: flex; justify-content: space-between; align-items: baseline; padding: calc(var(--u) * .9) 0; border-bottom: var(--hair) solid var(--win-2); white-space: nowrap; }
+    .lr .px { font-size: calc(var(--u) * 4.4); }
+    .lr.tot { border-bottom: 0; }
+    #bill, #net { color: var(--coral); }
+    #net { background: var(--ink); padding: 0 calc(var(--u) * .6); }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 38.93;                         // the scene cut
+    const END = 46.30, W = p => R.w(p, R.START - 0.1);
+
+    // a price on your website (layer: price)
+    const tiers = [['Solo', '$19'], ['Team', '$49'], ['Pro', '$99']];
+    const PR = R.win({ title: 'yourapp.com/pricing', right: 'clicks <span id="ck">0</span>', x: 4, y: 21, w: 82, h: 'auto', layer: 'price',
+      body: tiers.map(([n, p], i) => `<div class="tier${i === 1 ? ' hot' : ''}"><span class="nm">${n}</span><span class="disp pr"><span class="type">${p}</span><small>/mo</small></span><span class="bt">Get early access</span></div>`).join('') });
+    PR.id = 'PR';
+    const body = PR.querySelector('.win__body');
+    const op = R.open(PR, W('Four,'), { from: { x: 54, y: 60 } });
+    const pr = W('price');
+    PR.querySelectorAll('.pr .type').forEach((el, i) => R.type(el, pr + i * 0.18, 14, { sfx: i ? false : 'type' }));
+    R.sfx('pop', pr + 0.36, { vol: -4, layer: 'price' });
+
+    // will people actually pay: a cursor clicks the Team plan
+    const cur = R.box('h', { parent: body, id: 'cur', x: 70, y: 4, html: R.pix(['k.....', 'kk....', 'kpk...', 'kppk..', 'kpppk.', 'kppkk.', 'kk.k..'], .8) });
+    const ap = W('actually'), pay = W('pay for');
+    R.show(cur, ap - 0.3);
+    R.path(cur, [[ap - 0.3, 70, 4], [pay - 0.05, 40, 12]]);
+    const team = PR.querySelectorAll('.bt')[1];
+    R.press(team, pay, { vol: -3 });
+    R.text(R.$('#ck'), pay + 0.07, '1'); R.sfx('coin', pay + 0.07, { vol: -5, layer: 'price' });
+
+    // 1,000 free signups vs one hosting bill (layer: ledger), below the chest
+    const LG = R.win({ title: 'Ledger.xls', right: 'month 1', variant: 'paper', x: 4, y: 101, w: 82, h: 'auto', layer: 'ledger',
+      body: `<div class="lr"><span>free signups</span><span class="px" id="su">0</span></div>
+        <div class="lr"><span>revenue</span><span class="px" id="rev">$0.00</span></div>
+        <div class="lr h" id="hb"><span>hosting bill</span><span class="px" id="bill">−$24.00</span></div>
+        <div class="lr tot h" id="tt"><span>net</span><span class="px" id="net">−$24.00</span></div>` });
+    LG.id = 'LG';
+    const fs = W('signups'), one = fs - 0.64;           // "1,000" is two transcript words
+    R.open(LG, one - 0.1, { from: { x: 54, y: 80 } });
+    R.count(R.$('#su'), one, fs - one + 0.2, 0, 1000);
+    R.sfx('arpup', one, { vol: -9, layer: 'ledger' });
+    R.flash(R.$('#rev'), W('never'), 2); R.sfx('cancel', W('never'), { vol: -5, layer: 'ledger' });
+    const hb = W('hosting');
+    R.show(R.$('#hb'), hb); R.sfx('alert', hb, { vol: -6, layer: 'ledger' });
+    R.show(R.$('#tt'), W('bill.')); R.sfx('shrink', W('bill.') + 0.05, { vol: -6, layer: 'ledger' });
+    R.blink(R.$('#net'), W('bill.') + 0.2, END, 0.4);
+    R.done(END);
+  </script>
+</body>
+</html>
