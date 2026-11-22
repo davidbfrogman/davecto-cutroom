@@ -1,0 +1,130 @@
+<!doctype html>
+<!-- 06-launch-date: "build a homepage with an email wait list. But the real trick is picking a launch
+     date. That'll prevent you from overbuilding.": a homepage takes an email; then Launch Control rolls a
+     date like a slot machine and locks LAUNCH DAY, counts down 3-2-1 and the rocket blasts off in
+     confetti, leaving the extra features on the pad for v2. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>06-launch-date</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #HP .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1.6) calc(var(--u) * 2); }
+    #hl { font-size: calc(var(--u) * 5.6); }
+    .form { display: flex; gap: calc(var(--u) * 1.2); align-items: stretch; }
+    .field { flex: 1; border: var(--hair) solid var(--ink); background: var(--paper); font: 400 calc(var(--u) * 2.6)/1 var(--f-mono); padding: calc(var(--u) * .9) calc(var(--u) * 1); white-space: nowrap; }
+    #join { font: calc(var(--u) * 3.4)/1 var(--f-pixel); background: var(--accent); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .8) calc(var(--u) * 1.4); box-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 var(--ink); white-space: nowrap; }
+    #wl { font: 400 calc(var(--u) * 2.2)/1 var(--f-mono); }
+    #LW .win__body { overflow: hidden; background: var(--paper); }
+    #cal { position: absolute; left: calc(var(--u) * 1.8); top: calc(var(--u) * 1.8); width: calc(var(--u) * 19); bottom: calc(var(--u) * 1.8); border: var(--hair) solid var(--ink); display: flex; flex-direction: column; align-items: center; background: var(--paper); }
+    #cal .mo { align-self: stretch; text-align: center; background: var(--accent); border-bottom: var(--hair) solid var(--ink); font: calc(var(--u) * 3)/1.3 var(--f-pixel); }
+    #cal .d { font-size: calc(var(--u) * 12); margin-top: calc(var(--u) * 2); }
+    #lt { margin-top: auto; margin-bottom: calc(var(--u) * 1); font-size: calc(var(--u) * 2.8); }
+    #cd { position: absolute; left: calc(var(--u) * 24); top: calc(var(--u) * 2); font-size: calc(var(--u) * 10); }
+    #rk { position: absolute; left: calc(var(--u) * 39.5); top: calc(var(--u) * 5.8); }
+    #fl { visibility: hidden; }
+    #pad { position: absolute; left: calc(var(--u) * 22.5); right: 0; bottom: 0; height: calc(var(--u) * 1.4); background: var(--ink); }
+    .crate { position: absolute; left: calc(var(--u) * 55); width: calc(var(--u) * 23); height: calc(var(--u) * 4.6); border: var(--hair) solid var(--ink); background: var(--win);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 calc(var(--u) * 1); font: 400 calc(var(--u) * 2.1)/1 var(--f-mono); white-space: nowrap; }
+    .crate b { font: normal calc(var(--u) * 2.6)/1 var(--f-pixel); background: var(--ink); color: var(--accent); padding: 0 calc(var(--u) * .4); }
+    #live { position: absolute; left: calc(var(--u) * 23.5); top: calc(var(--u) * 14); font-size: calc(var(--u) * 3.4); z-index: 2; }
+    .bit { position: absolute; }
+  </style>
+</head>
+<body data-world="sky">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 24.17;                         // the scene cut
+    const END = 30.47, W = p => R.w(p, R.START - 0.1);
+
+    // a homepage with an email wait list (layer: home)
+    const HP = R.win({ title: 'yourapp.com', right: 'waitlist <span id="wl">0</span>', variant: 'paper', x: 4, y: 21, w: 82, h: 'auto', layer: 'home',
+      body: `<span class="disp" id="hl">Know your number by 55.</span>
+        <div class="form"><div class="field"><span class="type" id="em">you@mail.com</span></div><span id="join">Join waitlist</span></div>` });
+    HP.id = 'HP';
+    const hp = R.open(HP, W('homepage'), { from: { x: 50, y: 62 } });
+    R.type(R.$('#em'), W('email'), 26);
+    const jl = W('list.');
+    R.press(R.$('#join'), jl, { vol: -3 }); R.text(R.$('#wl'), jl + 0.07, '1'); R.sfx('coin', jl + 0.07, { vol: -6, layer: 'home' });
+    R.close(HP, W('But'));
+
+    // picking a launch date, then LAUNCH (layer: launch), down by the waist where you put the calendar
+    const ROCKET = [
+      '....k....',
+      '...kpk...',
+      '...kpk...',
+      '..kpppk..',
+      '..kpnpk..',
+      '..kpppk..',
+      '..kpppk..',
+      '..kpnpk..',
+      '..kpppk..',
+      '..kpppk..',
+      '.kkpppkk.',
+      'kknpppnkk',
+      'kn.kkk.nk',
+      'k..www..k'];
+    const FLAME = [['...npn...', '...nnn...', '....n....', '.........'], ['...pnp...', '..nnnnn..', '...nnn...', '....n....']];
+    const CRATES = ['dark mode', 'AI chat', 'team seats'];
+    const LW = R.win({ title: 'Launch Control', right: 'v1.0', x: 9, y: 106, w: 82, h: 34.5, layer: 'launch',
+      body: `<div id="cal"><span class="mo">MAR 2027</span><span class="disp d" id="day">··</span><span class="chip-inv h" id="lt">LAUNCH DAY</span></div>
+        <span class="disp h" id="cd">3</span>
+        <div id="rk" data-bleed>${R.pix(ROCKET, 1.6)}<div id="fl">${R.pixAnim(FLAME, 1.6)}</div></div>
+        <div id="pad"></div>
+        ${CRATES.map((c, i) => `<div class="crate" style="top:calc(var(--u) * ${16.6 - i * 5.2})"><span>+ ${c}</span><b class="h">v2</b></div>`).join('')}
+        <span class="chip-inv h" id="live">WE'RE LIVE ✓</span>` });
+    LW.id = 'LW'; LW.dataset.world = 'orange';
+    const lb = LW.querySelector('.win__body');
+    R.open(LW, W('real trick'), { from: { x: 45, y: 90 } });
+
+    // picking a date: the day rolls like a slot machine, then locks on the 14th
+    const pk = W('picking'), ld = W('launch date'), day = R.$('#day');
+    R.every(pk, ld, t => { const k = Math.round((t - pk) * 15); day.textContent = String(((k * 11) % 28) + 1); });
+    R.text(day, ld, '14');
+    for (let t = pk; t < ld - 0.05; t += 0.1) R.sfx('select', t, { vol: -8, layer: 'launch' });
+    R.show(R.$('#lt'), ld); R.flash(R.$('#cal'), ld, 2);
+    R.sfx('confirm', ld, { vol: -4, layer: 'launch' }); R.sfx('stab', ld + 0.1, { vol: -6, layer: 'launch' });
+
+    // the countdown, then liftoff on "overbuilding"; the extra features stay on the pad
+    const go = W('overbuilding'), cd = R.$('#cd'), c0 = W("That'll"), st = (go - c0) / 3;
+    R.show(cd, c0);
+    ['3', '2', '1'].forEach((n, i) => { R.text(cd, c0 + i * st, n); R.sfx('blip', c0 + i * st, { vol: -3, freq: 700 + i * 180, layer: 'launch' }); });
+    R.text(cd, go, 'GO!');
+    R.sfx('riser', go - 1.1, { vol: -9, layer: 'launch' });
+    const rk = R.$('#rk'), fl = R.$('#fl');
+    R.every(c0, END, t => {
+      const shake = t >= go - st && t < go ? (Math.round(t * 15) % 2 ? 0.3 : -0.3) : 0;
+      const dt = Math.max(0, t - go), dy = -55 * dt * dt - 8 * dt;
+      rk.style.transform = `translate(${R.u(shake)}, ${R.u(dy.toFixed(2))})`;
+      fl.style.visibility = t >= go - 0.25 ? 'visible' : 'hidden';
+    });
+    R.flip(R.$('#fl .flip'), go - 0.25, END, { fps: 15 });
+    R.sfx('turbo', go, { vol: -5, layer: 'launch' });
+    R.stagger(LW.querySelectorAll('.crate b'), go + 0.2, go + 0.45, { sfx: 'kick', vol: -6 });
+    R.show(R.$('#live'), go + 0.25); R.sfx('fanfare', go + 0.25, { vol: -5, layer: 'launch' });
+
+    // confetti from the pad
+    R.seed(6);
+    const COLS = ['var(--pink)', 'var(--teal)', 'var(--yellow)', 'var(--lime)', 'var(--lavender)', 'var(--blue)', 'var(--ink)'];
+    const bits = Array.from({ length: 70 }, (_, i) => ({ vx: (R.rnd() - 0.5) * 110, vy: -26 - R.rnd() * 34, s: R.rnd() < 0.3 ? 1.6 : 1,
+      el: R.box('bit', { parent: lb, x: 46, y: 24, w: 1, h: 1, style: { background: COLS[i % COLS.length], visibility: 'hidden' } }) }));
+    bits.forEach(b => { b.el.dataset.bleed = ''; });
+    bits.forEach(b => { b.el.style.width = b.el.style.height = R.u(b.s); });
+    R.every(go + 0.1, END, t => {
+      const dt = t - go - 0.1;
+      bits.forEach(b => {
+        b.el.style.visibility = dt > 0 ? 'visible' : 'hidden';
+        b.el.style.left = R.u((46 + b.vx * dt).toFixed(2));
+        b.el.style.top = R.u((24 + b.vy * dt + 55 * dt * dt).toFixed(2));
+      });
+    });
+    R.sfx('clap', go + 0.35, { vol: -6, layer: 'launch' });
+    R.done(END);
+  </script>
+</body>
+</html>

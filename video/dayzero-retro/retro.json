@@ -1,0 +1,737 @@
+{
+  "video": "../dayzero.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-day-one": {
+      "on": true,
+      "ltime": {
+        "main": {
+          "retime": [
+            0.628,
+            3.328
+          ]
+        }
+      },
+      "move": {
+        "main": [
+          5,
+          10
+        ]
+      },
+      "sounds": {
+        "edit": {
+          "open@0.50": {
+            "gain": 3
+          },
+          "open@0.84": {
+            "gain": 3
+          },
+          "arpup@1.42": {
+            "gain": 3
+          },
+          "powerup@2.62": {
+            "gain": 3
+          },
+          "sword@3.32": {
+            "gain": 3
+          },
+          "stab@3.44": {
+            "gain": 3
+          },
+          "tick@1.63": {
+            "gain": 3
+          },
+          "tick@1.72": {
+            "gain": 3
+          },
+          "tick@1.81": {
+            "gain": 3
+          },
+          "tick@1.89": {
+            "gain": 3
+          },
+          "tick@1.98": {
+            "gain": 3
+          },
+          "tick@2.07": {
+            "gain": 3
+          },
+          "tick@2.15": {
+            "gain": 3
+          },
+          "tick@2.24": {
+            "gain": 3
+          },
+          "tick@2.33": {
+            "gain": 3
+          },
+          "tick@2.41": {
+            "gain": 3
+          },
+          "tick@2.50": {
+            "gain": 3
+          },
+          "lowhealth@2.97": {
+            "gain": 3
+          }
+        },
+        "add": []
+      }
+    },
+    "02-wrong-place": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -0.5
+        ]
+      },
+      "sounds": {
+        "edit": {
+          "strike@4.42": {
+            "gain": 3
+          },
+          "error@4.68": {
+            "gain": 3
+          },
+          "alert@4.10": {
+            "gain": 3
+          }
+        },
+        "add": []
+      }
+    },
+    "03-five-things": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -0.5
+        ]
+      },
+      "sounds": {
+        "edit": {
+          "open@5.72": {
+            "gain": 3
+          },
+          "tick@5.90": {
+            "gain": 3
+          },
+          "tick@6.00": {
+            "gain": 3
+          },
+          "tick@6.10": {
+            "gain": 3
+          },
+          "tick@6.20": {
+            "gain": 3
+          },
+          "tick@6.30": {
+            "gain": 3
+          },
+          "coin@7.70": {
+            "gain": 3
+          },
+          "coin@8.36": {
+            "gain": 3
+          },
+          "blip@9.80": {
+            "gain": 3
+          },
+          "blip@10.09": {
+            "gain": 3
+          },
+          "blip@10.38": {
+            "gain": 3
+          },
+          "blip@10.67": {
+            "gain": 3
+          },
+          "blip@10.96": {
+            "gain": 3
+          },
+          "pop@11.46": {
+            "gain": 3
+          },
+          "success@11.98": {
+            "gain": 3
+          }
+        },
+        "add": []
+      }
+    },
+    "04-magnets": {
+      "on": true,
+      "move": {
+        "main": [
+          5,
+          -1.5
+        ]
+      },
+      "sounds": {
+        "edit": {
+          "open@12.44": {
+            "gain": 3
+          },
+          "stab@12.54": {
+            "gain": 3
+          },
+          "pop@14.72": {
+            "gain": 3
+          },
+          "type@15.96": {
+            "gain": 3
+          },
+          "type@16.05": {
+            "gain": 3
+          },
+          "type@16.15": {
+            "gain": 3
+          },
+          "tick@16.20": {
+            "gain": 3
+          },
+          "type@16.34": {
+            "gain": 3
+          },
+          "type@16.43": {
+            "gain": 3
+          },
+          "type@16.52": {
+            "gain": 3
+          },
+          "type@16.62": {
+            "gain": 3
+          },
+          "tick@16.72": {
+            "gain": 3
+          },
+          "tick@17.24": {
+            "gain": 3
+          },
+          "gem@18.44": {
+            "gain": 3
+          },
+          "gem@18.66": {
+            "gain": 3
+          },
+          "gem@18.88": {
+            "gain": 3
+          },
+          "powerup@13.12": {
+            "gain": 3
+          },
+          "type@16.24": {
+            "gain": 3
+          },
+          "coin@18.94": {
+            "gain": 3
+          }
+        },
+        "add": []
+      }
+    },
+    "05-calculators": {
+      "on": true,
+      "move": {
+        "site": [
+          -10,
+          103
+        ],
+        "calc": [
+          11,
+          -4.5
+        ]
+      },
+      "sounds": {
+        "edit": {
+          "open@19.82": {
+            "gain": 3
+          },
+          "blip@20.02": {
+            "gain": 3
+          },
+          "blip@20.15": {
+            "gain": 3
+          },
+          "blip@20.28": {
+            "gain": 3
+          },
+          "blip@20.41": {
+            "gain": 3
+          },
+          "thunk@20.54": {
+            "gain": 3
+          },
+          "open@20.82": {
+            "gain": 3
+          },
+          "pop@21.04": {
+            "gain": 3
+          },
+          "bell@21.14": {
+            "gain": 3
+          },
+          "tick@23.06": {
+            "gain": 3
+          },
+          "tick@23.45": {
+            "gain": 3
+          },
+          "pop@21.35": {
+            "gain": 3
+          },
+          "pop@21.66": {
+            "gain": 3
+          },
+          "tick@22.28": {
+            "gain": 3
+          },
+          "tick@22.67": {
+            "gain": 3
+          },
+          "solved@23.64": {
+            "gain": 3
+          }
+        },
+        "add": []
+      }
+    },
+    "06-launch-date": {
+      "on": true,
+      "ltime": {
+        "home": {
+          "retime": [
+            24.439,
+            26.603333300000003
+          ]
+        }
+      },
+      "move": {
+        "home": [
+          5,
+          -3
+        ],
+        "date": [
+          2,
+          96.5
+        ],
+        "scope": [
+          5.5,
+          98
+        ]
+      },
+      "sounds": {
+        "edit": {
+          "open@24.74": {
+            "gain": 3
+          },
+          "type@25.60": {
+            "gain": 3
+          },
+          "type@25.68": {
+            "gain": 3
+          },
+          "type@25.75": {
+            "gain": 3
+          },
+          "type@25.83": {
+            "gain": 3
+          },
+          "type@25.91": {
+            "gain": 3
+          },
+          "type@25.98": {
+            "gain": 3
+          },
+          "thunk@26.12": {
+            "gain": 3
+          },
+          "close@26.40": {
+            "gain": 3
+          },
+          "open@26.52": {
+            "gain": 3
+          },
+          "select@27.40": {
+            "gain": 3
+          },
+          "select@27.50": {
+            "gain": 3
+          },
+          "select@27.60": {
+            "gain": 3
+          },
+          "select@27.70": {
+            "gain": 3
+          },
+          "select@27.80": {
+            "gain": 3
+          },
+          "confirm@27.92": {
+            "gain": 3
+          },
+          "blip@28.50": {
+            "gain": 3
+          },
+          "blip@28.88": {
+            "gain": 3
+          },
+          "blip@29.26": {
+            "gain": 3
+          },
+          "turbo@29.64": {
+            "gain": 3
+          },
+          "coin@26.19": {
+            "gain": 3
+          },
+          "stab@28.02": {
+            "gain": 3
+          },
+          "kick@29.84": {
+            "gain": 3
+          },
+          "kick@29.96": {
+            "gain": 3
+          },
+          "kick@30.09": {
+            "gain": 3
+          },
+          "riser@28.54": {
+            "gain": 3
+          },
+          "fanfare@29.89": {
+            "gain": 3
+          },
+          "clap@29.99": {
+            "gain": 3
+          }
+        },
+        "add": []
+      }
+    },
+    "07-reviews": {
+      "on": true,
+      "move": {
+        "read": [
+          5,
+          -4.5
+        ],
+        "map": [
+          5,
+          -5
+        ]
+      },
+      "sounds": {
+        "edit": {
+          "open@30.76": {
+            "gain": 3
+          },
+          "tick@31.96": {
+            "gain": 3
+          },
+          "tick@32.18": {
+            "gain": 3
+          },
+          "tick@32.40": {
+            "gain": 3
+          },
+          "tick@32.62": {
+            "gain": 3
+          },
+          "tick@32.84": {
+            "gain": 3
+          },
+          "tick@33.06": {
+            "gain": 3
+          },
+          "tick@33.28": {
+            "gain": 3
+          },
+          "tick@33.50": {
+            "gain": 3
+          },
+          "tick@33.72": {
+            "gain": 3
+          },
+          "tick@33.94": {
+            "gain": 3
+          },
+          "success@34.04": {
+            "gain": 3
+          },
+          "close@36.06": {
+            "gain": 3
+          },
+          "tick@36.88": {
+            "gain": 3
+          },
+          "tick@37.13": {
+            "gain": 3
+          },
+          "tick@37.38": {
+            "gain": 3
+          },
+          "coin@37.46": {
+            "gain": 3
+          },
+          "coin@37.75": {
+            "gain": 3
+          },
+          "coin@38.05": {
+            "gain": 3
+          },
+          "itemget@38.44": {
+            "gain": 3,
+            "s": "sunset"
+          },
+          "open@36.06": {
+            "gain": 3
+          }
+        },
+        "add": []
+      }
+    },
+    "08-price": {
+      "on": true,
+      "move": {
+        "price": [
+          5,
+          -4
+        ],
+        "ledger": [
+          5,
+          23.5
+        ]
+      },
+      "ltime": {
+        "ledger": {
+          "crop": [
+            42.8633333,
+            46.297
+          ]
+        }
+      },
+      "sounds": {
+        "edit": {
+          "shrink@46.07": {
+            "shift": -0.251,
+            "gain": 3
+          },
+          "thunk@42.14": {
+            "s": "starfall",
+            "gain": 3
+          },
+          "alert@45.70": {
+            "shift": -0.165,
+            "gain": 3
+          },
+          "type@39.60": {
+            "gain": 3
+          },
+          "type@39.67": {
+            "gain": 3
+          },
+          "type@39.74": {
+            "gain": 3
+          },
+          "pop@39.96": {
+            "gain": 3
+          },
+          "cancel@44.40": {
+            "gain": 3
+          },
+          "open@39.10": {
+            "gain": 3
+          },
+          "coin@42.21": {
+            "gain": 3
+          },
+          "open@42.98": {
+            "gain": 3
+          },
+          "arpup@43.18": {
+            "gain": 3
+          }
+        },
+        "add": [
+          {
+            "t": 42.127,
+            "s": "keyget",
+            "vol": 0,
+            "layer": "ledger"
+          },
+          {
+            "t": 42.127,
+            "s": "starfall",
+            "vol": 0,
+            "layer": "ledger"
+          },
+          {
+            "t": 42.127,
+            "s": "starfall",
+            "vol": 0,
+            "layer": "ledger"
+          }
+        ]
+      }
+    },
+    "09-register": {
+      "on": true,
+      "sounds": {
+        "edit": {
+          "open@46.47": {
+            "gain": 3
+          },
+          "stab@46.57": {
+            "gain": 3
+          },
+          "thunk@47.52": {
+            "gain": 3
+          },
+          "blip@48.44": {
+            "gain": 3
+          },
+          "blip@48.58": {
+            "gain": 3
+          },
+          "blip@48.71": {
+            "gain": 3
+          },
+          "blip@48.85": {
+            "gain": 3
+          },
+          "blip@48.99": {
+            "gain": 3
+          },
+          "blip@49.13": {
+            "gain": 3
+          },
+          "blip@49.27": {
+            "gain": 3
+          },
+          "blip@49.40": {
+            "gain": 3
+          },
+          "blip@49.54": {
+            "gain": 3
+          },
+          "notify@49.66": {
+            "gain": 3
+          },
+          "type@47.04": {
+            "gain": 3
+          },
+          "type@47.11": {
+            "gain": 3
+          },
+          "type@47.17": {
+            "gain": 3
+          },
+          "type@47.24": {
+            "gain": 3
+          },
+          "type@47.31": {
+            "gain": 3
+          },
+          "type@47.37": {
+            "gain": 3
+          }
+        },
+        "add": []
+      }
+    },
+    "10-day-zero": {
+      "on": true,
+      "move": {
+        "comment": [
+          5,
+          68.5
+        ],
+        "boot": [
+          5,
+          3.5
+        ]
+      },
+      "sounds": {
+        "edit": {
+          "open@50.20": {
+            "shift": -0.111,
+            "gain": 3
+          },
+          "tick@51.38": {
+            "gain": 3
+          },
+          "boot@52.68": {
+            "gain": 7.5
+          },
+          "type@53.98": {
+            "gain": 3
+          },
+          "type@54.06": {
+            "gain": 3
+          },
+          "type@54.15": {
+            "gain": 3
+          },
+          "type@54.23": {
+            "gain": 3
+          },
+          "type@54.31": {
+            "gain": 3
+          },
+          "thunk@54.38": {
+            "gain": 3
+          },
+          "notify@55.14": {
+            "gain": 3
+          },
+          "keyget@55.72": {
+            "gain": 3
+          },
+          "heart@56.31": {
+            "gain": 3
+          },
+          "tick@50.98": {
+            "gain": 3
+          },
+          "tick@51.08": {
+            "gain": 3
+          },
+          "tick@51.18": {
+            "gain": 3
+          },
+          "tick@51.28": {
+            "gain": 3
+          },
+          "open@53.48": {
+            "gain": 3
+          },
+          "thunk@56.24": {
+            "gain": 3
+          },
+          "sunrise@57.20": {
+            "gain": 3,
+            "off": true
+          }
+        },
+        "add": [
+          {
+            "t": 50.963,
+            "s": "powerup",
+            "vol": 3,
+            "layer": "boot"
+          },
+          {
+            "t": 56.557,
+            "s": "ocarina",
+            "vol": 3,
+            "layer": "boot"
+          }
+        ]
+      }
+    }
+  }
+}
