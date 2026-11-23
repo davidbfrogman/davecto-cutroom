@@ -44,7 +44,7 @@ export function mount(b) {
     applyDepth(b);
     if (show0(b)) { w.__timelines.root.seek(Math.max(0, v.currentTime - b.start), false); f.style.visibility = 'visible'; }
     if (old && old !== f) old.remove();
-    if (!S.cur) S.cur = b;
+    if (!S.cur) S.cur = b;                                 // (main.js starts on the first beat; this covers a page with none picked)
     renderAll();
     if (beats.every(x => x.ready)) { buildSfxSoon(); if (first) status(`${beats.length} beats loaded`); }
   };

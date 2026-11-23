@@ -39,7 +39,14 @@ async function editor() {
   await until(() => page.evaluate(() => [...document.querySelectorAll('#list .btime')].every(el => !el.textContent.includes('…'))
     && !document.querySelector('#insp .busy') && !document.querySelector('#insp [disabled]')), 'every beat to be ready', 30000);
   await sleep(300);                                          // let the first sync pass settle
+  assert.equal(await page.locator('#insp h2').textContent(), '01-hello', 'the editor starts on the first beat, whichever loads first');
+  await pickBeat(page, '01-hello');                          // say which beat the test works on; don't rely on a default
   return { page, dir, beat: id => readCfg(dir).beats?.[id] || {}, done: async () => { assert.deepEqual(page.errors, []); await page.close(); } };
+}
+/** Show a beat in the inspector by clicking its row in the list (doesn't move the playhead). */
+async function pickBeat(page, id) {
+  await page.locator('#list .brow', { hasText: id }).locator('.bname').click();
+  await until(async () => (await page.locator('#insp h2').textContent()) === id, `${id} in the inspector`);
 }
 const seek = (page, t) => page.evaluate(t => { document.querySelector('#v').currentTime = t; }, t).then(() => sleep(250));
 const time = page => page.evaluate(() => document.querySelector('#v').currentTime);
