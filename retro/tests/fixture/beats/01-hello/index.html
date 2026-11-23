@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- 01-hello: test fixture. A window (main) on "hello", a tag (own layer) on "tiny". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01-hello</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 0.2;
+    const END = 3.0, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'Hello.app', right: 'v1', variant: 'paper', x: 8, y: 24, w: 70, h: 30, body: '<p class="disp" style="font-size:calc(var(--u)*8);margin:calc(var(--u)*3)">hello</p>' });
+    R.open(A, W('hello'));
+    R.sfx('tick', W('this'), { vol: -3 });
+    const T = R.box('chip-inv h', { x: 10, y: 60, w: 40, h: 8, html: 'TINY TEST', layer: 'tag' });
+    R.show(T, W('tiny')); R.sfx('pop', W('tiny'), { layer: 'tag' });
+    R.done(END);
+  </script>
+</body>
+</html>

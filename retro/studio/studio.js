@@ -52,7 +52,7 @@ function badges(c) {
   if (!c.faces) out.push('<span class="badge">no faces</span>');
   if (c.lint) out.push(`<span class="badge ok ${c.lint.stale ? 'old' : ''}">${c.lint.count ? `lint: ${c.lint.count} issue${c.lint.count > 1 ? 's' : ''}` : 'lint ok'}${c.lint.stale ? ' (old)' : ''}</span>`);
   for (const k of ['draft', 'final']) {
-    if (c[k]) out.push(`<span class="chip">${k}</span>${c[k].stale ? '<span class="badge">render out of date</span>' : ''}`);
+    if (c[k]) out.push(`<span class="chip">${k}</span>${c[k].stale ? '<span class="badge">${k} render out of date</span>' : ''}`);
   }
   return out.join('');
 }
