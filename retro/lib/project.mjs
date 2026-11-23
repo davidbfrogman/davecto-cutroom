@@ -6,7 +6,7 @@
      out/          overlays, sfx stem, the export, check frames, caches */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
 import { basename, dirname, extname, join, resolve } from 'node:path';
@@ -51,7 +51,8 @@ export class Project {
     this.out = join(dir, 'out');
     mkdirSync(this.out, { recursive: true });
   }
-  save() { writeFileSync(this.file, JSON.stringify(this.cfg, null, 2) + '\n'); }
+  /** Written to a temp file and renamed over retro.json, so a reader (the CLI, the Studio, Claude) never sees it half-written. */
+  save() { const tmp = `${this.file}.${process.pid}.tmp`; writeFileSync(tmp, JSON.stringify(this.cfg, null, 2) + '\n'); renameSync(tmp, this.file); }
   get video() { return resolve(this.dir, this.cfg.video); }
   /** The video's length: nothing plays past it (the kit cuts beats and sounds there). */
   get length() { return (this._len ??= Math.round(duration(this.video) * 1000) / 1000); }

@@ -7,6 +7,7 @@ import { initTimeline, trimToPlayhead } from './timeline.js';
 import { closePicker, initSounds, restartSfx } from './sounds.js';
 import { initPanel, renderAll } from './panel.js';
 import { initStudio } from './studio.js';
+import { initPrep } from './prep.js';
 
 // Retro preview: the entry point. Each module exports an init() that wires its listeners; the order in
 // the start-up sequence at the bottom is the page's start-up order (the same as it was in one file).
@@ -53,6 +54,8 @@ function initKeys() {
 }
 
 /* ---------- start-up ---------- */
+await initPrep();                                      // a project still being set up says so (and reloads when it's ready)
+$('#v').src = 'video.mp4';                             // only now: before this it may not exist yet
 initApi();
 initHeader();
 initReset();

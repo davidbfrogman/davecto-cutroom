@@ -21,12 +21,25 @@ function testClip() {                                    // made once per run, s
   return clip;
 }
 
+let light = null;
+function lightClip() {
+  if (light) return light;
+  light = join(dirname(testClip()), 'preview.mp4');
+  const r = spawnSync('ffmpeg', ['-v', 'error', '-y', '-i', testClip(), '-c', 'copy', '-movflags', '+faststart', light]);   // already small: a remux will do
+  if (r.status) throw new Error('ffmpeg failed making the light copy');
+  return light;
+}
+
 /** A videos folder in /tmp with the fixture as <name>-retro and its clip next to it. Returns { root, dir }. */
 export function fixture(name = 'fx', root = mkdtempSync(join(tmpdir(), 'retro-test-'))) {
   mkdirSync(root, { recursive: true });
   if (!existsSync(join(root, 'clip.mp4'))) cpSync(testClip(), join(root, 'clip.mp4'));
   const dir = join(root, `${name}-retro`);
   cpSync(join(RETRO, 'tests', 'fixture'), dir, { recursive: true });
+  // The editor's light preview copy is the same for every copy of the fixture: make it once per run and hand
+  // it out (newer than the clip, so the Studio uses it), instead of every test waiting for ffmpeg.
+  mkdirSync(join(dir, 'out'), { recursive: true });
+  cpSync(lightClip(), join(dir, 'out', '.preview.mp4'));
   return { root, dir };
 }
 export const readCfg = dir => JSON.parse(readFileSync(join(dir, 'retro.json'), 'utf8'));
@@ -34,10 +47,10 @@ export const readCfg = dir => JSON.parse(readFileSync(join(dir, 'retro.json'), '
 export function editCfg(dir, fn) { const c = readCfg(dir); fn(c); writeFileSync(join(dir, 'retro.json'), JSON.stringify(c, null, 2) + '\n'); }
 
 /** Start a Studio on a videos folder (own port, state file and Trash). Returns { url, stop, trash }. */
-export async function studio(root, port = 4300 + Math.floor(Math.random() * 500)) {
+export async function studio(root, port = 4300 + Math.floor(Math.random() * 500), env = {}) {
   const trash = join(root, '.trash');
   const p = spawn(process.execPath, [join(RETRO, 'cli.mjs'), 'studio', '--port', String(port), '--no-open'], {
-    env: { ...process.env, RETRO_STUDIO_CHILD: '1', RETRO_VIDEOS: root, RETRO_STUDIO_STATE: join(root, '.studio.json'), RETRO_TRASH: trash },
+    env: { ...process.env, ...env, RETRO_STUDIO_CHILD: '1', RETRO_VIDEOS: root, RETRO_STUDIO_STATE: join(root, '.studio.json'), RETRO_TRASH: trash },
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
   let log = ''; p.stdout.on('data', d => { log += d; }); p.stderr.on('data', d => { log += d; });
   const url = `http://localhost:${port}`;
