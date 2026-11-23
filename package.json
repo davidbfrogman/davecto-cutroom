@@ -12,7 +12,8 @@
     "dev": "node --watch server.mjs --open",
     "setup": "node setup.mjs",
     "cli": "node cli.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "retro:test": "node --test --test-concurrency=1 retro/tests/"
   },
   "dependencies": {
     "gsap": "3.14.2",

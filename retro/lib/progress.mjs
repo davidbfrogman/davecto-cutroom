@@ -34,6 +34,17 @@ export function run(cmd, args, onLine = () => {}) {
   });
 }
 
+/* Inside a Studio job (lib/job.mjs runs with RETRO_JOB=1 and an IPC channel), bars also go to the server as
+   { t: 'bar', label, frac, note } messages, at most ~5 a second, so the page can draw them. */
+const job = !!(process.env.RETRO_JOB && process.send);
+let lastSend = 0;
+export const report = (msg, force = false) => {
+  if (!job) return;
+  const now = Date.now();
+  if (!force && now - lastSend < 200) return;
+  lastSend = now; process.send(msg);
+};
+
 /** A progress line: bar.update(0–1, note) as it goes, bar.done(message) to finish it. */
 export function bar(label, { pipeEvery = 10 } = {}) {
   const tty = !!process.stdout.isTTY, t0 = Date.now();
@@ -43,6 +54,8 @@ export function bar(label, { pipeEvery = 10 } = {}) {
     elapsed,
     update(frac, note = '') {
       const pct = Math.round(Math.max(0, Math.min(1, frac)) * 100);
+      report({ t: 'bar', label: label.trim(), frac: pct / 100, note });
+      if (job) return;                                   // the page draws it; the log gets the done line
       if (tty) {
         const w = 24, n = Math.round(pct / 100 * w), cols = process.stdout.columns || 100;
         let line = `  ${label}  ${'█'.repeat(n)}${'░'.repeat(w - n)} ${String(pct).padStart(3)}%  ${note}`;
@@ -54,6 +67,7 @@ export function bar(label, { pipeEvery = 10 } = {}) {
       }
     },
     done(msg) {
+      report({ t: 'bar', label: label.trim(), frac: 1, note: 'done' }, true);
       if (tty) process.stdout.write('\r\x1b[2K');
       console.log(msg);
     },

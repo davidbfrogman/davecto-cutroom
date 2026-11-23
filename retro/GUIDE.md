@@ -31,8 +31,10 @@ plumbing, and don't re-derive anything this file already says.
 5. Look once: `retro frames all` (one frame per beat, one sheet), then `retro frames <beat>
    --events` for any beat you're unsure of (a frame just after each sound = each thing happening).
    Red box = face no-go zone.
-6. `retro render --draft` once at the end, then tell the user about `retro preview` for toggling
-   and moving things themselves. Never undo their moves (retro.json `move`).
+6. `retro render --draft` once at the end, then tell the user to open the project in Retro Studio
+   (`retro`, or `retro preview` in the project folder) for toggling and moving things themselves,
+   linting and rendering. Never undo their moves (retro.json `move`). The Studio runs the same lint and
+   render code as the CLI, so `retro lint` and the Studio's Lint panel always agree.
 
 ## Timing tweaks (the user's, in retro.json)
 

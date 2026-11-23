@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- 02-second: test fixture. A window that opens on "second" and a coin on "here". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>02-second</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+</head>
+<body data-world="teal">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 3.0;
+    const END = 5.8, W = p => R.w(p, R.START - 0.1);
+    const B = R.win({ title: 'Second.app', right: '2/2', variant: 'grey', x: 8, y: 24, w: 70, h: 30, body: '<p class="disp" style="font-size:calc(var(--u)*7);margin:calc(var(--u)*3)">beat two</p>' });
+    R.open(B, W('second'));
+    R.sfx('coin', W('here'), { vol: -2 });
+    R.done(END);
+  </script>
+</body>
+</html>

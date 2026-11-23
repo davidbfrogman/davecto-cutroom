@@ -11,7 +11,7 @@
      - Instagram UI: keep graphics inside x 0–86u, y 20u–(H-37u). */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RETRO, sh } from './project.mjs';
@@ -43,7 +43,9 @@ export function detect(project, fps = 5) {
     const r = spawnSync('ffmpeg', ['-v', 'info', '-nostdin', '-i', project.video, '-filter_complex',
       `[0:v]scale=360:-2,split[a][b];[a]fps=${fps}[f];[b]select='gt(scene\\,0.3)',showinfo[s]`,
       '-map', '[f]', '-q:v', '4', join(tmp, '%05d.jpg'), '-map', '[s]', '-f', 'null', '-'], { encoding: 'utf8', maxBuffer: 1 << 28 });
-    if (r.status !== 0) throw new Error(`ffmpeg failed: ${r.stderr.split('\n').slice(-5).join('\n')}`);
+    // a video without a single scene cut gives the cut stream no frames, which ffmpeg calls a failure
+    const noCuts = r.status !== 0 && /Nothing was written into output file/.test(r.stderr) && readdirSync(tmp).length;
+    if (r.status !== 0 && !noCuts) throw new Error(`ffmpeg failed: ${r.stderr.split('\n').slice(-5).join('\n')}`);
     const cuts = [...r.stderr.matchAll(/pts_time:([\d.]+)/g)].map(m => Math.round(+m[1] * 100) / 100);
     const raw = JSON.parse(sh(binary(), [tmp, String(fps)]));
     const samples = raw.map(s => ({

@@ -112,6 +112,12 @@ export class Project {
   }
 }
 
+/** Transcribe the video into words.json (faster-whisper small.en) if it's missing, or always with redo. */
+export function transcribe(project, redo = false) {
+  if (!redo && existsSync(join(project.dir, 'words.json'))) return null;
+  return sh(PYTHON, [join(RETRO, 'lib', 'words.py'), project.video, join(project.dir, 'words.json')]).trim();
+}
+
 /** Create a project folder for a video. */
 export function createProject(video, dir) {
   const v = resolve(video);

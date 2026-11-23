@@ -7,14 +7,19 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { detect, fmtZone, freeOver, layout, zones } from './lib/faces.mjs';
-import { describe, lint } from './lib/lint.mjs';
+import { describe, lintProject } from './lib/lint.mjs';
 import { probe } from './lib/probe.mjs';
-import { secs } from './lib/progress.mjs';
-import { checkDeps, createProject, duration, findProject, Project, PYTHON, RETRO, sh } from './lib/project.mjs';
+import { checkDeps, createProject, duration, findProject, Project, RETRO, transcribe } from './lib/project.mjs';
 import { rangeMatte } from './lib/cutout.mjs';
-import { exportVideo, renderOverlays, sheet, writeSfx } from './lib/render.mjs';
+import { renderOverlays, renderProject, sheet, writeSfx } from './lib/render.mjs';
 
 const HELP = `retro: Retro OS overlays + sound effects for a finished video
+
+Studio
+  retro  /  retro studio [--port 4180] [--no-open]
+                                  the Studio in your browser: every project, new projects, the editor,
+                                  lint, contact sheets, renders (one server; restarts itself when retro's
+                                  code changes)
 
 Setup
   retro new <video> [--dir d]     make a project (<video>-retro/ next to it), transcribe, find faces
@@ -36,7 +41,8 @@ Look
   retro frames <beat> --events    a frame just after each moment something happens (from its sounds)
   retro frames all|<beats...>     one frame per beat in one sheet (--at 0.85 = how far into each beat)
   retro preview [--port 4180] [--no-open]
-                                  browser preview (opens it): play, toggle, move, retime (saves to retro.json)
+                                  this project's editor in the Studio (starts it if it isn't running):
+                                  play, toggle, move, retime (saves to retro.json)
 
 Tweak (all of this is retro.json; edit it by hand if you like)
   retro off <beats>  /  retro on <beats>
@@ -71,7 +77,7 @@ const flag = (name, val = false) => {
   argv.splice(i, val ? 2 : 1);
   return v;
 };
-const cmd = argv.shift() || 'help';
+const cmd = argv.shift() || 'studio';
 const pdir = flag('-p', true);
 const P = () => new Project(findProject(pdir));
 
@@ -99,7 +105,7 @@ const cmds = {
   async words(redo = flag('--redo'), p = P()) {
     if (redo || !existsSync(join(p.dir, 'words.json'))) {
       process.stdout.write('… transcribing (faster-whisper small.en) ');
-      console.log(sh(PYTHON, [join(RETRO, 'lib', 'words.py'), p.video, join(p.dir, 'words.json')]).trim());
+      console.log(transcribe(p, true));
     }
     const [a = 0, b = 1e9] = argv.map(Number);
     let line = [], start = 0;
@@ -224,8 +230,7 @@ ${info} -->
   },
 
   async lint() {
-    const p = P(), ids = p.match(argv).filter(id => p.on(id)), pr = await probes(p, ids);
-    const issues = lint(p, pr, p.faces());
+    const p = P(), { issues } = await lintProject(p, p.match(argv));
     if (!p.faces()) console.log('(no faces.json: only the Instagram zone was checked; run retro faces)');
     issues.forEach(i => console.log(describe(i)));
     const n = k => issues.filter(i => i.kind === k).length;
@@ -334,53 +339,50 @@ ${info} -->
   },
 
   async render() {
-    checkDeps();
     const p = P();
     const draft = !!flag('--draft'), noSfx = !!flag('--no-sfx'), noOpen = !!flag('--no-open');
     const video = flag('--video', true), sizeArg = flag('--size', true);
     const size = sizeArg ? sizeArg.split('x').map(Number) : p.size;
-    const ids = p.match(argv).filter(id => p.on(id));
-    const off = p.beatIds().filter(id => !p.on(id));
-    if (off.length) console.log(`off: ${off.join(', ')}`);
-    const t0 = Date.now();
-    process.stdout.write(`… checking ${ids.length} beats (timing, placement, sounds) `);
-    const pr = await probe(p, ids, size);
-    const issues = lint(p, pr, p.faces());
-    console.log(issues.length ? `${issues.length} placement note(s):` : 'ok');
-    issues.forEach(i => console.log(`! ${describe(i)}`));
-    const movs = await renderOverlays(p, ids, size);
-    const out = await exportVideo(p, pr, movs, { video: video ? resolve(video) : p.video, size, sfx: !noSfx, draft });
-    console.log(`→ ${out}`);
-    console.log(`  done in ${secs((Date.now() - t0) / 1000)}`);
+    const out = await renderProject(p, { ids: p.match(argv), draft, sfx: !noSfx, video: video ? resolve(video) : p.video, size });
     // Show it in Finder (what you want next 99% of the time); --no-open to skip, e.g. in scripts
     if (!noOpen && process.platform === 'darwin') spawnSync('open', ['-R', out]);
   },
 
-  // The preview runs as a child process that this one restarts whenever retro's own code changes, so a
-  // long-running preview never keeps serving old code (an old server silently ignored new kinds of
-  // edits once). The browser tab stays put: the page retries a save while the server restarts.
-  async preview() {
+  // The Studio runs as a child process that this one restarts whenever retro's own code changes, so a
+  // long-running server never keeps serving old code (an old server silently ignored new kinds of edits
+  // once). The child finishes running jobs first. Browser tabs stay put: the page retries a save meanwhile.
+  async studio(openDir = null) {
     const port = Number(flag('--port', true)) || 4180, noOpen = !!flag('--no-open');
-    if (process.env.RETRO_PREVIEW_CHILD) { const { serve } = await import('./lib/preview.mjs'); await serve(P(), port, { open: !noOpen }); return; }
+    if (process.env.RETRO_STUDIO_CHILD) { const { studio } = await import('./lib/studio.mjs'); await studio({ port, open: noOpen ? null : (process.env.RETRO_OPEN ?? '') }); return; }
+    const base = `http://localhost:${port}`;
+    const ping = await fetch(`${base}/api/ping`).then(r => r.json()).catch(() => null);
+    if (ping?.studio) {                                  // already running: just open it
+      let to = `${base}/`;
+      if (openDir) { const r = await (await fetch(`${base}/api/projects/open`, { method: 'POST', body: JSON.stringify({ dir: openDir }) })).json(); if (r.error) throw new Error(r.error); to = `${base}/p/${encodeURIComponent(r.name)}/`; }
+      console.log(`Retro Studio is already running: ${to}`);
+      if (!noOpen && process.platform === 'darwin') spawnSync('open', [to]);
+      return;
+    }
     const { spawn } = await import('node:child_process'), { readdirSync, statSync } = await import('node:fs');
-    const dir = P().dir, files = () => [join(RETRO, 'cli.mjs'), ...readdirSync(join(RETRO, 'lib')).filter(f => f.endsWith('.mjs')).map(f => join(RETRO, 'lib', f))];
+    const files = () => [join(RETRO, 'cli.mjs'), ...readdirSync(join(RETRO, 'lib')).filter(f => f.endsWith('.mjs')).map(f => join(RETRO, 'lib', f))];
     const stamp = () => files().map(f => statSync(f).mtimeMs).join();
     let child = null, first = true, last = stamp();
     const start = () => {
-      child = spawn(process.execPath, [join(RETRO, 'cli.mjs'), 'preview', '-p', dir, '--port', String(port), ...(first && !noOpen ? [] : ['--no-open'])],
-        { stdio: 'inherit', env: { ...process.env, RETRO_PREVIEW_CHILD: '1' } });
+      child = spawn(process.execPath, [join(RETRO, 'cli.mjs'), 'studio', '--port', String(port), ...(first && !noOpen ? [] : ['--no-open'])],
+        { stdio: ['inherit', 'inherit', 'inherit', 'ipc'], env: { ...process.env, RETRO_STUDIO_CHILD: '1', RETRO_OPEN: openDir || '' } });
       first = false;
-      child.on('exit', code => { if (code && !child.restarting) { console.error(`retro preview stopped (exit ${code})`); process.exit(code); } });
+      child.on('exit', code => { if (code && !child.restarting) { console.error(`retro studio stopped (exit ${code})`); process.exit(code); } });
     };
     start();
     setInterval(() => {
-      const now = stamp(); if (now === last) return;
-      last = now; console.log('… retro was updated: restarting the preview server (your browser tab keeps working)');
-      child.restarting = true; child.once('exit', start); child.kill();
+      const now = stamp(); if (now === last || child.restarting) return;
+      last = now; console.log('… retro was updated: restarting the Studio server when nothing is running (your browser tabs keep working)');
+      child.restarting = true; child.once('exit', start); child.send('restart');
     }, 1000);
-    for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { child?.kill(); process.exit(0); });
+    for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { child?.kill(sig); process.exit(0); });
     await new Promise(() => {});
   },
+  preview() { return cmds.studio(P().dir); },
 
   // Write only the SFX stem (out/sfx.wav), e.g. to drop into an editor.
   async stem() { const p = P(); const pr = await probes(p); const s = writeSfx(p, pr, duration(p.video)); console.log(`${s.count} cues → ${s.file}`); },
