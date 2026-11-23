@@ -195,16 +195,29 @@ document.addEventListener('click', (e) => { if (openMenu && !e.target.closest('.
 /* add video */
 const addForm = $('#addForm');
 function addErr(t) { const el = $('#addErr'); el.textContent = t || ''; el.hidden = !t; }
-$('#addBtn').onclick = () => { addForm.hidden = !addForm.hidden; $('#addBtn').hidden = !addForm.hidden; if (!addForm.hidden) $('#addPath').focus(); };
-$('#addCancel').onclick = () => { addForm.hidden = true; $('#addBtn').hidden = false; addErr(''); };
+const showForm = on => { addForm.hidden = !on; $('#addBtn').hidden = on; $('#typeBtn').hidden = on; if (on) $('#addPath').focus(); else addErr(''); };
+async function create(video) {                        // start the 'new' job; the placeholder card shows its progress
+  const r = await post('/api/projects', { video });
+  if (r.error) { addErr(r.error); return false; }
+  addErr('');
+  if (r.id != null) jobs.set(String(r.id), r);
+  render();
+  return true;
+}
+// + Add video opens the Mac's file dialog (the server opens it: a browser picker can't tell us the file's path)
+$('#addBtn').onclick = async () => {
+  const b = $('#addBtn'); b.disabled = true; b.textContent = 'Choose a video…';
+  try {
+    const r = await post('/api/pick');
+    if (r.error) { addErr(r.error); showForm(true); } else if (r.path) await create(r.path);
+  } finally { b.disabled = false; b.textContent = '+ Add video'; }
+};
+$('#typeBtn').onclick = () => showForm(true);
+$('#addCancel').onclick = () => showForm(false);
 addForm.onsubmit = async (e) => {
   e.preventDefault();
   const video = $('#addPath').value.trim(); if (!video) return;
-  const r = await post('/api/projects', { video });
-  if (r.error) { addErr(r.error); return; }
-  addErr(''); $('#addPath').value = ''; addForm.hidden = true; $('#addBtn').hidden = false;
-  if (r.id != null) jobs.set(String(r.id), r);
-  render();
+  if (await create(video)) { $('#addPath').value = ''; showForm(false); }
 };
 
 refresh();

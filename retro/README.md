@@ -21,7 +21,8 @@ One page for the whole workflow, no terminal needed:
 - **Projects** (home): every `*-retro` folder in `video/`, as cards with a thumbnail, length, beat count and
   last edit, and badges for a missing transcript or faces, the lint count, and the draft/final render
   (marked "render out of date" when the beats or retro.json changed after it).
-  **+ Add video** takes a video path from anywhere and makes the project next to it (transcript, faces).
+  **+ Add video** opens the Mac's file dialog: pick a video from anywhere and the project is made next to
+  it (transcript, faces). **Type a path…** does the same from a pasted path.
   Per card: open the editor, lint, contact sheet, render draft / final, play the render, re-transcribe,
   reveal in Finder, delete (the project folder goes to the Trash; the video is never touched).
 - **Jobs** (new, transcribe, lint, contact sheet, render) run in the Studio's server with live progress

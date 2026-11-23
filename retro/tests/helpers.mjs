@@ -34,10 +34,10 @@ export const readCfg = dir => JSON.parse(readFileSync(join(dir, 'retro.json'), '
 export function editCfg(dir, fn) { const c = readCfg(dir); fn(c); writeFileSync(join(dir, 'retro.json'), JSON.stringify(c, null, 2) + '\n'); }
 
 /** Start a Studio on a videos folder (own port, state file and Trash). Returns { url, stop, trash }. */
-export async function studio(root, port = 4300 + Math.floor(Math.random() * 500)) {
+export async function studio(root, port = 4300 + Math.floor(Math.random() * 500), env = {}) {
   const trash = join(root, '.trash');
   const p = spawn(process.execPath, [join(RETRO, 'cli.mjs'), 'studio', '--port', String(port), '--no-open'], {
-    env: { ...process.env, RETRO_STUDIO_CHILD: '1', RETRO_VIDEOS: root, RETRO_STUDIO_STATE: join(root, '.studio.json'), RETRO_TRASH: trash },
+    env: { ...process.env, ...env, RETRO_STUDIO_CHILD: '1', RETRO_VIDEOS: root, RETRO_STUDIO_STATE: join(root, '.studio.json'), RETRO_TRASH: trash },
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
   let log = ''; p.stdout.on('data', d => { log += d; }); p.stderr.on('data', d => { log += d; });
   const url = `http://localhost:${port}`;

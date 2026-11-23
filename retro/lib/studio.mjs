@@ -98,6 +98,25 @@ function trash(dir) {
   return to;
 }
 
+/* The Mac's own file dialog, opened by this server (it runs on the same Mac): a page can't learn a file's
+   path from the browser's picker, but this gives the real path. → { path } or { cancelled: true }.
+   RETRO_PICK (tests) answers with that path instead of opening a dialog. */
+let picking = null;
+function pickVideo() {
+  if (process.env.RETRO_PICK != null) return Promise.resolve(process.env.RETRO_PICK ? { path: process.env.RETRO_PICK } : { cancelled: true });
+  if (process.platform !== 'darwin') return Promise.resolve({ error: 'The file dialog needs macOS: type the path instead.' });
+  if (picking) return picking;                          // one dialog at a time; a second click waits for the same one
+  const from = existsSync(VIDEOS) ? VIDEOS : homedir();
+  const script = ['activate', `set f to choose file with prompt "Choose a video for a new retro project" of type {"public.movie"} default location (POSIX file ${JSON.stringify(from)})`, 'POSIX path of f'];
+  picking = new Promise(ok => {
+    const p = spawn('osascript', script.flatMap(l => ['-e', l]));
+    let out = '', err = '';
+    p.stdout.on('data', d => { out += d; }); p.stderr.on('data', d => { err += d; });
+    p.on('close', code => ok(code === 0 ? { path: out.trim() } : /-128/.test(err) ? { cancelled: true } : { error: err.trim() || 'The file dialog failed' }));
+  }).finally(() => { picking = null; });
+  return picking;
+}
+
 /* ---------- per-project media (light copy, filmstrip, thumbnail), made in the background ---------- */
 const media = new Map();                                 // dir → { light: Promise, strip }
 function lightCopy(p) {
@@ -289,6 +308,7 @@ export async function studio({ port = 4180, open = null } = {}) {
         if (existsSync(join(dir, 'retro.json'))) { remember(dir); emit('projects', {}); return json(res, { error: `${basename(dir)} already exists`, project: nameOf(dir) }, 409); }
         return json(res, pub(addJob('new', { video: v, project: basename(dir) })));
       }
+      if (path === '/api/pick' && req.method === 'POST') return json(res, await pickVideo());
       if (path === '/api/projects/open' && req.method === 'POST') {   // retro preview: make sure the studio knows this folder
         const { dir } = await body(req);
         if (!existsSync(join(dir, 'retro.json'))) return json(res, { error: `No retro.json in ${dir}` }, 400);
