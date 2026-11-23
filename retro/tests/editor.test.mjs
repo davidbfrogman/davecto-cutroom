@@ -34,6 +34,10 @@ async function editor() {
   await page.goto(`${srv.url}/p/${name}-retro/`);
   await until(async () => (await page.locator('#tlInner .blk').count()) === 2 && (await page.locator('#insp .ihead').count()) === 1, 'both beats to load', 30000);
   await until(() => page.evaluate(() => document.querySelector('#v').readyState >= 2), 'the video to load', 30000);
+  // every beat ready (its times in the list, nothing "Updating…"): a beat that finishes loading re-renders the
+  // inspector, and a control picked before that would be swapped out from under the test
+  await until(() => page.evaluate(() => [...document.querySelectorAll('#list .btime')].every(el => !el.textContent.includes('…'))
+    && !document.querySelector('#insp .busy') && !document.querySelector('#insp [disabled]')), 'every beat to be ready', 30000);
   await sleep(300);                                          // let the first sync pass settle
   return { page, dir, beat: id => readCfg(dir).beats?.[id] || {}, done: async () => { assert.deepEqual(page.errors, []); await page.close(); } };
 }

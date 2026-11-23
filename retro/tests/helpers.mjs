@@ -21,12 +21,25 @@ function testClip() {                                    // made once per run, s
   return clip;
 }
 
+let light = null;
+function lightClip() {
+  if (light) return light;
+  light = join(dirname(testClip()), 'preview.mp4');
+  const r = spawnSync('ffmpeg', ['-v', 'error', '-y', '-i', testClip(), '-c', 'copy', '-movflags', '+faststart', light]);   // already small: a remux will do
+  if (r.status) throw new Error('ffmpeg failed making the light copy');
+  return light;
+}
+
 /** A videos folder in /tmp with the fixture as <name>-retro and its clip next to it. Returns { root, dir }. */
 export function fixture(name = 'fx', root = mkdtempSync(join(tmpdir(), 'retro-test-'))) {
   mkdirSync(root, { recursive: true });
   if (!existsSync(join(root, 'clip.mp4'))) cpSync(testClip(), join(root, 'clip.mp4'));
   const dir = join(root, `${name}-retro`);
   cpSync(join(RETRO, 'tests', 'fixture'), dir, { recursive: true });
+  // The editor's light preview copy is the same for every copy of the fixture: make it once per run and hand
+  // it out (newer than the clip, so the Studio uses it), instead of every test waiting for ffmpeg.
+  mkdirSync(join(dir, 'out'), { recursive: true });
+  cpSync(lightClip(), join(dir, 'out', '.preview.mp4'));
   return { root, dir };
 }
 export const readCfg = dir => JSON.parse(readFileSync(join(dir, 'retro.json'), 'utf8'));
