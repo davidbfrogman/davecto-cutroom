@@ -119,13 +119,20 @@ function pickVideo() {
 
 /* ---------- per-project media (light copy, filmstrip, thumbnail), made in the background ---------- */
 const media = new Map();                                 // dir → { light: Promise, strip }
-function lightCopy(p) {
+/** The editor plays a light 720p copy. Making it takes a while on a long video, so it reports how far it is
+    (prog.frac, from ffmpeg's -progress) for the editor's "getting ready" screen. */
+function lightCopy(p, len, prog) {
   const out = join(p.out, '.preview.mp4');
-  if (existsSync(out) && mtime(out) > mtime(p.video)) return Promise.resolve(out);
+  if (existsSync(out) && mtime(out) > mtime(p.video)) { prog.frac = 1; return Promise.resolve(out); }
   console.log(`… ${basename(p.dir)}: making a light preview copy of the video (once)`);
   const tmp = join(p.out, '.preview.part.mp4');
-  return ffmpeg(['-v', 'error', '-y', '-i', p.video, '-vf', 'scale=720:-2', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26',
-    '-g', '15', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', tmp]).then(() => { renameSync(tmp, out); return out; });
+  return new Promise((ok, no) => {
+    const f = spawn('ffmpeg', ['-v', 'error', '-nostats', '-progress', 'pipe:1', '-y', '-i', p.video, '-vf', 'scale=720:-2', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26',
+      '-g', '15', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', tmp], { stdio: ['ignore', 'pipe', 'ignore'] });
+    f.stdout.setEncoding('utf8').on('data', d => { const m = /out_time_us=(\d+)\s*$/m.exec(d); if (m && len) prog.frac = Math.min(0.99, +m[1] / 1e6 / len); });
+    f.on('error', no);
+    f.on('close', c => (c === 0 ? ok() : no(new Error('ffmpeg failed making the preview copy'))));
+  }).then(() => { renameSync(tmp, out); prog.frac = 1; return out; }, e => { prog.error = e.message; throw e; });
 }
 /* The filmstrip on the timeline: one small frame every `every` seconds, in one row (a sprite), made once
    from the light copy and cached next to it. */
@@ -141,9 +148,9 @@ function filmstrip(p, light, len) {
 function mediaOf(p) {
   let m = media.get(p.dir);
   if (!m || m.video !== mtime(p.video)) {
-    const light = lightCopy(p); light.catch(e => console.error(e.message));
-    const len = duration(p.video);
-    m = { video: mtime(p.video), len, light, strip: filmstrip(p, light, len) };
+    const len = duration(p.video), prog = { frac: 0, error: null };
+    const light = lightCopy(p, len, prog); light.catch(e => console.error(e.message));
+    m = { video: mtime(p.video), len, light, prog, strip: filmstrip(p, light, len) };
     media.set(p.dir, m);
   }
   return m;
@@ -202,7 +209,7 @@ function start(j) {
   c.stdout.setEncoding('utf8').on('data', lines()); c.stderr.setEncoding('utf8').on('data', lines());
   c.on('message', m => {
     if (m.t === 'bar') j.bar = { label: m.label, frac: m.frac, note: m.note };
-    else if (m.t === 'project') { j.dir = m.dir; remember(m.dir); j.project = nameOf(m.dir); emit('projects', {}); }
+    else if (m.t === 'project') { j.dir = m.dir; remember(m.dir); j.project = nameOf(m.dir); emit('projects', {}); try { mediaOf(new Project(m.dir)); } catch {} }
     else if (m.t === 'result') j.result = m.result;
     else if (m.t === 'error') j.error = m.message;
     changed(j);
@@ -238,6 +245,18 @@ async function projectRoute(req, res, name, dir, sub, url) {
   if (sub === 'api/lint') { try { return json(res, JSON.parse(readFileSync(join(p.out, '.lint.json'), 'utf8'))); } catch { return json(res, null); } }
   if (sub === 'api/card') return json(res, card(name, dir));
   const m = mediaOf(p);
+  // What's still being got ready for the editor: the light copy, and a new project's transcript and faces.
+  if (sub === 'api/prep') {
+    const busy = [...jobs.values()].filter(j => j.dir === dir && (j.kind === 'new' || j.kind === 'transcribe'));
+    const failed = busy.filter(j => j.state === 'error').sort((a, b) => b.ended - a.ended)[0];
+    const doing = busy.filter(j => j.state === 'running' || j.state === 'queued').map(pub);
+    return json(res, { light: { ready: m.prog.frac >= 1, frac: m.prog.frac, error: m.prog.error }, jobs: doing, failed: failed && !doing.length ? pub(failed) : null,
+      words: existsSync(join(dir, 'words.json')), faces: existsSync(join(dir, 'faces.json')), ready: m.prog.frac >= 1 && !doing.length });
+  }
+  // Not made yet: say so at once instead of holding the request open (the editor shows the "getting ready"
+  // screen and reloads when it's done).
+  if (m.prog.frac < 1 && ['video.mp4', 'thumbs.jpg', 'cut.mp4'].includes(sub)) { res.writeHead(503, { 'Retry-After': '2' }); return res.end('still making the preview copy'); }
+  if (m.prog.frac < 1 && sub === 'api/cutout') return json(res, { state: 'none', progress: 0, error: null });
   if (sub === 'video.mp4') return sendFile(req, res, await m.light);
   if (sub === 'thumbs.jpg') return sendFile(req, res, await m.strip.ready.catch(() => null));
   // The preview copy with the speaker's matte stacked under it, for animations behind the speaker.

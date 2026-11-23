@@ -281,3 +281,17 @@ a.pill { text-decoration: none; }
 #playModal { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.7); display: grid; place-items: center; }
 #playModal .pm { background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px; padding: 12px; }
 #playModal video { display: block; max-height: calc(100vh - 120px); max-width: 90vw; border-radius: 6px; background: #000; }
+
+/* "Hold your horses": a project still being set up (prep.js) */
+#prep { position: fixed; inset: 0; z-index: 80; background: rgba(15, 15, 17, .92); display: grid; place-items: center; }
+.pr-card { width: min(520px, calc(100vw - 40px)); background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; padding: 22px; box-shadow: 0 22px 60px rgba(0,0,0,.6); }
+.pr-card h2 { margin: 0 0 4px; font-size: 18px; }
+.pr-sub { color: var(--muted); margin: 0 0 16px; }
+.pr-row { margin: 12px 0; }
+.pr-t { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; } .pr-t span { color: var(--faint); font-size: 12px; }
+.pr-bar { height: 8px; border-radius: 4px; background: var(--bg); overflow: hidden; }
+.pr-bar i { display: block; height: 100%; background: var(--accent); transition: width .4s; }
+.pr-bar.steps i { background: repeating-linear-gradient(135deg, var(--accent) 0 10px, #f7a9bc 10px 20px); background-size: 28px 100%; animation: pr-move .8s linear infinite; }
+@keyframes pr-move { to { background-position: 28px 0; } }
+.pr-err { color: #ff9a9a; white-space: pre-wrap; font-size: 12.5px; }
+.pr-foot { display: flex; align-items: center; gap: 12px; margin-top: 18px; color: var(--faint); font-size: 12px; } .pr-foot a { text-decoration: none; }

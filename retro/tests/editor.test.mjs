@@ -33,6 +33,7 @@ async function editor() {
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) page.errors.push(m.text()); });
   await page.goto(`${srv.url}/p/${name}-retro/`);
   await until(async () => (await page.locator('#tlInner .blk').count()) === 2 && (await page.locator('#insp .ihead').count()) === 1, 'both beats to load', 30000);
+  await until(() => page.evaluate(() => document.querySelector('#v').readyState >= 2), 'the video to load', 30000);
   await sleep(300);                                          // let the first sync pass settle
   return { page, dir, beat: id => readCfg(dir).beats?.[id] || {}, done: async () => { assert.deepEqual(page.errors, []); await page.close(); } };
 }
