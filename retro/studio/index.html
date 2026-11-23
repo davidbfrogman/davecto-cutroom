@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro Studio</title>
+<link rel="stylesheet" href="/studio/studio.css">
+</head>
+<body>
+<header>
+  <h1>Retro Studio</h1>
+  <span id="status">Loading…</span>
+  <div id="jobsStrip"></div>
+  <form id="addForm" hidden>
+    <input id="addPath" placeholder="/path/to/video.mov  (~ ok)" spellcheck="false" autocomplete="off">
+    <button class="btn pri" type="submit">Create</button>
+    <button class="btn ghostb" type="button" id="addCancel">Cancel</button>
+  </form>
+  <button class="btn pri" id="addBtn">+ Add video</button>
+</header>
+<div id="addErr" hidden></div>
+<main><div id="grid"></div><div id="empty" hidden>No projects yet. Add a video to start one.</div></main>
+<div id="modal" hidden></div>
+<script type="module" src="/studio/studio.js"></script>
+</body>
+</html>

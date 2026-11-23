@@ -5,8 +5,10 @@ import { tmpdir } from 'node:os';
 import { basename, extname, join } from 'node:path';
 import { behindOf, rangeMatte } from './cutout.mjs';
 import { faceAt, noGo } from './faces.mjs';
+import { describe, lint, saveLint } from './lint.mjs';
+import { probe } from './probe.mjs';
 import { bar, run, secs } from './progress.mjs';
-import { duration, HF, sh } from './project.mjs';
+import { checkDeps, duration, HF, sh } from './project.mjs';
 import { mix, wav } from './synth.mjs';
 
 /** Render the overlay .mov for each beat that's stale. Returns { id: { front, back } }: back is only there
@@ -144,4 +146,36 @@ export function sheet(project, items, name, { zones = true, faces, cols = 5 } = 
     sh('ffmpeg', ['-v', 'error', '-y', '-pattern_type', 'glob', '-i', join(tmp, '*.png'), '-vf', `tile=${c}x${r}:color=0x1E1E1E`, '-frames:v', '1', out]);
     return out;
   } finally { rmSync(tmp, { recursive: true, force: true }); }
+}
+
+/** The whole render, as `retro render` and the Studio run it: check (lint, printed), overlays (cached), export.
+    ids: beats to include (default: all that are on). Returns the export's path. */
+export async function renderProject(project, { ids, draft = false, sfx = true, video = project.video, size = project.size } = {}) {
+  checkDeps();
+  ids = (ids || project.beatIds()).filter(id => project.on(id));
+  const off = project.beatIds().filter(id => !project.on(id));
+  if (off.length) console.log(`off: ${off.join(', ')}`);
+  const t0 = Date.now();
+  process.stdout.write(`… checking ${ids.length} beats (timing, placement, sounds) `);
+  const pr = await probe(project, ids, size);
+  const issues = lint(project, pr, project.faces());
+  if (size === project.size) saveLint(project, issues, pr, ids.length === project.beatIds().filter(id => project.on(id)).length);
+  console.log(issues.length ? `${issues.length} placement note(s):` : 'ok');
+  issues.forEach(i => console.log(`! ${describe(i)}`));
+  const movs = await renderOverlays(project, ids, size);
+  const out = await exportVideo(project, pr, movs, { video, size, sfx, draft });
+  console.log(`→ ${out}`);
+  console.log(`  done in ${secs((Date.now() - t0) / 1000)}`);
+  return out;
+}
+
+/** One frame per beat (that's on), `at` of the way into each, in one sheet → out/check-all.jpg. */
+export async function framesAll(project, { at = 0.85, zones = true } = {}) {
+  const ids = project.beatIds().filter(id => project.on(id));
+  if (!ids.length) throw new Error('No beats to show yet');
+  const pr = await probe(project, ids), movs = await renderOverlays(project, ids);
+  const mattes = {};
+  for (const id of ids) if (movs[id].back) mattes[id] = await rangeMatte(project.video, project.out, pr[id].start, pr[id].end, project.size);
+  const items = ids.map(id => ({ id, t: +(pr[id].start + (pr[id].end - pr[id].start) * at).toFixed(2) }));
+  return sheet(project, items.map(i => ({ ...i, probe: pr[i.id], mov: movs[i.id], matte: mattes[i.id] })), 'check-all', { faces: project.faces(), zones });
 }

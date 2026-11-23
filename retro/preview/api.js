@@ -4,7 +4,7 @@ import { record } from './history.js';
 /* Saving. Every edit goes to retro.json through the server, and every save is checked: the server sends
    back what it stored, and if something we sent isn't there (an out-of-date server), or the server
    can't be reached for a while, a red banner says so instead of the edit quietly vanishing. */
-export const API = 5;                                         // must match lib/preview.mjs API
+export const API = 5;                                         // must match lib/studio.mjs API
 export const pending = new Map();                             // beat id → patch waiting to be saved
 let saveT = null;
 export function save(b, patch, delay = 0) {
@@ -29,7 +29,7 @@ export async function flushNow() {
     }
     if (!got) { alarm(`Couldn't save ${id}: the preview server isn't answering. Run retro preview again; this tab keeps your edits until you reload.`); pending.set(id, { ...p, ...(pending.get(id) || {}) }); continue; }
     const lost = Object.entries(p).filter(([k, v]) => !stored(k, v, got)).map(([k]) => k);
-    if (got.api !== API || lost.length) { alarm(`This preview server is out of date and didn't save ${lost.join(', ') || 'everything'}. Stop it (Ctrl-C) and run retro preview again, then make the edit once more.`); continue; }
+    if (got.api !== API || lost.length) { alarm(`This preview server is out of date and didn't save ${lost.join(', ') || 'everything'}. Stop it (Ctrl-C) and run retro again, then make the edit once more.`); continue; }
   }
   if (all.length && performance.now() - S.undoNote > 2500) status(`Saved ${all.map(([id]) => id).join(', ')}`);
 }
@@ -42,6 +42,6 @@ export function stored(k, v, got) {                           // did the server 
   return got[k] !== undefined;
 }
 export function initApi() {
-  setTimeout(() => { if (state.api !== API) alarm('This preview server is older than the page, so some edits won\'t save. Stop it (Ctrl-C) and run retro preview again.'); });
+  setTimeout(() => { if (state.api !== API) alarm('This preview server is older than the page, so some edits won\'t save. Stop it (Ctrl-C) and run retro again.'); });
   addEventListener('beforeunload', e => { if (pending.size) { flush(); e.preventDefault(); } });
 }

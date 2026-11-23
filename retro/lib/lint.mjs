@@ -3,7 +3,10 @@
    "allow": ["face"] or ["safe"] (or both), or ["clip"] for a beat whose overflow is on purpose.
    Also reported: content a window cuts off (kind 'clip', from the probe) and the kit's timing
    warnings (kind 'timing'). */
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { faceAt, noGo, SAFE } from './faces.mjs';
+import { probe } from './probe.mjs';
 import { NAMES } from './synth.mjs';
 
 const overlap = ([ax, ay, aw, ah], [bx, by, bw, bh]) =>
@@ -57,3 +60,17 @@ export const describe = i => i.kind === 'timing' ? `${i.beat}: ${i.msg}`
   : i.kind === 'face'
   ? `${i.beat} [${i.layer}] ${i.el}: covers ${i.worst}% of the face/chin zone, ${i.from.toFixed(2)}–${i.to.toFixed(2)}s`
   : `${i.beat} [${i.layer}] ${i.el}: ${i.worst}u into the Instagram UI zone, ${i.from.toFixed(2)}–${i.to.toFixed(2)}s`;
+
+/** Lint the beats that are on (all, or ids) and keep the result in out/.lint.json for the Studio's badges and
+    lint panel: { at, issues: [{ ...issue, text, t }] } (t = where to look, in video seconds). */
+export async function lintProject(project, ids = project.beatIds()) {
+  ids = ids.filter(id => project.on(id));
+  const pr = await probe(project, ids), issues = lint(project, pr, project.faces());
+  saveLint(project, issues, pr, ids.length === project.beatIds().filter(id => project.on(id)).length);
+  return { issues, probes: pr };
+}
+export function saveLint(project, issues, probes, whole = true) {
+  if (!whole) return;
+  const out = issues.map(i => ({ ...i, text: describe(i), t: i.from ?? probes[i.beat]?.start ?? 0 }));
+  writeFileSync(join(project.out, '.lint.json'), JSON.stringify({ at: Date.now(), faces: !!project.faces(), issues: out }));
+}

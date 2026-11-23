@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Retro preview</title>
 <!-- retro preview: the video with every beat running live on top, sound effects mixed in the browser
-     with the export's synth, and controls that write straight to retro.json (via lib/preview.mjs).
+     with the export's synth, and controls that write straight to retro.json (via lib/studio.mjs).
      Layout: header (global toggles) · stage (click an animation to select it, drag to move) ·
      timeline (resizable; ruler, beats with drag handles for trim/stretch, sound lanes where sounds
      drag left/right and their right edge trims them) · side panel (beat list + inspector) · the sound
@@ -15,7 +15,8 @@
 </head>
 <body>
 <header>
-  <h1>Retro preview</h1>
+  <a class="pill home" href="/" title="All projects">← Projects</a>
+  <h1 id="projName">Retro preview</h1>
   <button class="pill" id="pSfx" title="Hear the sound effects while you play"><span class="dot"></span>Sound effects</button>
   <button class="pill" id="pZone" title="Show the face no-go zone (red dashes)"><span class="dot"></span>Face zone</button>
   <button class="pill" id="pSnapV" title="While dragging, pull an animation's centre onto the vertical centre line (hold ⌥ to drag past)"><span class="dot"></span>Snap centre</button>
@@ -24,6 +25,8 @@
   <button class="pill" id="pUndo" title="Undo (⌘Z)" disabled>↶ Undo</button>
   <button class="pill" id="pRedo" title="Redo (⇧⌘Z)" disabled>↷ Redo</button>
   <button class="pill" id="pReset" title="Put things back the way they were written (asks first, and you can undo)">↺ Reset…</button>
+  <button class="pill" id="pLint" title="Check placement, clipping and timing (the same check as retro lint)"><span class="dot"></span>Lint</button>
+  <button class="pill pri" id="pRender" title="Render a draft or the final video">Render…</button>
 </header>
 
 <div id="stageWrap">
@@ -64,6 +67,8 @@
 </aside>
 <div id="sndPop"></div>
 <div id="resetMenu"></div>
+<div id="lintPanel" class="spop"></div>
+<div id="renderMenu" class="spop"></div>
 <div id="toast"></div>
 
 

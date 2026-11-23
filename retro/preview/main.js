@@ -6,6 +6,7 @@ import { applyMove, ensureCut, guides, initStage, layout, mount, nudge, togglePl
 import { initTimeline, trimToPlayhead } from './timeline.js';
 import { closePicker, initSounds, restartSfx } from './sounds.js';
 import { initPanel, renderAll } from './panel.js';
+import { initStudio } from './studio.js';
 
 // Retro preview: the entry point. Each module exports an init() that wires its listeners; the order in
 // the start-up sequence at the bottom is the page's start-up order (the same as it was in one file).
@@ -63,5 +64,6 @@ initSounds();
 initTimeline();
 initStage();
 initKeys();
+initStudio();
 renderAll();
 layout();

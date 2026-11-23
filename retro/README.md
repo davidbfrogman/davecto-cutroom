@@ -2,28 +2,52 @@
 
 **New here? Open `START.html`** (`open retro/START.html`): a step-by-step walkthrough for a new video.
 
-Retro OS motion graphics and sound effects over a finished vertical video. Command-line tools plus a
-small preview page. It's separate from Cutroom: it only borrows the tools Cutroom installs
+Retro OS motion graphics and sound effects over a finished vertical video. Retro Studio (a local web
+app) plus the command-line tools it shares its code with. It's separate from Cutroom: it only borrows the tools Cutroom installs
 (HyperFrames, GSAP, Chromium, the whisper venv in `~/Library/Application Support/Cutroom`).
 
 ```bash
 alias retro="$HOME/conductor/repos/davecto-cutroom/retro/retro"   # once, in ~/.zshrc
 ```
 
-## Use
+## Studio
+
+```bash
+retro                                 # (or retro studio) opens Retro Studio: http://localhost:4180
+```
+
+One page for the whole workflow, no terminal needed:
+
+- **Projects** (home): every `*-retro` folder in `video/`, as cards with a thumbnail, length, beat count and
+  last edit, and badges for a missing transcript or faces, the lint count, and the draft/final render
+  (marked "render out of date" when the beats or retro.json changed after it).
+  **+ Add video** takes a video path from anywhere and makes the project next to it (transcript, faces).
+  Per card: open the editor, lint, contact sheet, render draft / final, play the render, re-transcribe,
+  reveal in Finder, delete (the project folder goes to the Trash; the video is never touched).
+- **Jobs** (new, transcribe, lint, contact sheet, render) run in the Studio's server with live progress
+  and a Cancel button. One render at a time; the rest wait their turn.
+- **Editor** (open a card): play, toggle, drag, retime, sounds, undo. Plus **Render** (draft or final,
+  with progress), a **Lint** panel (click an issue to go to that beat and moment), and ← Projects.
+
+The server restarts itself when retro's code changes (after anything running finishes); open tabs keep
+working. `retro preview` in a project folder opens that project's editor straight away.
+
+Claude still writes the beats (it follows `GUIDE.md`, from the command line); the Studio doesn't.
+
+## Command line
 
 ```bash
 retro new ~/Videos/MyReel.mov         # makes ~/Videos/MyReel-retro/: transcript, faces, scene cuts
 cd ~/Videos/MyReel-retro
 # ask Claude: "add retro animations to this" (it follows retro/GUIDE.md)
-retro preview                         # http://localhost:4180: play, toggle, drag
+retro preview                         # this project in the Studio's editor
 retro render                          # → out/MyReel-retro.mp4 (1440x2560, sounds mixed in)
 ```
 
 ## Tweaking
 
-Everything lives in `retro.json`, so you can edit it by hand, use the preview page, or run commands.
-In the preview, every edit can be undone: ⌘Z undoes, ⇧⌘Z (or ⌘Y) redoes, or use the ↶ ↷ buttons. A drag
+Everything lives in `retro.json`, so you can edit it by hand, use the Studio's editor, or run commands.
+In the editor, every edit can be undone: ⌘Z undoes, ⇧⌘Z (or ⌘Y) redoes, or use the ↶ ↷ buttons. A drag
 or a slider counts as one step; the history lasts until you reload the page.
 
 Commands:
@@ -82,8 +106,10 @@ retro render --size 1080x1920
 | `GUIDE.md` | how beats are written (the rules Claude follows: placement, brand, sound) |
 | `kit/` | what every beat links: `retro.css`, `retro.js` (timing, windows, layers, sounds), `ships.js` (starships) |
 | `brand/` | the Retro OS brand, copied from davecto.com: `DESIGN.md`, `guide.html`, the site's CSS/JS/fonts, and the Top 10 Trending Repos reel with the pixel Star Wars ships (`examples/`) |
-| `lib/` | transcription (`words.py`), faces (`faces.swift`, `faces.mjs`), probe, lint, render, synth, preview |
-| `preview/` | the preview page |
+| `lib/` | transcription (`words.py`), faces (`faces.swift`, `faces.mjs`), probe, lint, render, synth; `studio.mjs` (the Studio's server) and `job.mjs` (one job, run by the server, calling the same functions as the CLI) |
+| `studio/` | the Studio's projects page |
+| `preview/` | the editor: `main.js` and one module per part (`stage`, `timeline`, `sounds`, `history`, `api`, `reset`), `preview.css` |
+| `tests/` | `npm run retro:test`: a tiny fixture project, kit timing tests, Playwright tests of the Studio |
 
 Updating the brand: copy the files from the site repo again (`brand/SOURCE.md` lists them). The
 one local change is in `brand/assets/js/retro-os-critters.js`: `buffer` is exported for `kit/ships.js`.

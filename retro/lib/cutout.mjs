@@ -38,13 +38,14 @@ export async function rangeMatte(video, outDir, start, end, [W, H]) {
 
 /* ---------- preview: the light copy with its matte stacked underneath ---------- */
 
-let job = null;   // { progress, error }
+const jobs = new Map();   // project dir → { progress, error } (the Studio serves many projects)
 const cutFile = project => join(project.out, `.preview-cut-${matteKey()}.mp4`);
 
 /** { state: 'ready' | 'working' | 'error' | 'none', progress, error } */
 export function previewCut(project, light) {
   const f = cutFile(project);
   if (existsSync(f) && statSync(f).mtimeMs >= statSync(light).mtimeMs) return { state: 'ready', progress: 1, file: f };
+  const job = jobs.get(project.dir);
   if (job) return { state: job.error ? 'error' : 'working', progress: job.progress, error: job.error };
   return { state: 'none', progress: 0 };
 }
@@ -53,7 +54,7 @@ export function previewCut(project, light) {
 export function startPreviewCut(project, light) {
   const cur = previewCut(project, light);
   if (cur.state === 'ready' || cur.state === 'working') return cur;
-  job = { progress: 0, error: null };
+  const job = { progress: 0, error: null }; jobs.set(project.dir, job);
   const out = cutFile(project), tmp = out.replace(/\.mp4$/, '.part.mp4');
   const [w, h] = probeSize(light), total = Math.max(1, Math.round(duration(light) * FPS));
   console.log('… cutting you out of the preview copy (once per video)');
@@ -63,7 +64,7 @@ export function startPreviewCut(project, light) {
       '-filter_complex', f, '-map', '[v]', '-map', '0:a:0?', '-c:a', 'copy',
       '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '22', '-pix_fmt', 'yuv420p', '-g', '15', '-keyint_min', '15', '-movflags', '+faststart', tmp],
     { width: w, height: h, quality: 'balanced', onFrame: n => { job.progress = Math.min(0.999, n / total); } })
-    .then(() => { renameSync(tmp, out); job = null; console.log('  ✓ preview cutout ready'); })
+    .then(() => { renameSync(tmp, out); jobs.delete(project.dir); console.log('  ✓ preview cutout ready'); })
     .catch(e => { job.error = e.message; console.error(e); });
   return previewCut(project, light);
 }
