@@ -63,6 +63,9 @@ export async function serve(project, port, { open = true } = {}) {
     try {
       if (p === '/') return sendFile(req, res, join(RETRO, 'preview', 'index.html'));
       if (p === '/synth.mjs') return sendFile(req, res, join(RETRO, 'lib', 'synth.mjs'));
+      // the page's own modules and stylesheet: any file directly in preview/ (a bare file name, so no path tricks)
+      const own = /^\/([\w-][\w.-]*\.(?:js|css|html))$/.exec(p);
+      if (own) return sendFile(req, res, join(RETRO, 'preview', own[1]));
       if (p === '/video.mp4') return sendFile(req, res, video);
       if (p === '/thumbs.jpg') { strip.ready.then(f => sendFile(req, res, f), () => { res.writeHead(404); res.end(); }); return; }
       // The preview copy with the speaker's matte stacked under it, for animations behind the speaker.
