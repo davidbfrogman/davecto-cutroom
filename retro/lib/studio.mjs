@@ -49,7 +49,7 @@ const ffmpeg = args => new Promise((ok, no) => { const p = spawn('ffmpeg', args,
 const remembered = () => { try { return JSON.parse(readFileSync(STATE, 'utf8')).extra || []; } catch { return []; } };
 function remember(dir, keep = true) {
   const extra = remembered().filter(d => d !== dir && existsSync(join(d, 'retro.json')));
-  if (keep && !dir.startsWith(VIDEOS + '/')) extra.push(dir);
+  if (keep && !(dirname(dir) === VIDEOS && dir.endsWith('-retro'))) extra.push(dir);   // the videos folder's own are listed anyway
   mkdirSync(dirname(STATE), { recursive: true });
   writeFileSync(STATE, JSON.stringify({ extra }, null, 2) + '\n');
 }
