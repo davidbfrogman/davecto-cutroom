@@ -59,6 +59,7 @@ $('#v').src = 'video.mp4';                             // only now: before this 
 initApi();
 initHeader();
 initReset();
+S.cur = beats[0] || null;                              // the inspector starts on the first beat, not whichever loads first
 for (const b of beats) mount(b);
 ensureCut();
 initHistory();
