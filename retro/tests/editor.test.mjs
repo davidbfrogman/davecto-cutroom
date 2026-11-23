@@ -3,7 +3,7 @@
    Run: node --test retro/tests/editor.test.mjs   (the whole suite: npm run retro:test) */
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { fixture, playwright, readCfg, studio } from './helpers.mjs';
+import { editCfg, fixture, playwright, readCfg, studio } from './helpers.mjs';
 
 let fx, srv, browser, n = 0;
 before(async () => {
@@ -25,8 +25,10 @@ async function until(fn, what, ms = 10000) {                 // poll a condition
 }
 
 /** A fresh copy of the fixture, opened in the editor with every beat loaded. Any console or page error fails the test. */
-async function editor() {
+/** setup(cfg): change the copy's retro.json before the page opens (edits the user made earlier). */
+async function editor(setup = null) {
   const name = `ed${++n}`, { dir } = fixture(name, fx.root);
+  if (setup) editCfg(dir, setup);
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   page.errors = [];
   page.on('pageerror', e => page.errors.push(e.message));
@@ -37,7 +39,7 @@ async function editor() {
   // every beat ready (its times in the list, nothing "Updating…"): a beat that finishes loading re-renders the
   // inspector, and a control picked before that would be swapped out from under the test
   await until(() => page.evaluate(() => [...document.querySelectorAll('#list .btime')].every(el => !el.textContent.includes('…'))
-    && !document.querySelector('#insp .busy') && !document.querySelector('#insp [disabled]')), 'every beat to be ready', 30000);
+    && !document.querySelector('#insp .busy') && !document.querySelector('#insp input[data-a="bgain"]:disabled')), 'every beat to be ready', 30000);
   await sleep(300);                                          // let the first sync pass settle
   assert.equal(await page.locator('#insp h2').textContent(), '01-hello', 'the editor starts on the first beat, whichever loads first');
   await pickBeat(page, '01-hello');                          // say which beat the test works on; don't rely on a default
@@ -182,6 +184,41 @@ describe('editor', () => {
     assert.equal(seen.minVisible, 1, 'a visible iframe on every frame');
     assert.equal(seen.blkGone, 0, 'the beat block stayed on the timeline');
     assert.equal(seen.lyrGone, 0, "the beat's animation blocks stayed on the timeline");
+    await e.done();
+  });
+
+  test('reset everything asks first, puts retro.json back as written, and can be undone', async () => {
+    const edits = {
+      '01-hello': { on: true, move: { main: [3, -2] }, hide: ['tag'], sfxGain: -4, time: { crop: [0.5, 2.8] } },
+      '02-second': { on: false, sounds: { edit: {}, add: [{ t: 4, s: 'pop', vol: 0, layer: 'main' }] } },
+    };
+    const e = await editor(cfg => { cfg.beats = structuredClone(edits); });
+    const beats = () => readCfg(e.dir).beats;
+
+    // Cancel at the confirm: nothing changes
+    await e.page.click('#pReset');
+    await e.page.click('#resetMenu [data-r="all"]');
+    await e.page.click('#resetMenu [data-r="no"]');
+    await sleep(500);
+    assert.deepEqual(beats(), edits, 'cancel leaves every edit alone');
+
+    // Reset everything: every kind of edit goes, on every beat
+    await e.page.click('#resetMenu [data-r="all"]');
+    await e.page.click('#resetMenu [data-r="yes"]');
+    await until(() => {
+      const b = beats(), h = b['01-hello'] || {}, s2 = b['02-second'] || {};
+      return !h.move && !h.hide && !h.sfxGain && !h.time && h.on !== false && s2.on !== false && !s2.sounds;
+    }, 'retro.json back to the beats as written');
+    await loaded(e.page);
+
+    // Undo (the toast's button) brings all of it back
+    await e.page.click('#toast #undoBtn');
+    await until(() => {
+      const b = beats(), h = b['01-hello'] || {};
+      return h.move?.main?.join() === '3,-2' && h.hide?.join() === 'tag' && h.sfxGain === -4 && h.time?.crop?.join() === '0.5,2.8'
+        && b['02-second']?.on === false && b['02-second']?.sounds?.add?.length === 1;
+    }, 'undo to restore every edit');
+    await loaded(e.page);
     await e.done();
   });
 });
