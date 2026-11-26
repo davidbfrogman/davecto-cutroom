@@ -1,0 +1,71 @@
+<!doctype html>
+<!-- 03-drowning: "Marketing teams are drowning in AI agents right now that can create thousands of ad
+     variations and blogs and emails.": below the chest, agents spawn one after another, then a grid of ad
+     tiles floods (doubling) while three counters run: ads, blogs, emails. Ends in a low-health warning. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03-drowning</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #AG .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1.2); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6); }
+    #pills { display: flex; flex-wrap: wrap; gap: calc(var(--u) * .7); }
+    #pills .chip { font-size: calc(var(--u) * 3); }
+    #main { display: grid; grid-template-columns: 1fr calc(var(--u) * 24); gap: calc(var(--u) * 1.6); }
+    #grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: calc(var(--u) * .45); align-content: start; }
+    #grid i { display: block; height: calc(var(--u) * 3.6); border: var(--hair) solid var(--ink-55); background: transparent; }
+    #grid i.a { border-color: var(--ink); background: var(--accent); }
+    #grid i.k { border-color: var(--ink); background: var(--ink); }
+    #grid i.p { border-color: var(--ink); background: var(--paper); }
+    #cnt { display: flex; flex-direction: column; gap: calc(var(--u) * 1.1); }
+    #cnt .c { border-left: var(--hair) solid var(--ink); padding-left: calc(var(--u) * 1.2); }
+    #cnt .disp { display: block; font-size: calc(var(--u) * 6.4); }
+    #cnt .micro { display: block; margin-top: calc(var(--u) * .5); }
+    #warn { align-self: flex-start; }
+  </style>
+</head>
+<body data-world="orange">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w('Marketing teams', 0);
+    const END = 14.23, W = p => R.w(p, R.START - 0.1);
+    const N = 72;
+    const names = ['ads.gpt', 'blog.bot', 'mailer', 'seo.agent', 'social.ai', 'variant.x', 'copy.llm', 'ugc.gen'];
+    const AG = R.win({ title: 'Agents.exe', right: '<span id="run">0</span> running', x: 9, y: 86, w: 82, h: 'auto', layer: 'agents',
+      body: `<div id="pills">${names.map(n => `<span class="chip h">● ${n}</span>`).join('')}</div>
+        <div id="main"><div id="grid">${'<i></i>'.repeat(N)}</div>
+          <div id="cnt"><div class="c"><span class="disp" id="ads">0</span><span class="micro">ad variations</span></div>
+            <div class="c"><span class="disp" id="blogs">0</span><span class="micro">blog posts</span></div>
+            <div class="c"><span class="disp" id="mails">0</span><span class="micro">emails</span></div></div></div>
+        <span class="chip-inv h" id="warn">⚠ OUTPUT &gt; HUMANS READING IT</span>` });
+    AG.id = 'AG';
+    R.open(AG, W('teams'), { from: { x: 50, y: 70 } });
+
+    // agents spawn (on "drowning in AI agents right now")
+    const ts = R.stagger(AG.querySelectorAll('#pills .chip'), W('drowning'), W('now'), { sfx: 'tick', vol: -7, layer: 'agents' });
+    ts.forEach((t, i) => R.text(R.$('#run'), t, String(i + 1)));
+    R.sfx('lowhealth', W('drowning'), { vol: -9, layer: 'agents' });
+
+    // the flood: tiles fill, doubling (on "create thousands of ad variations")
+    const tiles = [...AG.querySelectorAll('#grid i')], kinds = tiles.map(() => { const r = R.rnd(); return r < .5 ? 'a' : r < .8 ? 'p' : 'k'; });
+    const f0 = W('create'), f1 = W('variations') + 0.5;
+    R.every(f0, END, t => { const k = R.clamp((t - f0) / (f1 - f0), 0, 1), n = Math.round(N * (2 ** (k * 6) - 1) / 63); tiles.forEach((el, i) => { el.className = i < n ? kinds[i] : ''; }); });
+    [0, 1, 2, 3, 4, 5].forEach(i => R.sfx('blip', f0 + (f1 - f0) * (i + 1) / 6, { vol: -8, freq: 500 * 2 ** (i / 4), layer: 'agents' }));
+
+    // the counters
+    R.count(R.$('#ads'), W('thousands'), W('and') - W('thousands'), 0, 4096);
+    R.count(R.$('#blogs'), W('blogs'), 0.5, 0, 512);
+    R.count(R.$('#mails'), W('emails.'), 0.45, 0, 12288);
+    R.sfx('pop', W('blogs'), { vol: -5, layer: 'agents' }); R.sfx('pop', W('emails.'), { vol: -5, layer: 'agents' });
+    R.show(R.$('#warn'), W('emails.') + 0.25); R.sfx('alert', W('emails.') + 0.25, { vol: -7, layer: 'agents' });
+    R.flash(R.$('#warn'), W('emails.') + 0.35, 2);
+    R.close(AG, 14.0);
+    R.done(END);
+  </script>
+</body>
+</html>

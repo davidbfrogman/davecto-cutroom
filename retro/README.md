@@ -29,11 +29,33 @@ One page for the whole workflow, no terminal needed:
   and a Cancel button. One render at a time; the rest wait their turn.
 - **Editor** (open a card): play, toggle, drag, retime, sounds, undo. Plus **Render** (draft or final,
   with progress), a **Lint** panel (click an issue to go to that beat and moment), and ← Projects.
+  The **Instagram UI** toggle draws the Reels app over the video as it looks on an iPhone (buttons, username,
+  caption, tab bar) and shades the strips the phone crops off each side (about 5u: x 0–5 and 95–100). A guide only: never rendered.
 
 The server restarts itself when retro's code changes (after anything running finishes); open tabs keep
 working. `retro preview` in a project folder opens that project's editor straight away.
 
 Claude still writes the beats (it follows `GUIDE.md`, from the command line); the Studio doesn't.
+
+## Zooms
+
+The slow push-ins on the video, under the graphics (they're never zoomed). Rules, not AI: you pick, or the
+easy button picks the usual for you. Per beat, in the editor's **Zoom** card or with `retro zoom`:
+
+- **Push**: a slow push from 100% to 125% (the **Zoom to** slider) across the beat, about the centre.
+- **Pop + push**: a quick zoom out (125%→100% in 0.2 s), then the slow push. The opening move.
+- **Push + pan**: the slow push about your face instead of the centre, so the picture pans as it zooms and a
+  face low in the frame doesn't fall off the bottom.
+- **Auto**: pop + push on the opening beat, push on the rest, and push + pan wherever a centre push would carry
+  your face (and the space under your chin) off the frame or under the Instagram caption.
+- **Off**: as shot.
+- **Punch in on a word**: pick a word and the picture jumps 15% closer, about your face, for 1.2 s (both
+  adjustable), then back.
+
+**⤢ Auto zoom** in the editor's header (or `retro zoom auto`) puts every beat on auto at 125%, as one undo.
+New projects start on auto; older ones have no zoom until you press it. Zooms stay when a beat's graphics are
+switched off. The lint, `retro zones` and the contact sheets check your face where the zoom puts it, and the
+render zooms straight from the video's own size (a 4K video stays sharp at 125%).
 
 ## Command line
 
@@ -72,6 +94,11 @@ retro time 04 stretch - 17.2          # squeeze beat 04 so it ends at 17.2 s (so
 retro time 04 --reset                 # back to the beat's own timing
 retro behind 01 main                  # put beat 01's animation behind you (you're cut out of the video)
 retro front 01 main                   # back in front
+retro zoom                            # every beat's zoom
+retro zoom auto                       # the easy button (or: retro zoom auto 03 04)
+retro zoom 05 pan --to 1.3            # push + pan to 130% on beat 05 (push, pop, pan, auto, off)
+retro zoom 04 punch discount codes    # punch in on a word (--dur 1.2 --by 1.15; punch --clear)
+retro zoom 05 --reset                 # back to the project's default
 retro render --draft                  # quicker, lower quality export
 retro render --video ../OtherCut.mov  # same graphics over another cut (same timing)
 retro render --size 1080x1920
@@ -107,9 +134,9 @@ retro render --size 1080x1920
 | `GUIDE.md` | how beats are written (the rules Claude follows: placement, brand, sound) |
 | `kit/` | what every beat links: `retro.css`, `retro.js` (timing, windows, layers, sounds), `ships.js` (starships) |
 | `brand/` | the Retro OS brand, copied from davecto.com: `DESIGN.md`, `guide.html`, the site's CSS/JS/fonts, and the Top 10 Trending Repos reel with the pixel Star Wars ships (`examples/`) |
-| `lib/` | transcription (`words.py`), faces (`faces.swift`, `faces.mjs`), probe, lint, render, synth; `studio.mjs` (the Studio's server) and `job.mjs` (one job, run by the server, calling the same functions as the CLI) |
+| `lib/` | transcription (`words.py`), faces (`faces.swift`, `faces.mjs`), the placement rules (`rules.mjs`), zooms (`zoom.mjs`), probe, lint, render, synth; `studio.mjs` (the Studio's server) and `job.mjs` (one job, run by the server, calling the same functions as the CLI) |
 | `studio/` | the Studio's projects page |
-| `preview/` | the editor: `main.js` and one module per part (`stage`, `timeline`, `sounds`, `history`, `api`, `reset`), `preview.css` |
+| `preview/` | the editor: `main.js` and one module per part (`stage`, `timeline`, `sounds`, `history`, `api`, `reset`, `zoom`), `preview.css` |
 | `tests/` | `npm run retro:test`: a tiny fixture project, kit timing tests, Playwright tests of the Studio |
 
 Updating the brand: copy the files from the site repo again (`brand/SOURCE.md` lists them). The

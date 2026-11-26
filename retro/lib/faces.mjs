@@ -2,23 +2,17 @@
    detect(): sample the video at 5 fps, find faces with Apple Vision (faces.swift), find scene cuts
    with ffmpeg, write faces.json. Boxes are stored in u (1% of frame width; the frame is 100 wide
    and 100*H/W tall), top-left origin.
-
-   The rules (the user's, Nov 2026; keep them here, not in anyone's head):
-     - Don't cover the face. Ever, unless retro.json says allow: ["face"] for that beat.
-     - Nothing right under the chin: the no-go zone runs from the brow to CHIN face-heights below
-       the chin.
-     - Prefer the space above the head. Below the chest is fine. Covering an on-screen card is fine.
-     - Instagram UI: keep graphics inside x 0–86u, y 20u–(H-37u). */
+   The placement rules themselves (no-go zone, Instagram zone) live in rules.mjs, shared with the editor.
+   Boxes here are where the face is in the video; zoom.mjs zoomFaces() moves them to where they show. */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RETRO, sh } from './project.mjs';
+import { CHIN, faceAt, noGo, PAD_TOP, PAD_X, SAFE } from './rules.mjs';
 
-export const CHIN = 0.45;                       // no-go zone below the chin, in face heights
-export const PAD_X = 0.12, PAD_TOP = 0.2;      // side and brow padding, in face sizes
-export const SAFE = { x0: 0, x1: 86, y0: 20, bottom: 37 };
+export { CHIN, faceAt, noGo, PAD_TOP, PAD_X, SAFE };
 
 function binary() {
   const src = join(RETRO, 'lib', 'faces.swift');
@@ -57,21 +51,6 @@ export function detect(project, fps = 5) {
     writeFileSync(join(project.dir, 'faces.json'), JSON.stringify(out));
     return out;
   } finally { rmSync(tmp, { recursive: true, force: true }); }
-}
-
-/** The largest face at time t: the nearest sample that's in the same shot (never across a cut). */
-export function faceAt(faces, t) {
-  if (!faces?.samples.length) return null;
-  const n = faces.samples.length, cuts = faces.cuts || [];
-  let i = Math.max(0, Math.min(n - 1, Math.round(t * faces.fps)));
-  const across = j => cuts.some(c => (faces.samples[j].t - c) * (t - c) < 0 || (t < c && faces.samples[j].t >= c));
-  if (across(i)) i = Math.max(0, Math.min(n - 1, faces.samples[i].t > t ? i - 1 : i + 1));
-  return faces.samples[i].faces[0] || null;
-}
-
-/** The no-go rectangle [x, y, w, h] in u for a face box. */
-export function noGo([x, y, w, h]) {
-  return [x - w * PAD_X, y - h * PAD_TOP, w * (1 + 2 * PAD_X), h * (1 + PAD_TOP + CHIN)];
 }
 
 /** Free space over [a, b): worst case across every face sample in it (not the median, which hides

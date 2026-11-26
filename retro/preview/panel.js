@@ -3,6 +3,7 @@ import { save } from './api.js';
 import { applyDepth, applyMove, cutNote, ensureCut, rebuild, seek } from './stage.js';
 import { renderTimeline } from './timeline.js';
 import { addSoundAt, buildSfx, buildSfxSoon, dot, openPicker, placePop, renderPop, selectSound } from './sounds.js';
+import { zoomCard, zoomEvent } from './zoom.js';
 
 /* ---------- side panel: beat list ---------- */
 
@@ -17,6 +18,7 @@ export function renderList() {
       ${b.behind.length ? `<span class="badge" title="${b.behind.length} animation(s) behind you">⧉</span>` : ''}
       ${Object.keys(b.sounds.edit || {}).length || (b.sounds.add || []).length ? '<span class="badge" title="Sounds edited">♪</span>' : ''}
       ${b.sfx === false ? '<span class="badge" title="Sounds muted">mute</span>' : ''}
+      ${b.zoom ? '<span class="badge" title="Zoom set for this beat">⤢</span>' : ''}
       <span class="btime num">${b.start != null ? `${f2(b.start)}–${f2(b.end)}` : '…'}</span>
     </div>`).join('');
 }
@@ -84,6 +86,8 @@ export function renderInspector() {
       <div style="margin-top:10px"><button class="btn sm" data-a="sadd" ${dis} title="Add a sound to this beat at the playhead">+ Add sound at playhead</button></div>
     </div>
 
+    ${zoomCard(b)}
+
     <p class="sec-title">Timing</p>
     <div class="card">
       <div class="tsum">
@@ -111,6 +115,7 @@ export function initPanel() {
   $('#insp').addEventListener('click', e => {
     const btn = e.target.closest('[data-a]'), a = btn?.dataset.a, row = e.target.closest('.anim'), srow = e.target.closest('.srow');
     const b = S.cur; if (!b) return;
+    if (e.target.closest('.zoomc') && zoomEvent(e, b, renderAll)) return;
     if (srow) { selectSound(b, srow.dataset.k); renderAll(); return; }
     if (a === 'sadd') { openPicker(btn, { title: `at ${f2(v.currentTime)} s`, onPick: n => addSoundAt(v.currentTime, n) }); return; }
     if (a === 'jump') { if (b.ready) seek(b.start); return; }
@@ -137,9 +142,11 @@ export function initPanel() {
     }
   });
   $('#insp').addEventListener('input', e => {
+    if (e.target.closest('.zoomc') && zoomEvent(e, S.cur, renderAll)) return;
     if (e.target.dataset.a === 'bgain' && S.cur) { $('#bgainV').textContent = dB(+e.target.value); S.cur.sfxGain = +e.target.value; buildSfxSoon(); }
   });
   $('#insp').addEventListener('change', e => {
+    if (e.target.closest('.zoomc') && zoomEvent(e, S.cur, renderAll)) return;
     if (e.target.dataset.a === 'bgain' && S.cur) { save(S.cur, { sfxGain: S.cur.sfxGain }); renderInspector(); }
   });
 }

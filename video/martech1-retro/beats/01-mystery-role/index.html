@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- 01-mystery-role: "There's a role coming to a marketing team near you that's paying better than software
+     engineering.": a job alert pings above the head with the title scrambled (never says what it is), then
+     a payroll race below: software engineer median vs the classified role, which wins. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01-mystery-role</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PG .win__body { display: flex; align-items: center; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6); }
+    .scr { display: inline-block; background: var(--ink); color: var(--accent); font: calc(var(--u) * 4.4)/1 var(--f-pixel); padding: calc(var(--u) * .3) calc(var(--u) * 1) calc(var(--u) * .6); white-space: pre; }
+    #PG .near { font: 400 calc(var(--u) * 2.4)/1 var(--f-mono); }
+    #PY .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1.6) calc(var(--u) * 1.8); }
+    .row { display: grid; grid-template-columns: calc(var(--u) * 25) 1fr calc(var(--u) * 13); gap: calc(var(--u) * 1.2); align-items: center; }
+    .row .lab { font: 400 calc(var(--u) * 2.5)/1 var(--f-mono); white-space: nowrap; }
+    .row .scr { font-size: calc(var(--u) * 3.4); }
+    .bar { height: calc(var(--u) * 3.2); border: var(--hair) solid var(--ink); position: relative; background: var(--paper); }
+    .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--grey); }
+    .bar i.n { background: var(--accent); }
+    .val { font: calc(var(--u) * 4.6)/1 var(--f-pixel); text-align: right; }
+    .foot { display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("There's a role", 0);
+    const END = 4.90, W = p => R.w(p, R.START - 0.1);
+    const GL = '▓▒░#%&@$?!*';
+    const scramble = (el, a, b, n) => R.every(a, b, t => { R.seed(Math.floor(t * 15) + n); let s = ''; for (let i = 0; i < n; i++) s += GL[Math.floor(R.rnd() * GL.length)]; el.textContent = s.slice(0, 9) + ' ' + s.slice(9); });
+
+    // the ping: a new role near you, title classified (layer: ping). Gone before he leans in at 2.0.
+    const PG = R.win({ title: 'Jobs.watch', right: '1 new · near you', variant: 'paper', x: 9, y: 22, w: 82, h: 'auto', layer: 'ping',
+      body: `<span class="chip-inv">NEW ROLE</span><span class="scr" id="t1">▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓</span><span class="near">→ marketing team</span>` });
+    PG.id = 'PG';
+    const pg = R.open(PG, R.START, { from: { x: 40, y: 55 }, sfx: 'notify' });
+    scramble(R.$('#t1'), pg, W('team'), 18);
+    R.close(PG, W('team'));
+
+    // the payroll race (layer: pay), below the chest
+    const PY = R.win({ title: 'Payroll.app', right: 'base pay · US', x: 9, y: 101, w: 82, h: 'auto', layer: 'pay',
+      body: `<div class="row"><span class="lab">Software engineer</span><div class="bar"><i id="b1"></i></div><span class="val" id="v1">$0</span></div>
+        <div class="row"><span class="lab"><span class="scr" id="t2">▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓</span></span><div class="bar"><i class="n" id="b2"></i></div><span class="val" id="v2">$0</span></div>
+        <div class="foot"><span class="micro">median (BLS) vs top posted base, 2026</span><span class="chip-inv h" id="win">▲ +62%</span></div>` });
+    PY.id = 'PY';
+    R.open(PY, W('near'), { from: { x: 40, y: 40 } });
+    scramble(R.$('#t2'), W('near'), END, 18);
+    const a = W('paying'), b = W('engineering.');
+    const $ = v => '$' + Math.round(v / 1000) + 'K';
+    R.count(R.$('#v1'), a, b - a, 0, 135980, $);
+    R.count(R.$('#v2'), a, b - a + 0.2, 0, 220000, $);
+    R.tl.to('#b1', { width: '61.8%', duration: b - a, ease: `steps(${Math.round((b - a) * 15)})` }, R.T(a));
+    R.tl.to('#b2', { width: '100%', duration: b - a + 0.2, ease: `steps(${Math.round((b - a + 0.2) * 15)})` }, R.T(a));
+    [a, W('better'), W('than'), W('software')].forEach(t => R.sfx('tick', t, { vol: -6, layer: 'pay' }));
+    R.show(R.$('#win'), b + 0.2); R.sfx('coin', b + 0.2, { vol: -5, layer: 'pay' });
+    R.done(END);
+  </script>
+</body>
+</html>

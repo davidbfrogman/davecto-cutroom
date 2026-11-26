@@ -1,0 +1,55 @@
+<!doctype html>
+<!-- 07-deal-hunter: "I put together a prompt that'll turn your AI agent into a pretty sophisticated deal hunter":
+     above the head. An installer: "AI Agent 1.0" with the prompt's steps (from the Deal Hunter page) ticking in
+     under a filling segmented bar; on "deal hunter" it becomes "Deal Hunter 2.0" (power-up). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-deal-hunter</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .ins .win__body { padding: calc(var(--u) * 1.6) calc(var(--u) * 2); }
+    .nm { display: flex; align-items: baseline; gap: calc(var(--u) * 2); }
+    .nm .disp { font-size: calc(var(--u) * 7.4); }
+    .nm .chip-inv { font-size: calc(var(--u) * 4.2); }
+    .ins .seg { margin: calc(var(--u) * 1.6) 0 calc(var(--u) * 1); }
+    .ins .seg i { height: calc(var(--u) * 2.4); }
+    .step { display: flex; justify-content: space-between; font: calc(var(--u) * 3.9)/1 var(--f-pixel);
+            padding: calc(var(--u) * .5) 0 calc(var(--u) * .7); border-bottom: var(--hair) dashed var(--ink-55); }
+    .step:last-child { border-bottom: 0; }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 29.0;
+    const END = 34.18, W = p => R.w(p, R.START - 0.1);
+    const STEPS = [['01 Meta Ad Library', 'codes'], ['02 Creator codes', 'YouTube'], ['05 Stack cashback', 'Rakuten'], ['06 Price history', '90 days'], ['08 Test at cart', 'verified']];
+    const N = 16;
+
+    const A = R.win({ title: 'Install ▸ deal-hunter.prompt', right: '<span id="pct">0%</span>', variant: 'paper', x: 9, y: 21, w: 82, h: 'auto',
+      body: `<div class="nm"><span class="disp" id="nm">AI Agent</span><span class="chip-inv" id="ver">v1.0</span></div>${R.seg(N)}` +
+        STEPS.map(([a, b], i) => `<div class="step h" id="s${i}"><span>${a}</span><span>${b} ✓</span></div>`).join('') });
+    A.classList.add('ins');
+    R.open(A, W('prompt'), { from: { x: 45, y: 80 } });
+
+    // install: cells fill on twos, steps tick in alongside
+    const cells = A.querySelectorAll('.seg i'), ia = W('turn'), ib = W('deal') - 0.1;
+    cells.forEach((c, i) => { const t = R.lerp(ia, ib, i / (N - 1)); R.tl.set(c, { backgroundColor: 'var(--ink)' }, R.T(t)); if (i % 2 === 0) R.sfx('tick', t, { vol: -7 }); });
+    R.count(R.$('#pct'), ia, ib - ia, 0, 100, v => `${Math.round(v)}%`);
+    R.stagger(STEPS.map((_, i) => R.$('#s' + i)), W('your'), W('sophisticated'), { sfx: 'blip', vol: -8 });
+
+    // "deal hunter": the agent levels up
+    R.text(R.$('#nm'), W('deal'), 'Deal Hunter');
+    R.text(R.$('#ver'), W('deal'), 'v2.0 ✣');
+    R.flash(R.$('#ver'), W('deal'), 2);
+    R.sfx('powerup', W('deal'), { vol: -5 });
+    R.done(END);
+  </script>
+</body>
+</html>

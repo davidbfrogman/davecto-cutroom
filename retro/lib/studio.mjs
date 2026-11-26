@@ -17,7 +17,7 @@ import { duration, Project, RETRO } from './project.mjs';
 
 /** What the page and this server agree on. Bump it whenever /api/beat learns a new kind of edit: a page
     that sees a different number warns that its edits may not save. */
-export const API = 5;
+export const API = 6;
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.woff2': 'font/woff2', '.mp4': 'video/mp4', '.wav': 'audio/wav', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
@@ -239,7 +239,7 @@ const EDITOR = join(RETRO, 'preview');
 async function projectRoute(req, res, name, dir, sub, url) {
   const p = new Project(dir);                            // re-read retro.json each request (hand edits win)
   if (sub === '') return sendFile(req, res, join(EDITOR, 'index.html'));
-  if (sub === 'synth.mjs') return sendFile(req, res, join(RETRO, 'lib', 'synth.mjs'));
+  if (['synth.mjs', 'zoom.mjs', 'rules.mjs'].includes(sub)) return sendFile(req, res, join(RETRO, 'lib', sub));   // shared with the render, so the page plays what it makes
   if (sub === 'thumb.jpg') return sendFile(req, res, await thumb(p).catch(() => null));
   if (sub.startsWith('out/')) { const f = inside(p.out, sub.slice(4)); return sendFile(req, res, f && /\.(mp4|jpg|png)$/.test(f) ? f : null); }
   if (sub === 'api/lint') { try { return json(res, JSON.parse(readFileSync(join(p.out, '.lint.json'), 'utf8'))); } catch { return json(res, null); } }
@@ -268,10 +268,10 @@ async function projectRoute(req, res, name, dir, sub, url) {
   }
   if (sub === 'api/state' && req.method === 'GET') {
     return json(res, { api: API, name, size: p.size, duration: m.len, thumbs: { every: m.strip.every, n: m.strip.n, h: m.strip.h }, sfxGain: p.cfg.sfxGain || 0, faces: p.faces(),
-      beats: p.beatIds().map(id => ({ id, ...p.beat(id) })) });
+      zoom: p.cfg.zoom ?? null, words: p.words(), beats: p.beatIds().map(id => ({ id, ...p.beat(id) })) });
   }
   if (sub === 'api/beat' && req.method === 'POST') {
-    const { id, on, move, sfx, time, ltime, hide, behind, sounds, sfxGain } = await body(req);
+    const { id, on, move, sfx, time, ltime, hide, behind, sounds, sfxGain, zoom } = await body(req);
     if (!p.beatIds().includes(id)) return json(res, { error: `no beat ${id}` }, 404);
     const b = p.beat(id);
     if (on != null) b.on = on;
@@ -282,6 +282,7 @@ async function projectRoute(req, res, name, dir, sub, url) {
     if (time !== undefined) { if (time && Object.keys(time).length) b.time = time; else delete b.time; }
     if (ltime !== undefined) { if (ltime && Object.keys(ltime).length) b.ltime = ltime; else delete b.ltime; }
     if (sfx != null) { if (sfx) delete b.sfx; else b.sfx = false; }
+    if (zoom !== undefined) { if (zoom) b.zoom = { kind: zoom.kind, to: zoom.to, ...(zoom.punch?.length ? { punch: zoom.punch } : {}) }; else delete b.zoom; }
     if (move) {   // kept to 0.01u so a snapped centre stays dead centre
       b.move = Object.fromEntries(Object.entries(move).filter(([, v]) => v[0] || v[1]).map(([k, [x, y]]) => [k, [Math.round(x * 100) / 100, Math.round(y * 100) / 100]]));
       if (!Object.keys(b.move).length) delete b.move;

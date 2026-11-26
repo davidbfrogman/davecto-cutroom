@@ -3,6 +3,7 @@ import { save, whenSaved } from './api.js';
 import { pps } from './timeline.js';
 import { ac, buildSfxSoon, placePop, restartSfx } from './sounds.js';
 import { renderAll, renderInspector } from './panel.js';
+import { applyZoom, faceZone } from './zoom.js';
 
 let k = 1, U = 1;                                                         // display scale; px per u on screen
 
@@ -12,6 +13,7 @@ export function layout() {                                   // fit the video to
   if (aw <= 0 || ah <= 0) return;
   k = Math.min(ah / H, aw / W); const dw = Math.round(W * k), dh = Math.round(H * k); U = dw / 100;
   Object.assign(stage.style, { width: dw + 'px', height: dh + 'px' });
+  stage.style.setProperty('--u', U + 'px');              // the Instagram UI overlay is sized in it
   Object.assign(v.style, { width: dw + 'px', height: (cut.on ? 2 * dh : dh) + 'px' });   // the cutout copy has its matte under the picture
   Object.assign($('#bg').style, { width: dw + 'px', height: dh + 'px' });
   for (const b of beats) if (b.frame) b.frame.style.transform = `scale(${k})`;
@@ -157,6 +159,7 @@ export const showing = (b, t = v.currentTime) => b.ready && b.on !== false && t 
 /* ---------- moving: click an animation on the video, drag it ---------- */
 export const SNAP = 1.5;                                  // pull distance in u
 export function guides(hitV = false, hitH = false) {
+  $('#ig').style.display = opts.ig ? 'block' : 'none';
   $('#guideV').style.display = opts.snapV ? 'block' : 'none';
   $('#guideH').style.display = opts.snapH ? 'block' : 'none';
   $('#guideV').classList.toggle('hit', hitV); $('#guideH').classList.toggle('hit', hitH);
@@ -196,14 +199,6 @@ export function nudge(dx, dy) {
 }
 
 /* ---------- time ---------- */
-export function faceZone(t) {               // same rule as lib/faces.mjs noGo()
-  const f = state.faces; if (!f) return null;
-  const s = f.samples[Math.max(0, Math.min(f.samples.length - 1, Math.round(t * f.fps)))];
-  const b = s?.faces[0]; if (!b) return null;
-  const [x, y, w, h] = b;
-  return [x - w * 0.12, y - h * 0.2, w * 1.24, h * (1 + 0.2 + 0.45)];
-}
-
 export function sync() {
   const t = v.currentTime;
   for (const b of beats) {
@@ -214,6 +209,7 @@ export function sync() {
   }
   const deep = beats.filter(b => showing(b, t) && b.behind.some(L => !b.hide.includes(L)));
   paintCut(deep);
+  applyZoom(t, U, deep);                             // the picture (and the cut-out speaker) zoomed; never the graphics
   $('#tc').innerHTML = `<b>${f2(t)}</b> / ${f2(DUR)}`;
   $('#play').textContent = v.paused ? '▶' : '❚❚';
   const hx = t * pps(), hd = $('#head'); if (hd) hd.style.left = `${hx}px`;

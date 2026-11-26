@@ -1,0 +1,74 @@
+<!doctype html>
+<!-- 08-comment-deal: "If you want the prompt, comment deal below and I'll send it to you for free and follow along":
+     the Deal Hunter page graphic (the user's) above the head, the prompt itself; a cursor clicks its
+     "Open The Page" button on "send". Below the chest a comment box types "deal" and posts on "below",
+     the DM chip lands on "free" and the Follow button is pressed on "follow". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08-comment-deal</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .shot .win__body { padding: 0; }
+    .sw { position: relative; }
+    .sw img { display: block; width: 100%; aspect-ratio: 1200 / 630; }
+    .btn { position: absolute; left: 5.3%; top: 84.6%; width: 18.6%; height: 7.4%; border: calc(var(--u) * .5) solid var(--ink); }
+    .cur { position: absolute; width: calc(var(--u) * 3.6); }
+    .cm .win__body { padding: calc(var(--u) * 1.4) calc(var(--u) * 1.6); }
+    .fld { display: flex; align-items: center; gap: calc(var(--u) * 1.4); font: calc(var(--u) * 4.6)/1 var(--f-pixel); }
+    .in { flex: 1; background: var(--paper); border: var(--hair) solid var(--ink); padding: calc(var(--u) * .7) calc(var(--u) * 1.2) calc(var(--u) * 1); }
+    .in .ph { color: var(--grey); }
+    .cb { display: inline-block; width: calc(var(--u) * 2); height: calc(var(--u) * 3.6); background: var(--ink); vertical-align: middle; }
+    .go { background: var(--ink); color: var(--accent); padding: calc(var(--u) * .7) calc(var(--u) * 1.6) calc(var(--u) * 1); box-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 var(--ink-55); }
+    .out { display: flex; gap: calc(var(--u) * 1.4); align-items: center; margin-top: calc(var(--u) * 1.6); }
+    .out .chip-inv { font-size: calc(var(--u) * 4.2); }
+    .out .fw { margin-left: auto; font-size: calc(var(--u) * 4.2); }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 34.18;
+    const END = 39.36, W = p => R.w(p, R.START - 0.1);
+    const ARROW = ['k.......', 'kk......', 'kpk.....', 'kppk....', 'kpppk...', 'kppppk..', 'kpppppk.', 'kppppppk', 'kpppkkkk', 'kpkpk...', 'kk.kpk..', 'k...kpk.', '....kk..'];
+
+    // the prompt: the Deal Hunter page graphic
+    const A = R.win({ title: 'davecto.com ▸ Deal.Hunter', right: 'free', variant: 'paper', x: 11, y: 21, w: 78, h: 'auto', layer: 'prompt',
+      body: `<div class="sw" id="sw"><img src="dealhunter.png"><div class="btn h" id="btn"></div><span class="cur h" id="cur">${R.pix(ARROW, .35)}</span></div>` });
+    A.classList.add('shot');
+    R.open(A, W('prompt,'), { from: { x: 45, y: 82 } });
+    R.sfx('stab', W('prompt,'), { vol: -9, layer: 'prompt' });
+
+    // cursor drifts to "Open The Page ▶" and clicks it on "send"
+    const cur = R.$('#cur'), sw = R.$('#sw');
+    const wpx = 76.5;   // image width in u (window 78 minus frame)
+    R.show(cur, W('below'));
+    R.path(cur, [[W('below'), wpx * .62, 30], [W('send'), wpx * .17, wpx * .525 * .88]], { move: 0.5 });
+    R.show(R.$('#btn'), W('send')); R.sfx('thunk', W('send'), { vol: -4, layer: 'prompt' });
+    R.flash(R.$('#btn'), W('send'), 2);
+    R.hide(R.$('#btn'), W('send') + 0.27);
+
+    // below the chest: comment "deal"
+    const C = R.win({ title: 'Comments', right: '@davecto', variant: 'grey', x: 9, y: 108, w: 82, h: 'auto', layer: 'comment',
+      body: `<div class="fld"><span class="in"><span class="ph" id="ph">Add a comment…</span><span class="type" id="ty">deal</span> <span class="cb" id="cb"></span></span><span class="go" id="post">Post</span></div>` +
+        `<div class="out"><span class="chip-inv h" id="dm">DM ▸ prompt sent · $0.00</span><span class="chip fw h" id="fw">+ Follow</span></div>` });
+    C.classList.add('cm');
+    R.open(C, W('comment'), { from: { x: 45, y: 95 } });
+    R.blink(R.$('#cb'), W('comment'), END, 0.5);
+    R.tl.set(R.$('#ph'), { display: 'none' }, R.T(W('deal')));
+    R.type(R.$('#ty'), W('deal'), 10);
+    R.press(R.$('#post'), W('below'), { vol: -3 });
+    R.sfx('confirm', W('below') + 0.12, { vol: -6, layer: 'comment' });
+    R.show(R.$('#dm'), W('free')); R.sfx('coin', W('free'), { vol: -5, layer: 'comment' });
+    R.show(R.$('#fw'), W('follow')); R.press(R.$('#fw'), W('along'), { vol: -4 });
+    R.text(R.$('#fw'), W('along'), '✓ Following');
+    R.sfx('success', W('along') + 0.1, { vol: -7, layer: 'comment' });
+    R.done(END);
+  </script>
+</body>
+</html>

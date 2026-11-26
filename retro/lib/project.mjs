@@ -1,7 +1,8 @@
 /* A retro project: one folder per video.
      retro.json    which video, render size, and per-beat switches (on/off, moves, sound)
      words.json    transcript word timings (retro new / retro words --redo)
-     faces.json    face boxes and scene cuts (retro faces)
+     faces.json    face boxes and scene cuts (retro faces), where they are in the video; screenFaces() moves
+                   them by the zoom to where they show
      beats/NN-name/index.html   one bespoke HyperFrames composition per beat
      out/          overlays, sfx stem, the export, check frames, caches */
 import { spawnSync } from 'node:child_process';
@@ -11,6 +12,7 @@ import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { plan as zoomPlan, zoomFaces } from './zoom.mjs';
 
 export const RETRO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const KIT = join(RETRO, 'kit'), BRAND = join(RETRO, 'brand');
@@ -74,6 +76,21 @@ export class Project {
   on(id) { return this.beat(id).on !== false; }
   words() { const f = join(this.dir, 'words.json'); return existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : []; }
   faces() { const f = join(this.dir, 'faces.json'); return existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : null; }
+  /** Where each beat shows ({ id: { start, end } }) as the probe last saw it (out/.probe), for when there's no
+      fresh probe at hand (retro zones, retro beat's notes). */
+  windows() {
+    const d = join(this.out, '.probe'), out = {};
+    for (const id of this.beatIds()) { try { const x = JSON.parse(readFileSync(join(d, `${id}.json`), 'utf8')); out[id] = { start: x.start, end: x.end }; } catch {} }
+    return out;
+  }
+  /** The zooms (lib/zoom.mjs): { resolved, segs }. probes: { id: { start, end } } for every beat, on or off
+      (a beat switched off hides its graphics, not its zoom). */
+  zoom(probes = this.windows()) {
+    const beats = this.beatIds().filter(id => probes[id]).map(id => ({ id, start: probes[id].start, end: probes[id].end, zoom: this.beat(id).zoom }));
+    return zoomPlan(beats, this.faces(), { dflt: this.cfg.zoom ?? null });
+  }
+  /** faces.json as the faces show on screen, after the zoom: what the lint, zones and contact sheets use. */
+  screenFaces(probes) { const f = this.faces(); return f && zoomFaces(f, this.zoom(probes).segs); }
 
   /** Write a beat's render folder (index.html with size + RETRO injected, kit, brand scripts, fonts).
       Returns { work, key }: key changes whenever anything that affects its pixels changes.
@@ -81,13 +98,16 @@ export class Project {
       pass: 'front' | 'back' for a beat with layers behind the speaker: the render draws those layers
       (back) and the rest (front) as two overlays, with the speaker cut out between them. */
   stage(id, [W, H] = this.size, { live = false, pass = null } = {}) {
-    const src = readFileSync(join(this.dir, 'beats', id, 'index.html'), 'utf8');
+    const bdir = join(this.dir, 'beats', id), src = readFileSync(join(bdir, 'index.html'), 'utf8');
+    const files = beatFiles(bdir);   // the beat's own assets (screenshots, logos): copied next to its index.html
     const move = live ? {} : this.beat(id).move || {};
     const inject = { beat: id, words: this.words(), move, time: this.beat(id).time || null, ltime: this.beat(id).ltime || null, hide: this.beat(id).hide || [], sounds: this.beat(id).sounds || null, videoEnd: this.length };   // timing applies live too
     if (pass) Object.assign(inject, { pass, behind: this.beat(id).behind || [] });
     const kit = ['retro.css', 'retro.js', 'ships.js'].map(f => readFileSync(join(KIT, f), 'utf8'));
     const brandJs = ['retro-os.js', 'retro-os-critters.js', 'retro-os-starships.js'].map(f => readFileSync(join(BRAND, 'assets', 'js', f), 'utf8'));
-    const key = createHash('sha1').update(src).update(kit.join('')).update(brandJs.join('')).update(JSON.stringify(inject)).update(`${W}x${H}`).digest('hex').slice(0, 12);
+    const hash = createHash('sha1').update(src).update(kit.join('')).update(brandJs.join('')).update(JSON.stringify(inject)).update(`${W}x${H}`);
+    for (const f of files) hash.update(f).update(readFileSync(join(bdir, f)));
+    const key = hash.digest('hex').slice(0, 12);
     const work = join(this.out, live ? '.live' : '.work', pass ? `${id}~${pass}` : id);
     if (existsSync(join(work, '.key')) && readFileSync(join(work, '.key'), 'utf8') === key) return { work, key };
     rmSync(work, { recursive: true, force: true });
@@ -104,6 +124,7 @@ export class Project {
     writeFileSync(join(work, 'ships.js'), brandJs.join('\n;\n') + '\n;\n' + kit[2]);
     cpSync(GSAP, join(work, 'gsap.min.js'));
     for (const f of ['vt323', 'inter-tight', 'jetbrains-mono']) cpSync(join(BRAND, 'assets', 'fonts', `${f}.woff2`), join(work, 'assets', 'fonts', `${f}.woff2`));
+    for (const f of files) { mkdirSync(dirname(join(work, f)), { recursive: true }); cpSync(join(bdir, f), join(work, f)); }
     writeFileSync(join(work, '.key'), key);
     return { work, key };
   }
@@ -111,6 +132,14 @@ export class Project {
     const [w0, h0] = this.size;
     return join(this.out, W === w0 && H === h0 ? 'overlays' : `overlays-${W}x${H}`);
   }
+}
+
+/** Files in a beat's folder other than its index.html (relative paths, sorted; dotfiles skipped). */
+function beatFiles(dir, sub = '') {
+  return readdirSync(join(dir, sub), { withFileTypes: true }).filter(e => !e.name.startsWith('.')).flatMap(e => {
+    const rel = sub ? `${sub}/${e.name}` : e.name;
+    return e.isDirectory() ? beatFiles(dir, rel) : rel === 'index.html' ? [] : [rel];
+  }).sort();
 }
 
 /** Transcribe the video into words.json (faster-whisper small.en) if it's missing, or always with redo. */
@@ -127,7 +156,7 @@ export function createProject(video, dir) {
   if (existsSync(join(dir, 'retro.json'))) throw new Error(`${dir} already has a retro.json`);
   mkdirSync(join(dir, 'beats'), { recursive: true });
   const rel = v.startsWith(dir) ? v.slice(dir.length + 1) : relativePath(dir, v);
-  writeFileSync(join(dir, 'retro.json'), JSON.stringify({ video: rel, size: '1440x2560', sfxGain: 0, beats: {} }, null, 2) + '\n');
+  writeFileSync(join(dir, 'retro.json'), JSON.stringify({ video: rel, size: '1440x2560', sfxGain: 0, zoom: 'auto', beats: {} }, null, 2) + '\n');
   return dir;
 }
 function relativePath(from, to) {

@@ -1,0 +1,161 @@
+{
+  "video": "../martech1.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-mystery-role": {
+      "on": true,
+      "move": {
+        "pay": [
+          0,
+          -84.5
+        ]
+      },
+      "behind": [
+        "pay"
+      ]
+    },
+    "02-already-hiring": {
+      "on": true,
+      "hide": [
+        "profound"
+      ],
+      "ltime": {
+        "gradial": {
+          "retime": [
+            5.401,
+            7.119999999999999
+          ]
+        }
+      },
+      "move": {
+        "gradial": [
+          -21,
+          -14.5
+        ]
+      }
+    },
+    "03-drowning": {
+      "on": true,
+      "behind": [
+        "agents"
+      ],
+      "move": {
+        "agents": [
+          4,
+          -81
+        ]
+      }
+    },
+    "04-taste": {
+      "on": true,
+      "move": {
+        "stats": [
+          3,
+          -2
+        ]
+      }
+    },
+    "05-hand-drawn": {
+      "on": true,
+      "move": {
+        "glossy": [
+          -12.5,
+          -7
+        ],
+        "euronews": [
+          -1,
+          -8.5
+        ],
+        "brands": [
+          -50,
+          116.5
+        ]
+      },
+      "hide": [
+        "slop"
+      ]
+    },
+    "06-the-machine": {
+      "on": true,
+      "move": {
+        "check": [
+          0,
+          -55
+        ],
+        "machine": [
+          0,
+          -7.5
+        ]
+      },
+      "behind": [
+        "check"
+      ],
+      "sfxGain": 1.5
+    },
+    "07-reveal": {
+      "on": true,
+      "move": {
+        "cxl": [
+          0,
+          21
+        ],
+        "wsj": [
+          -3,
+          -12.5
+        ]
+      },
+      "ltime": {
+        "cxl": {
+          "retime": [
+            41.963,
+            44.273333300000004
+          ]
+        }
+      },
+      "hide": [
+        "cxl"
+      ]
+    },
+    "08-revenue": {
+      "on": true,
+      "move": {
+        "hiring": [
+          -7.5,
+          -94
+        ],
+        "leads": [
+          2,
+          16
+        ]
+      },
+      "behind": [
+        "hiring"
+      ]
+    },
+    "09-guide": {
+      "on": true,
+      "sounds": {
+        "edit": {
+          "oneup@61.70": {
+            "off": true
+          }
+        },
+        "add": [
+          {
+            "t": 61.077,
+            "s": "oneup",
+            "vol": 0,
+            "layer": "comment"
+          }
+        ]
+      },
+      "time": {
+        "retime": [
+          52.56,
+          62.903
+        ]
+      }
+    }
+  }
+}

@@ -1,20 +1,22 @@
 import { $, S, beats, opts } from './state.js';
 import { initApi, save } from './api.js';
 import { initHistory, redo, undo } from './history.js';
-import { initReset } from './reset.js';
+import { initReset, toast } from './reset.js';
 import { applyMove, ensureCut, guides, initStage, layout, mount, nudge, togglePlay } from './stage.js';
 import { initTimeline, trimToPlayhead } from './timeline.js';
 import { closePicker, initSounds, restartSfx } from './sounds.js';
 import { initPanel, renderAll } from './panel.js';
 import { initStudio } from './studio.js';
 import { initPrep } from './prep.js';
+import { initIg } from './ig.js';
+import { autoZoomAll } from './zoom.js';
 
 // Retro preview: the entry point. Each module exports an init() that wires its listeners; the order in
 // the start-up sequence at the bottom is the page's start-up order (the same as it was in one file).
 
 /* ---------- header toggles ---------- */
 function initHeader() {
-  const pills = { sfx: $('#pSfx'), zone: $('#pZone'), snapV: $('#pSnapV'), snapH: $('#pSnapH') };
+  const pills = { sfx: $('#pSfx'), zone: $('#pZone'), ig: $('#pIg'), snapV: $('#pSnapV'), snapH: $('#pSnapH') };
   for (const [key, el] of Object.entries(pills)) {
     el.classList.toggle('on', opts[key]);
     el.addEventListener('click', () => {
@@ -26,6 +28,7 @@ function initHeader() {
   setTool(S.tool);
   $('#toolTrim').onclick = () => setTool('trim');
   $('#toolStretch').onclick = () => setTool('stretch');
+  $('#pZoomAll').onclick = () => { const n = autoZoomAll(); renderAll(); toast(`Auto zoom on ${n} beat${n > 1 ? 's' : ''}: 100→125%, the opening beat pops`, undo); };
 }
 function setTool(t) { S.tool = t; localStorage.setItem('retro.tool', t); $('#toolTrim').classList.toggle('on', t === 'trim'); $('#toolStretch').classList.toggle('on', t === 'stretch'); }
 
@@ -57,6 +60,7 @@ function initKeys() {
 await initPrep();                                      // a project still being set up says so (and reloads when it's ready)
 $('#v').src = 'video.mp4';                             // only now: before this it may not exist yet
 initApi();
+initIg();
 initHeader();
 initReset();
 S.cur = beats[0] || null;                              // the inspector starts on the first beat, not whichever loads first

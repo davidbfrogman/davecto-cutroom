@@ -222,3 +222,70 @@ describe('editor', () => {
     await e.done();
   });
 });
+
+test('the Instagram UI toggle shows the Reels buttons over the video, scales with it, and is remembered', { timeout: 90000 }, async () => {
+  const { page, dir, done } = await editor();
+  await page.evaluate(() => localStorage.removeItem('retro.ig'));
+  await page.reload();
+  await until(async () => (await page.locator('#tlInner .blk').count()) === 2, 'the editor to load again', 30000);
+  assert.equal(await page.locator('#ig').isVisible(), false, 'off by default');
+  await page.locator('#pIg').click();
+  assert.equal(await page.locator('#ig').isVisible(), true);
+  assert.ok(await page.locator('#pIg').evaluate(el => el.classList.contains('on')));
+  // the iPhone crops the frame's sides (shaded), and the like button sits inside the screen, on its right, below the middle
+  const [st, ph, heart] = await Promise.all([page.locator('#stage').boundingBox(), page.locator('#ig .ig-phone').boundingBox(), page.locator('#ig .ig-at svg').nth(0).boundingBox()]);
+  assert.ok(Math.abs((ph.x - st.x) / st.width - 0.051) < 0.004 && ph.height > st.height, 'the phone crops ~5u each side, and its screen runs past the video\'s bottom');
+  const like = await page.locator('#ig .ig-at', { has: page.locator('svg') }).nth(1).boundingBox();
+  assert.ok(like.x > ph.x + ph.width * 0.85 && like.x + like.width <= ph.x + ph.width, 'like button on the screen\'s right edge');
+  assert.ok(like.y > st.y + st.height * 0.45, 'like button in the lower half');
+  assert.ok(heart, 'icons drawn');
+  assert.equal(await page.locator('#ig .ig-user b').textContent(), 'davecto');
+  assert.equal(await page.locator('#ig').evaluate(el => getComputedStyle(el).pointerEvents), 'none', 'never gets in the way of dragging');
+  await page.reload();                                       // remembered across reloads
+  await until(async () => (await page.locator('#tlInner .blk').count()) === 2, 'the editor to load again', 30000);
+  assert.equal(await page.locator('#ig').isVisible(), true, 'still on after a reload');
+  await page.locator('#pIg').click();
+  assert.equal(await page.locator('#ig').isVisible(), false);
+  assert.equal(JSON.stringify(readCfg(dir)).includes('ig'), false, 'a view setting: nothing written to retro.json');
+  await done();
+});
+
+describe('zoom', () => {
+  const scale = page => page.evaluate(() => { const m = /scale\(([\d.]+)\)/.exec(document.querySelector('#v').style.transform); return m ? +m[1] : 1; });
+
+  test('Auto zoom: every beat on auto, the video pushes in under the graphics, one undo takes it all back', async () => {
+    const e = await editor();
+    await seek(e.page, 2.0);
+    assert.equal(await scale(e.page), 1, 'no zoom in this project yet');
+    await e.page.locator('#pZoomAll').click();
+    await until(() => e.beat('01-hello').zoom?.kind === 'auto' && e.beat('02-second').zoom?.kind === 'auto', 'auto on both beats in retro.json');
+    assert.equal(e.beat('01-hello').zoom.to, 1.25);
+    await until(async () => (await scale(e.page)) > 1.1, 'the video zoomed in at 2.0 s');
+    const s = await scale(e.page);
+    // 01-hello is the opening beat (0.2–3.0): a 0.2 s pop out, then the push from 0.4 s: at 2.0 s about 100→125% × 1.6/2.6
+    assert.ok(Math.abs(s - (1 + 0.25 * 1.6 / 2.6)) < 0.02, `scale ${s} at 2.0 s`);
+    const frame = await e.page.evaluate(() => [...document.querySelectorAll('#stage iframe')].find(f => f.src.includes('/01-hello/')).style.transform);
+    assert.ok(!/translate/.test(frame), 'the graphics are never zoomed');
+    await e.page.keyboard.press('Meta+z');
+    await until(() => !e.beat('01-hello').zoom && !e.beat('02-second').zoom, 'one undo to take both back');
+    await until(async () => (await scale(e.page)) === 1, 'the video as shot again');
+    await e.done();
+  });
+
+  test('the Zoom card: a kind, how far, and a punch-in on a word, all saved to retro.json', async () => {
+    const e = await editor();
+    await e.page.locator('#insp .zseg button[data-k="pan"]').click();
+    await until(() => e.beat('01-hello').zoom?.kind === 'pan', 'pan in retro.json');
+    const to = e.page.locator('#insp input[data-a="zto"]');
+    await to.evaluate(el => { el.value = 140; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+    await until(() => e.beat('01-hello').zoom?.to === 1.4, 'to: 1.4');
+    const opt = await e.page.locator('#insp select[data-a="padd"] option').nth(1).getAttribute('value');
+    await e.page.locator('#insp select[data-a="padd"]').selectOption(opt);
+    await until(() => e.beat('01-hello').zoom?.punch?.length === 1, 'a punch-in');
+    assert.equal(e.beat('01-hello').zoom.punch[0].t, +opt, 'on the word picked');
+    assert.equal(await e.page.locator('#insp .prow').count(), 1, 'listed in the card');
+    await e.page.locator('#insp .prow [data-a="pdel"]').click();
+    await until(() => !e.beat('01-hello').zoom?.punch, 'removed');
+    await e.done();
+  });
+});

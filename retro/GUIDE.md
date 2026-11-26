@@ -74,6 +74,13 @@ skips the face check for it). The matte is Vision's guess: fast hands blur at th
 near the speaker can get cut out too, so check `retro frames` before suggesting one.
 Never undo the user's timing, hidden layers, behind layers, sound edits or moves; `retro ls` shows them all.
 
+**Zooms are the user's** (README › Zooms; `lib/zoom.mjs`): the push-ins on the video under the graphics,
+per beat in retro.json `"zoom"`, set in the editor or with `retro zoom`. Don't set or change them yourself
+unless asked. They move the face: a slow push to 125% grows it and, about the centre, carries a face below
+the middle further down. The lint, `retro zones`, `retro beat`'s notes and `retro frames` all use the face
+where it shows (`project.screenFaces()`), so trust them over faces.json. The notes only know the zooms of
+beats probed so far (out/.probe), so lint again after writing a beat in a project that zooms.
+
 ## Placement rules (the user's, non-negotiable)
 
 - **Never cover the face**, and never put anything **right under the chin**. The no-go zone is

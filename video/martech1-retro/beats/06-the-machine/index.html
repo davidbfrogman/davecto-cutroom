@@ -1,0 +1,131 @@
+<!doctype html>
+<!-- 06-the-machine: "There's a huge opportunity for somebody to come in, connect all of these AI systems,
+     understand the brand's voice and position, and then get that AI agent pipeline to produce genuinely
+     compelling marketing content.": four offline stations (insights, creative, audience, results) get wired
+     into a loop, brand.md types in the middle, packets run the loop, output counts up and lands "compelling".
+     Last line teases the job title, still scrambled. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>06-the-machine</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #PL .win__body { padding: 0; }
+    .nd { position: absolute; width: calc(var(--u) * 24); height: calc(var(--u) * 8); background: var(--paper); border: var(--hair) solid var(--ink);
+          padding: calc(var(--u) * 1) calc(var(--u) * 1.2); z-index: 2; display: flex; flex-direction: column; justify-content: space-between; }
+    .nd b { font: 600 calc(var(--u) * 3.4)/1 var(--f-display); letter-spacing: -0.03em; }
+    .nd span { font: 400 calc(var(--u) * 2.1)/1 var(--f-mono); display: flex; justify-content: space-between; }
+    .nd em { font-style: normal; color: var(--grey); }
+    .nd em.on { position: absolute; right: calc(var(--u) * 1.2); bottom: calc(var(--u) * 1); color: var(--ink); background: var(--accent); padding: 0 calc(var(--u) * .4); }
+    .wire { position: absolute; background: var(--ink); z-index: 1; }
+    .pk { position: absolute; width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); margin: calc(var(--u) * -1.3) 0 0 calc(var(--u) * -1.3); background: var(--accent); border: var(--hair) solid var(--ink); z-index: 1; display: none; }
+    #brand { position: absolute; left: calc(var(--u) * 27.5); top: calc(var(--u) * 6.2); width: calc(var(--u) * 26); height: calc(var(--u) * 15.6); z-index: 3; }
+    #brand .win__bar { font-size: calc(var(--u) * 3); padding: calc(var(--u) * .3) calc(var(--u) * .9) calc(var(--u) * .5); }
+    #brand .win__body { padding: calc(var(--u) * .8) calc(var(--u) * 1); display: flex; flex-direction: column; gap: calc(var(--u) * .7); }
+    #brand .type { font: 400 calc(var(--u) * 2.2)/1.1 var(--f-mono); }
+    #out { position: absolute; left: calc(var(--u) * 1.4); right: calc(var(--u) * 1.4); bottom: calc(var(--u) * 1.2); display: flex; align-items: center; gap: calc(var(--u) * 1.2);
+           font: 400 calc(var(--u) * 2.4)/1 var(--f-mono); border-top: var(--hair) solid var(--ink); padding-top: calc(var(--u) * 1.1); }
+    #out .px { font-size: calc(var(--u) * 4.2); }
+    #who { margin-left: auto; }
+    .scr { display: inline-block; background: var(--ink); color: var(--accent); font: calc(var(--u) * 3.6)/1 var(--f-pixel); padding: calc(var(--u) * .3) calc(var(--u) * .8) calc(var(--u) * .5); white-space: pre; }
+    #CK .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1); padding: calc(var(--u) * 1.3) calc(var(--u) * 1.6); }
+    #CK .dr { position: relative; height: calc(var(--u) * 6.6); display: flex; align-items: center; border: var(--hair) solid var(--ink); background: var(--paper); padding: 0 calc(var(--u) * 1.4); }
+    #CK .dr .disp { position: absolute; left: calc(var(--u) * 1.4); top: 50%; transform: translateY(-50%); font-size: calc(var(--u) * 4.2); line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
+    #CK .dr .disp.x { text-decoration: line-through; text-decoration-thickness: calc(var(--u) * .5); text-decoration-color: var(--coral); color: var(--grey); }
+    #CK .v { position: absolute; right: calc(var(--u) * 1); top: 50%; transform: translateY(-50%); }
+    #CK .v.bad { background: var(--coral); color: var(--ink); }
+    #CK .foot { display: flex; justify-content: space-between; align-items: center; }
+    #CK .tally { font: 400 calc(var(--u) * 2.4)/1 var(--f-mono); }
+  </style>
+</head>
+<body data-world="teal">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("There's a huge", 0);
+    const END = 39.27, W = p => R.w(p, R.START - 0.1);
+    const GL = '▓▒░#%&@$?!*';
+
+    // node boxes (u, inside the window body) and the loop they make: insights → creative → audience → results → back
+    const NODES = [['Insights', 'CRM · Clay', 1.2, 1.2], ['Creative', 'Claude', 54.8, 1.2], ['Audience', 'Meta Ads', 54.8, 19.2], ['Results', 'SQL · GA4', 1.2, 19.2]];
+    const C = NODES.map(([, , x, y]) => [x + 12, y + 4]);           // centres
+    const WIRES = [[C[0], C[1]], [C[1], C[2]], [C[2], C[3]], [C[3], C[0]]];
+    const wireHtml = WIRES.map(([a, b], i) => { const x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1]), w = Math.abs(a[0] - b[0]), h = Math.abs(a[1] - b[1]);
+      return `<i class="wire" id="w${i}" style="left:${R.u(x - .25)};top:${R.u(y - .25)};width:${R.u(w ? 0 : .5)};height:${R.u(h ? 0 : .5)}" data-w="${w + .5}" data-h="${h + .5}"></i>`; }).join('');
+    const nodeHtml = NODES.map(([t, s, x, y], i) => `<div class="nd h" id="n${i}" style="left:${R.u(x)};top:${R.u(y)}"><b>${t}</b><span>${s}<em id="e${i}">○ off</em><em class="on h" id="o${i}">● live</em></span></div>`).join('');
+
+    const PL = R.win({ title: 'Pipeline.sys', right: 'loop <span id="lp">0</span>', x: 9, y: 21, w: 82, h: 44, layer: 'machine',
+      body: wireHtml + nodeHtml + '<i class="pk"></i><i class="pk"></i><i class="pk"></i>' +
+        `<div class="win win--paper" id="brand"><div class="win__bar"><span>brand.md</span><span class="r">rules</span></div><div class="win__body">
+           <span class="type" id="l1">voice: plain</span><span class="type" id="l2">for: founders</span><span class="type" id="l3">never: "delve"</span></div></div>
+         <div id="out"><span>shipped</span><span class="px" id="cnt">0</span><span class="chip h" id="good">✓ compelling</span>
+           <span id="who" class="h">run by <span class="scr" id="t">▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓</span></span></div>` });
+    PL.id = 'PL';
+    R.open(PL, W('opportunity'), { from: { x: 50, y: 85 } });
+
+    // stations appear, offline (on "somebody to come in")
+    R.stagger(NODES.map((_, i) => R.$('#n' + i)), W('somebody'), W('in,'), { sfx: 'tick', vol: -6, layer: 'machine' });
+
+    // wires connect them, each station goes live (on "connect all of these AI systems")
+    const c0 = W('connect'), c1 = W('systems,');
+    WIRES.forEach((_, i) => {
+      const el = R.$('#w' + i), t = c0 + (c1 - c0) * i / 3, horiz = +el.dataset.h < 1;
+      R.tl.to(el, horiz ? { width: R.u(el.dataset.w) } : { height: R.u(el.dataset.h) }, { duration: 0.3, ease: 'steps(4)' }, R.T(t));
+      R.hide(R.$('#e' + ((i + 1) % 4)), t + 0.3); R.show(R.$('#o' + ((i + 1) % 4)), t + 0.3);
+      R.sfx('blip', t + 0.3, { vol: -6, freq: 500 * 2 ** (i / 4), layer: 'machine' });
+    });
+    R.hide(R.$('#e0'), c0); R.show(R.$('#o0'), c0);
+
+    // the brand file, in the middle (on "understand the brand's voice and position")
+    const BR = R.$('#brand');
+    R.show(BR, W('understand')); R.sfx('open', W('understand'), { layer: 'machine' });
+    R.type(R.$('#l1'), W("brand's"), 34); R.type(R.$('#l2'), W('position,'), 34); R.type(R.$('#l3'), W('then'), 40);
+
+    // halfway pop-out (layer: check): the brand file at work. AI drafts land one at a time below the chest;
+    // the off-brand ones get struck and rejected, the plain one ships.
+    const DR = [['Unlock AI-powered synergies today!', '✕ hype', 'bad'], ['Let\'s delve into lead gen', '✕ "delve"', 'bad'], ['Find buyers while you sleep.', '✓ on brand', '']];
+    const CK = R.win({ title: 'Brand.check', right: 'drafts <span id="dn">0</span>/3', x: 9, y: 113, w: 82, h: 'auto', layer: 'check',
+      body: `<div class="dr">${DR.map(([d, v, c], i) => `<span class="disp h" id="d${i}">${d}</span><span class="chip-inv v h ${c}" id="v${i}">${v}</span>`).join('')}</div>
+        <div class="foot"><span class="tally">rejected <b id="rj">0</b> · shipped <b id="sh">0</b></span><span class="micro">rules from brand.md</span></div>` });
+    CK.id = 'CK';
+    R.open(CK, W("brand's"), { from: { x: 45, y: 45 } });
+    const dT = [[W('voice'), W('and', W('voice'))], [W('position,'), W('and', W('position,'))], [W('then'), W('agent')]];
+    let rj = 0;
+    DR.forEach(([, , c], i) => {
+      const [a, b] = dT[i], d = R.$('#d' + i), v = R.$('#v' + i);
+      if (i) { R.hide(R.$('#d' + (i - 1)), a); R.hide(R.$('#v' + (i - 1)), a); }
+      R.show(d, a); R.text(R.$('#dn'), a, String(i + 1)); R.sfx('tick', a, { vol: -6, layer: 'check' });
+      R.show(v, b);
+      if (c === 'bad') { R.tl.set(d, { className: 'disp x' }, R.T(b)); R.text(R.$('#rj'), b, String(++rj)); R.sfx('strike', b, { vol: -3, layer: 'check' }); R.sfx('bump', b + 0.05, { vol: -8, layer: 'check' }); }
+      else { R.text(R.$('#sh'), b, '1'); R.sfx('confirm', b, { vol: -5, layer: 'check' }); R.flash(v, b + 0.1, 1); }
+    });
+    R.close(CK, W('produce') - 0.1);
+
+    // packets run the loop (on "AI agent pipeline", to the end)
+    const per = [0]; WIRES.forEach(([a, b]) => per.push(per[per.length - 1] + Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1])));   // cumulative, u
+    const L = per[4];
+    const at = d => { d = ((d % L) + L) % L; for (let k = 0; k < 4; k++) if (d <= per[k + 1]) { const [a, b] = WIRES[k], f = (d - per[k]) / (per[k + 1] - per[k]); return [R.lerp(a[0], b[0], f), R.lerp(a[1], b[1], f)]; } };
+    const pks = [...PL.querySelectorAll('.pk')], p0 = W('pipeline');
+    R.every(p0, END, t => {
+      const d = (t - p0) * 60;
+      pks.forEach((p, i) => { const [x, y] = at(d - i * 50); p.style.display = t >= p0 + i * 0.25 ? 'block' : 'none'; p.style.left = R.u(x); p.style.top = R.u(y); });
+      R.$('#lp').textContent = String(Math.max(0, Math.floor(d / L)));
+    });
+    R.sfx('arpwave', p0, { vol: -10, layer: 'machine' });
+
+    // output (on "produce genuinely compelling marketing content")
+    R.count(R.$('#cnt'), W('produce'), W('content.') - W('produce'), 0, 128);
+    R.show(R.$('#good'), W('compelling')); R.sfx('epiano', W('compelling'), { vol: -8, layer: 'machine' });
+
+    // the tease: who runs this? still classified
+    R.show(R.$('#who'), W('content.')); R.sfx('pop', W('content.'), { vol: -5, layer: 'machine' });
+    R.every(W('content.'), END, t => { R.seed(Math.floor(t * 15)); let s = ''; for (let i = 0; i < 18; i++) s += GL[Math.floor(R.rnd() * GL.length)]; R.$('#t').textContent = s.slice(0, 9) + ' ' + s.slice(9); });
+    R.sfx('riser', 38.5, { vol: -10, layer: 'machine' });
+    R.done(END);
+  </script>
+</body>
+</html>

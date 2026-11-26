@@ -1,0 +1,99 @@
+{
+  "video": "../dealhunter.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "beats": {
+    "01-secret-codes": {
+      "on": true,
+      "move": {
+        "main": [
+          0,
+          8.5
+        ]
+      },
+      "zoom": {
+        "kind": "off",
+        "to": 1.36
+      }
+    },
+    "02-never-shown": {
+      "on": true
+    },
+    "03-ad-library": {
+      "on": true,
+      "zoom": {
+        "kind": "auto",
+        "to": 1.5,
+        "punch": [
+          {
+            "t": 7.54,
+            "dur": 1.2,
+            "by": 1.15
+          }
+        ]
+      }
+    },
+    "04-buried": {
+      "on": true,
+      "behind": [
+        "ad",
+        "target"
+      ],
+      "move": {
+        "ad": [
+          0,
+          5
+        ]
+      }
+    },
+    "05-steepest": {
+      "on": true,
+      "behind": [
+        "main"
+      ]
+    },
+    "06-headphones-vacation": {
+      "on": true,
+      "behind": [
+        "main"
+      ]
+    },
+    "07-deal-hunter": {
+      "on": true,
+      "behind": [
+        "main"
+      ],
+      "move": {
+        "main": [
+          0,
+          7
+        ]
+      }
+    },
+    "08-comment-deal": {
+      "on": true,
+      "behind": [
+        "prompt",
+        "comment"
+      ],
+      "move": {
+        "prompt": [
+          0,
+          -1.5
+        ],
+        "comment": [
+          0,
+          -54
+        ]
+      },
+      "ltime": {
+        "comment": {
+          "retime": [
+            34.985,
+            39.18
+          ]
+        }
+      }
+    }
+  }
+}

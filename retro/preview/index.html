@@ -19,11 +19,13 @@
   <h1 id="projName">Retro preview</h1>
   <button class="pill" id="pSfx" title="Hear the sound effects while you play"><span class="dot"></span>Sound effects</button>
   <button class="pill" id="pZone" title="Show the face no-go zone (red dashes)"><span class="dot"></span>Face zone</button>
+  <button class="pill" id="pIg" title="Show the Instagram Reels buttons, username and caption over the video (a guide only: never rendered)"><span class="dot"></span>Instagram UI</button>
   <button class="pill" id="pSnapV" title="While dragging, pull an animation's centre onto the vertical centre line (hold ⌥ to drag past)"><span class="dot"></span>Snap centre</button>
   <button class="pill" id="pSnapH" title="Same for the horizontal middle line"><span class="dot"></span>Snap middle</button>
   <span id="status"></span>
   <button class="pill" id="pUndo" title="Undo (⌘Z)" disabled>↶ Undo</button>
   <button class="pill" id="pRedo" title="Redo (⇧⌘Z)" disabled>↷ Redo</button>
+  <button class="pill" id="pZoomAll" title="The easy button: every beat gets the usual zoom. A quick zoom out then a slow push on the opening beat, a slow push 100→125% on the rest, about your face instead of the centre where the centre would lose you off the frame. Undo puts it back.">⤢ Auto zoom</button>
   <button class="pill" id="pReset" title="Put things back the way they were written (asks first, and you can undo)">↺ Reset…</button>
   <button class="pill" id="pLint" title="Check placement, clipping and timing (the same check as retro lint)"><span class="dot"></span>Lint</button>
   <button class="pill pri" id="pRender" title="Render a draft or the final video">Render…</button>
@@ -32,7 +34,7 @@
 <div id="stageWrap">
   <div id="stage">
     <video id="v" preload="auto" playsinline></video><canvas id="bg"></canvas>
-    <div id="zone"></div><div id="guideV" class="guide"></div><div id="guideH" class="guide"></div>
+    <div id="zone"></div><div id="ig"></div><div id="guideV" class="guide"></div><div id="guideH" class="guide"></div>
     <div id="selBox"><span></span></div>
     <div id="grab"></div>
   </div>

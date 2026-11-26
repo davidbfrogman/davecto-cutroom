@@ -11,13 +11,13 @@ import { renderAll } from './panel.js';
    are one step; repeated saves of the same kind on the same beat in quick succession (a drag, a slider,
    arrow-key nudges) fold into one. Undo/redo write the state back through save() like any other edit. */
 export const editable = b => JSON.stringify({ on: b.on ?? null, move: b.move, time: b.time ?? null, ltime: b.ltime, hide: b.hide, behind: b.behind,
-  sounds: b.sounds, sfxGain: b.sfxGain ?? null, sfx: b.sfx ?? null });
+  sounds: b.sounds, sfxGain: b.sfxGain ?? null, sfx: b.sfx ?? null, zoom: b.zoom ?? null });
 export const known = new Map(beats.map(b => [b.id, editable(b)]));     // each beat as of the last recorded step
 export const undos = [], redos = [];
 
 let moment = null, restoring = false;
 
-export const WHAT = { move: 'move', time: 'beat timing', ltime: 'animation timing', sounds: 'sound edit', hide: 'show / hide', behind: 'behind me', on: 'beat on/off', sfxGain: 'beat level', sfx: 'beat sound on/off' };
+export const WHAT = { move: 'move', time: 'beat timing', ltime: 'animation timing', sounds: 'sound edit', hide: 'show / hide', behind: 'behind me', on: 'beat on/off', sfxGain: 'beat level', sfx: 'beat sound on/off', zoom: 'zoom' };
 export function record(b, patch) {
   if (restoring) return;
   const before = known.get(b.id), after = editable(b);
@@ -43,7 +43,7 @@ export function restore(step, back) {
       known.set(b.id, back ? it.before : it.after);
       const changed = Object.keys(to).filter(k => JSON.stringify(to[k]) !== JSON.stringify(was[k]));
       if (changed.some(k => ['time', 'ltime', 'hide'].includes(k))) { persist(b); continue; }   // the beat's own timeline changes: rebuild it
-      save(b, { on: b.on !== false, move: b.move, time: b.time || null, ltime: b.ltime, hide: b.hide, behind: b.behind, sounds: b.sounds, sfxGain: b.sfxGain || 0, sfx: b.sfx !== false });
+      save(b, { on: b.on !== false, move: b.move, time: b.time || null, ltime: b.ltime, hide: b.hide, behind: b.behind, sounds: b.sounds, sfxGain: b.sfxGain || 0, sfx: b.sfx !== false, zoom: b.zoom || null });
       applyMove(b); applyDepth(b); if (b.ready) refreshCues(b);
       if (changed.includes('behind')) ensureCut();
     }

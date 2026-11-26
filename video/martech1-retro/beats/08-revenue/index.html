@@ -1,0 +1,73 @@
+<!doctype html>
+<!-- 08-revenue: "build a system that reliably generates qualified leads, your value to the company is
+     directly tied to the revenue you generate.": a lead machine above the head runs visitors down to
+     qualified leads and revenue; below the chest, who's hiring and what they pay (real logos). The top
+     window closes before he drops down at 51.96. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08-revenue</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #LM .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1.1); padding: calc(var(--u) * 1.6) calc(var(--u) * 1.8); }
+    .st { display: grid; grid-template-columns: calc(var(--u) * 17) 1fr calc(var(--u) * 15); gap: calc(var(--u) * 1.2); align-items: center; }
+    .st .lab { font: 400 calc(var(--u) * 2.5)/1 var(--f-mono); }
+    .st .bar { height: calc(var(--u) * 3); border: var(--hair) solid var(--ink); position: relative; background: var(--paper); }
+    .st .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--ink); }
+    .st.q .bar i, .st.r .bar i { background: var(--accent); }
+    .st .px { font-size: calc(var(--u) * 4.4); text-align: right; }
+    .st.r .px { font-size: calc(var(--u) * 5.4); }
+    #HI .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * .9); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.8); }
+    .job { display: grid; grid-template-columns: calc(var(--u) * 19) 1fr calc(var(--u) * 17); gap: calc(var(--u) * 1.2); align-items: center; height: calc(var(--u) * 5.2); border-bottom: var(--hair) solid var(--win-2); }
+    .job .lg { height: calc(var(--u) * 4); display: flex; align-items: center; }
+    .job .lg img { height: 100%; width: auto; display: block; }
+    .job .lg.sm img { height: 80%; }
+    .job .lg b { font: 600 calc(var(--u) * 3.6)/1 var(--f-display); letter-spacing: -0.03em; }
+    .job .role { font: 400 calc(var(--u) * 2.3)/1.1 var(--f-mono); }
+    .job .chip { justify-self: end; font-size: calc(var(--u) * 3.8); }
+  </style>
+</head>
+<body data-world="green">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w('build a system', 0);
+    const END = 52.47, W = p => R.w(p, R.START - 0.1);
+
+    // the lead machine (layer: leads)
+    const ST = [['visitors', 12480, 100, ''], ['leads', 1140, 62, ''], ['qualified', 212, 38, 'q'], ['revenue', 1840000, 100, 'r']];
+    const LM = R.win({ title: 'Lead.machine', right: 'running <span id="clk">00:00</span>', x: 9, y: 21, w: 82, h: 'auto', layer: 'leads',
+      body: ST.map(([l, , , c], i) => `<div class="st ${c}" id="s${i}"><span class="lab">${l}</span><div class="bar"><i></i></div><span class="px">0</span></div>`).join('') });
+    LM.id = 'LM';
+    R.open(LM, R.START, { from: { x: 40, y: 85 } });
+    R.every(R.START, END, t => { const s = Math.floor((t - R.START) * 15) * 4 / 60; R.$('#clk').textContent = `00:${String(Math.floor(s)).padStart(2, '0')}.${String(Math.floor(s * 10) % 10)}`; });
+    const row = (i, t, dur) => {
+      const [, n, pct] = ST[i], el = R.$('#s' + i);
+      R.count(el.querySelector('.px'), t, dur, 0, n, i === 3 ? v => '$' + (v / 1e6).toFixed(2) + 'M' : undefined);
+      R.tl.to(el.querySelector('.bar i'), { width: pct + '%', duration: dur, ease: `steps(${Math.max(2, Math.round(dur * 15))})` }, R.T(t));
+      R.sfx('tick', t, { vol: -6, layer: 'leads' });
+    };
+    row(0, W('reliably'), 0.6); row(1, W('generates'), 0.6); row(2, W('qualified'), 0.6);
+    R.sfx('success', W('leads,'), { vol: -6, layer: 'leads' });
+    row(3, W('tied'), W('revenue') - W('tied') + 0.3);
+    R.sfx('coin', W('revenue') + 0.3, { vol: -4, layer: 'leads' });
+    R.close(LM, 51.8);
+
+    // who's hiring, what they pay (layer: hiring)
+    const J = [['<img src="logo-profound.png">', 'Marketing Engineer · NYC', '$140–220K', ''],
+               ['<img src="logo-clay.png">', 'GTM Engineer', '$140–220K', ''],
+               ['<img src="logo-gradial.png"><b>&nbsp;Gradial</b>', 'Marketing Engineer · SEA', '$155–185K', 'sm'],
+               ['<b>Figma</b>', 'Marketing Eng, AI', 'posted Oct', '']];
+    const HI = R.win({ title: 'Who.Is.Hiring', right: 'Nov 2026', variant: 'paper', x: 9, y: 104, w: 82, h: 'auto', layer: 'hiring',
+      body: J.map(([lg, r, p, c]) => `<div class="job h"><span class="lg ${c}">${lg}</span><span class="role">${r}</span><span class="chip chip--world">${p}</span></div>`).join('') });
+    HI.id = 'HI';
+    R.open(HI, W('your'), { from: { x: 50, y: 60 } });
+    R.stagger(HI.querySelectorAll('.job'), W('value'), W('directly'), { sfx: 'coin', vol: -9, every: 2, layer: 'hiring' });
+    R.done(END);
+  </script>
+</body>
+</html>

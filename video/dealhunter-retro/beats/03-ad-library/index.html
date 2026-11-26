@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- 03-ad-library: "Facebook has a public library of the ads ... across both Facebook and Instagram": above the
+     head. A Retro OS take on the Ad Library: "public · no login" lands on "public", the query types itself
+     in on "library" and Search is pressed, a row of live ads fills in on "ads that brands are running",
+     then Facebook and Instagram tick. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03-ad-library</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .lib .win__body { padding: calc(var(--u) * 1.6); }
+    .srch { display: flex; align-items: center; gap: calc(var(--u) * 1.4); font: calc(var(--u) * 4)/1 var(--f-pixel); }
+    .in { flex: 1; display: flex; align-items: center; gap: calc(var(--u) * 1.2); background: var(--paper); border: var(--hair) solid var(--ink);
+          padding: calc(var(--u) * .8) calc(var(--u) * 1.2) calc(var(--u) * 1); }
+    .in .pix { flex: none; }
+    .cb { display: inline-block; width: calc(var(--u) * 1.6); height: calc(var(--u) * 3.4); background: var(--ink); }
+    .go { background: var(--ink); color: var(--accent); padding: calc(var(--u) * .8) calc(var(--u) * 1.6) calc(var(--u) * 1); box-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 var(--ink-55); }
+    .flt { display: flex; gap: calc(var(--u) * 1); margin-top: calc(var(--u) * 1.4); }
+    .ads { display: flex; gap: calc(var(--u) * 1); margin-top: calc(var(--u) * 1.4); }
+    .ads > div { flex: 1; height: calc(var(--u) * 7); border: var(--hair) solid var(--ink); background: var(--paper); display: flex; flex-direction: column; }
+    .ads b { display: block; height: calc(var(--u) * 1.6); background: var(--ink); }
+    .ads i { display: block; margin: calc(var(--u) * .7) calc(var(--u) * .7) 0; height: calc(var(--u) * 1); background: var(--win-2); }
+    .ads i + i { width: 50%; background: var(--accent); }
+    .row { display: flex; align-items: center; gap: calc(var(--u) * 3); margin-top: calc(var(--u) * 1.6); font: calc(var(--u) * 4.2)/1 var(--f-pixel); }
+    .tg { display: inline-flex; align-items: center; gap: calc(var(--u) * 1.2); }
+    .box { display: inline-grid; place-items: center; width: calc(var(--u) * 3.6); height: calc(var(--u) * 3.6); border: var(--hair) solid var(--ink); background: var(--paper); }
+    .box i { font-style: normal; line-height: 1; }
+    .row .r { margin-left: auto; }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 5.57;
+    const END = 12.97, W = p => R.w(p, R.START - 0.1);
+    const GLASS = ['.kkk...', 'k...k..', 'k...k..', 'k...k..', '.kkk...', '....kk.', '.....kk'];
+
+    const A = R.win({ title: 'Meta ▸ Ad Library', right: '<span id="pub"></span>', variant: 'paper', x: 9, y: 21, w: 82, h: 'auto',
+      body: `<div class="srch"><span class="in">${R.pix(GLASS, .5)}<span class="type" id="q">black friday code electronics</span><span class="cb" id="cb"></span></span><span class="go" id="go">Search</span></div>` +
+        `<div class="flt"><span class="chip">United States ▾</span><span class="chip">All ads ▾</span><span class="chip">Active ▾</span></div>` +
+        `<div class="ads">${'<div class="h"><b></b><i></i><i></i></div>'.repeat(8)}</div>` +
+        `<div class="row"><span class="tg"><span class="box"><i class="h" id="k1">■</i></span>Facebook</span>` +
+        `<span class="tg"><span class="box"><i class="h" id="k2">■</i></span>Instagram</span><span class="r chip h" id="act">active ads</span></div>` });
+    A.classList.add('lib');
+    R.open(A, W('Facebook'), { from: { x: 53, y: 78 } });
+    R.blink(R.$('#cb'), W('Facebook'), END, 0.5);
+
+    // "public library": no login, and the query types itself in
+    R.text(R.$('#pub'), W('public'), 'public · no login');
+    R.sfx('pop', W('public'), { vol: -6 });
+    R.type(R.$('#q'), W('library'), 26);
+    R.press(R.$('#go'), W('that', W('ads')), { vol: -4 });
+
+    // the ads brands are running, filling in
+    R.stagger(A.querySelectorAll('.ads > div'), W('that', W('ads')) + 0.1, W('running'), { sfx: 'tick', vol: -6 });
+
+    // both platforms
+    R.show(R.$('#k1'), W('Facebook', W('both'))); R.sfx('confirm', W('Facebook', W('both')), { vol: -6 });
+    R.show(R.$('#k2'), W('Instagram.')); R.sfx('confirm', W('Instagram.'), { vol: -6 });
+    R.show(R.$('#act'), W('Instagram.') + 0.3); R.sfx('pop', W('Instagram.') + 0.3, { vol: -6 });
+    R.done(END);
+  </script>
+</body>
+</html>

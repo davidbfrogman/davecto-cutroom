@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- 06-headphones-vacation: "this works for everything from a new pair of headphones to a vacation": a short
+     band above the head. A range slider: pixel headphones at one end, a pixel palm tree at the other; a
+     ticker of things runs on "everything", then the price-tag handle slides from headphones to vacation. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>06-headphones-vacation</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .rng .win__body { padding: calc(var(--u) * 1) calc(var(--u) * 1.6); }
+    .rng-row { display: flex; align-items: center; gap: calc(var(--u) * 2); height: calc(var(--u) * 8); }
+    .ico { flex: none; }
+    .mid { position: relative; flex: 1; height: 100%; }
+    .tick { position: absolute; left: 0; right: 0; top: 0; font: calc(var(--u) * 3.6)/1 var(--f-pixel); white-space: pre; overflow: hidden; }
+    .line { position: absolute; left: 0; right: 0; top: calc(var(--u) * 5.4); border-top: var(--hair) solid var(--ink); }
+    .line i { position: absolute; top: calc(var(--u) * -.8); width: var(--hair); height: calc(var(--u) * 1.6); background: var(--ink); }
+    .hnd { position: absolute; top: calc(var(--u) * 3.3); font-size: calc(var(--u) * 3.6); transform: translateX(-50%); }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 24.47;
+    const END = 29.0, W = p => R.w(p, R.START - 0.1);
+    const PHONES = [
+      '...kkkkkk...',
+      '..k......k..',
+      '.k........k.',
+      'k..........k',
+      'k..........k',
+      'k..........k',
+      'kkk......kkk',
+      'knk......knk',
+      'knk......knk',
+      'knk......knk',
+      'kkk......kkk',
+    ];
+    const PALM = [
+      '..ggg..ggg..',
+      '.g...gg...g.',
+      'g...gggg...g',
+      '...g..k.g...',
+      '......k.....',
+      '......k.....',
+      '.....k......',
+      '.....k......',
+      '.....k......',
+      '...nnnnnn...',
+      '.nnnnnnnnnn.',
+    ];
+    const ticks = Array.from({ length: 11 }, (_, i) => `<i style="left:${i * 10}%"></i>`).join('');
+    const A = R.win({ title: 'works.on', right: '<span id="ev">everything</span> <span id="chev">▶▶▶</span>', variant: 'paper', x: 9, y: 21.5, w: 82, h: 'auto',
+      body: `<div class="rng-row"><span class="ico h" id="hp">${R.pix(PHONES, .62)}</span>` +
+        `<div class="mid"><div class="tick" id="tk"></div><div class="line">${ticks}</div><span class="chip-inv hnd h" id="hnd">$</span></div>` +
+        `<span class="ico h" id="palm">${R.pix(PALM, .62)}</span></div>` });
+    A.classList.add('rng');
+    R.open(A, W('works'), { from: { x: 52, y: 52 } });
+    R.blink(R.$('#chev'), W('works'), END, 0.5);
+
+    // "everything": a ticker of things it's found deals on
+    const tk = R.$('#tk'), ha = W('headphones'), hb = W('vacation.');
+    R.marquee(tk, W('everything'), ha, 'headphones · sneakers · a couch · laptops · flights · hotels · ', { chars: 34, cps: 14 });
+    R.text(tk, ha, '');
+
+    // headphones → vacation
+    const hnd = R.$('#hnd');
+    R.show(R.$('#hp'), ha); R.sfx('pop', ha, { vol: -5 });
+    R.show(hnd, ha); hnd.style.left = "4%";
+    R.every(W('to', ha), hb, t => { hnd.style.left = `${4 + 88 * R.clamp((t - W('to', ha)) / (hb - W('to', ha)))}%`; });
+    R.sfx('rev', W('to', ha), { vol: -10 });
+    R.show(R.$('#palm'), hb); R.sfx('sunset', hb, { vol: -8 });
+    R.text(hnd, hb, '$$$');
+    R.done(END);
+  </script>
+</body>
+</html>

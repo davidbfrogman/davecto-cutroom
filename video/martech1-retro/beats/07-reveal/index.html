@@ -1,0 +1,63 @@
+<!doctype html>
+<!-- 07-reveal: "It's called a marketing engineer, and the really good ones are gonna make a fortune because
+     when you can": THE PAYOFF. The WSJ headline (above) and the CXL headline (below) open with the title
+     blacked out; the bars peel away on "marketing engineer". Then the WSJ hiring number and the pay land. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-reveal</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .shot .win__body { padding: 0; }
+    .sw { position: relative; }
+    .sw img { display: block; width: 100%; }
+    .red { position: absolute; background: var(--ink); color: var(--accent); font-family: var(--f-pixel); line-height: 1;
+           display: flex; align-items: center; justify-content: center; white-space: pre; overflow: hidden; }
+    .stamp { position: absolute; font-size: calc(var(--u) * 4.4); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("It's called", 0);
+    const END = 44.46, W = p => R.w(p, R.START - 0.1);
+    const GL = '▓▒░#%&@$?!*';
+    const shot = (src, ratio, [x, y, w, h], fs, id) => `<div class="sw"><img src="${src}" style="aspect-ratio:${ratio}">` +
+      `<span class="red" id="${id}" style="left:${x * 100 - 0.6}%;top:${y * 100 - 1.5}%;width:${w * 100 + 1.2}%;height:${h * 100 + 3}%;font-size:${R.u(fs)}">▓▓▓▓▓▓</span></div>`;
+    const scramble = (el, a, b, n) => R.every(a, b, t => { R.seed(Math.floor(t * 15) + n); let s = ''; for (let i = 0; i < n; i++) s += GL[Math.floor(R.rnd() * GL.length)]; el.textContent = s; });
+    // peel a bar off left to right on twos, then it's gone
+    const peel = (el, t) => { R.tl.to(el, { clipPath: 'inset(0 0 0 100%)', duration: 0.27, ease: 'steps(4)' }, R.T(t)); R.tl.set(el, { clipPath: 'inset(0 0 0 0%)' }, 0); };
+
+    // WSJ, above the head (layer: wsj)
+    const A = R.win({ title: 'wsj.com · CMO Today', right: 'Sept 30, 2026', variant: 'paper', x: 9, y: 21, w: 82, h: 'auto', layer: 'wsj',
+      body: shot('wsj.png', '1640/640', [0.482, 0.561, 0.181, 0.12], 3.6, 'r1') + `<span class="chip-inv h stamp" id="hires" style="right:${R.u(1.4)};bottom:${R.u(1.2)}">173 hired in a year · ▲ from 98</span>` });
+    A.classList.add('shot');
+    R.open(A, R.START, { from: { x: 50, y: 75 } });
+
+    // CXL, below the chest (layer: cxl)
+    const B = R.win({ title: 'cxl.com/blog', right: 'Nov 3, 2026', variant: 'paper', x: 9, y: 101, w: 82, h: 'auto', layer: 'cxl',
+      body: shot('cxl.png', '1280/480', [0.3187, 0.35, 0.5708, 0.1833], 4, 'r2') + `<span class="chip-inv h stamp" id="pay" style="right:${R.u(1.4)};bottom:${R.u(1.2)}">$ up to $220K base</span>` });
+    B.classList.add('shot');
+    R.open(B, W('called'), { from: { x: 50, y: 85 } });
+
+    // the bars flicker, then peel on the words
+    scramble(R.$('#r1'), R.START, W('engineer,'), 6);
+    scramble(R.$('#r2'), W('called'), W('marketing'), 12);
+    peel(R.$('#r2'), W('marketing')); R.sfx('strike', W('marketing'), { vol: -3, layer: 'cxl' });
+    peel(R.$('#r1'), W('engineer,')); R.sfx('strike', W('engineer,'), { vol: -3, layer: 'wsj' });
+    R.sfx('orchhit', W('engineer,'), { vol: -6, layer: 'wsj' });
+    R.flash(A, W('engineer,') + 0.3, 1);
+
+    // the stakes: how rare it is, and the pay
+    R.show(R.$('#hires'), W('really')); R.sfx('pop', W('really'), { vol: -4, layer: 'wsj' });
+    R.show(R.$('#pay'), W('fortune')); R.sfx('coin', W('fortune'), { vol: -4, layer: 'cxl' });
+    R.blink(R.$('#pay'), W('fortune') + 0.4, END, 0.5);
+    R.done(END);
+  </script>
+</body>
+</html>
