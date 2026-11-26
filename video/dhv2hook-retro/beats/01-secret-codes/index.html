@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- 01-secret-codes: "Your AI agent can find you Black Friday deals": below the chest (the face sits high in this
+     shot). The agent's terminal scans ads; code chips land scrambled on "find", "Black", "Friday" and decode one by
+     one; the last lands on "deals" and stays redacted (the secret one). Counter in the title bar. Hands over to
+     02 on "that were never". (From dealhunter-retro's 01, retimed to v2's hook.) -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>01-secret-codes</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .cmd { font: calc(var(--u) * 4)/1 var(--f-pixel); }
+    .codes { display: flex; gap: calc(var(--u) * 1); margin-top: calc(var(--u) * 1.8); }
+    .codes .chip-inv { font-size: calc(var(--u) * 3.9); padding-left: calc(var(--u) * .8); padding-right: calc(var(--u) * .8); }
+    .codes .sec { background: var(--accent); color: var(--ink); }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("Your AI agent", 0);
+    const END = R.w('that', R.w('deals')), W = p => R.w(p, R.START - 0.1);
+    const GL = '▓▒░#%&@$?!*';
+    const CODES = ['SUPERSALE20', 'BLACKFRIDAY15', 'NEWSUB2026', '▓▓▓▓▓'];
+
+    const A = R.win({ title: 'agent ▸ hunt --black-friday', right: 'found <span id="n">0</span>', variant: 'paper', x: 9, y: 118, w: 82, h: 'auto',
+      body: `<div class="cmd"><span class="type" id="cmd">▸ reading every live ad…</span></div>` +
+        `<div class="codes">${CODES.map((c, i) => `<span class="chip-inv h${i === 3 ? ' sec' : ''}" id="c${i}">${c}</span>`).join('')}</div>` });
+    R.open(A, R.START, { from: { x: 38, y: 90 } });
+    R.type(R.$('#cmd'), 0.4, 30);
+
+    // each chip lands as glyph noise, then decodes; the secret one never does
+    const scramble = (el, a, b, n, s) => R.every(a, b, t => { R.seed(Math.floor(t * 15) * 7 + s); let o = ''; for (let i = 0; i < n; i++) o += GL[Math.floor(R.rnd() * GL.length)]; el.textContent = o; });
+    const land = [W('find'), W('Black'), W('Friday'), W('deals')];
+    CODES.forEach((c, i) => {
+      const el = R.$('#c' + i), t = land[i];
+      R.show(el, t);
+      R.sfx('pop', t, { vol: -6 });
+      if (i < 3) { scramble(el, t, t + 0.3, c.length, i); R.text(el, t + 0.3, c); R.sfx('blip', t + 0.3, { vol: -8, freq: 700 + i * 120 }); R.text(R.$('#n'), t + 0.3, String(i + 1)); }
+      else scramble(el, t, END, 5, 9);
+    });
+    R.sfx('secret', W('deals'), { vol: -6 });
+    R.text(R.$('#n'), W('deals') + 0.15, '4 · 1 hidden');
+    R.flash(R.$('#c3'), W('deals') + 0.15, 1);
+    R.done(END);
+  </script>
+</body>
+</html>

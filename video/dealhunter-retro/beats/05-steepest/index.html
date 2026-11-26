@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- 05-steepest: "get your AI agent to go through the influencer marketing campaigns that have the steepest
+     discount code": above the head. The three codes from beat 01, tried on a $499 TV: each races its
+     "% off" bar and shows what it saves in dollars; on "steepest" NEWSUB2026 (30%, −$149.70) jumps to the
+     top and inverts. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05-steepest</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .rank .win__body { padding: calc(var(--u) * 1.2) calc(var(--u) * 1.4); }
+    .list { position: relative; height: calc(var(--u) * 15.6); }
+    .rw { position: absolute; left: 0; right: 0; height: calc(var(--u) * 4.8); display: flex; align-items: center; gap: calc(var(--u) * 1.4);
+          font: calc(var(--u) * 4.2)/1 var(--f-pixel); padding: 0 calc(var(--u) * .8); white-space: nowrap; }
+    .rw .nm { width: calc(var(--u) * 21.5); }
+    .rw .tr { flex: 1; height: calc(var(--u) * 2.4); border: var(--hair) solid currentColor; position: relative; }
+    .rw .fl { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: currentColor; }
+    .rw .pc { width: calc(var(--u) * 11.5); text-align: right; }
+    .rw .sv { width: calc(var(--u) * 13.5); text-align: right; }
+  </style>
+</head>
+<body data-world="yellow">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = 19.33;
+    const END = 24.47, W = p => R.w(p, R.START - 0.1);
+    const PRICE = 499;
+    const ROWS = [['SUPERSALE20', 20], ['BLACKFRIDAY15', 15], ['NEWSUB2026', 30]];   // unsorted: the steepest starts last
+    const ROW = 5.4;
+    const money = v => `−$${(PRICE * v / 100).toFixed(2)}`;
+
+    const A = R.win({ title: 'agent ▸ best code · $499 TV', right: '<span id="st">ready</span>', variant: 'paper', x: 9, y: 21, w: 82, h: 'auto',
+      body: `<div class="list">${ROWS.map(([n], i) => `<div class="rw" id="r${i}" style="top:${R.u(i * ROW)}"><span class="nm">${n}</span><span class="tr"><span class="fl" id="f${i}"></span></span><span class="pc" id="p${i}">0% off</span><span class="sv" id="s${i}">−$0.00</span></div>`).join('')}</div>` });
+    A.classList.add('rank');
+    R.open(A, W('agent'), { from: { x: 55, y: 72 } });
+
+    // going through the campaigns: each code is tried at checkout
+    const ra = W('influencer'), rb = W('have');
+    R.text(R.$('#st'), W('go'), 'trying codes…');
+    R.blink(R.$('#st'), W('go'), rb, 0.5);
+    ROWS.forEach(([, pct], i) => {
+      const f = R.$('#f' + i), p = R.$('#p' + i), s = R.$('#s' + i);
+      R.every(ra, rb, t => { const k = R.clamp((t - ra) / (rb - ra)); R.seed(Math.floor(t * 15) * 3 + i); const v = k >= 1 ? pct : Math.round(pct * k * (0.75 + R.rnd() * 0.5)); f.style.width = `${Math.min(100, v / 30 * 100)}%`; p.textContent = `${v}% off`; s.textContent = money(v); });
+    });
+    R.sfx('rev', ra, { vol: -10 });
+    R.text(R.$('#st'), rb, 'sorted ▼ by savings'); R.show(R.$('#st'), rb);
+    R.sfx('tick', rb, { vol: -4 });
+
+    // "steepest": NEWSUB2026 climbs to the top, the others step down
+    const st = W('steepest');
+    [[2, 0], [0, 1], [1, 2]].forEach(([i, to]) => {
+      const el = R.$('#r' + i);
+      R.tl.set(el, { top: R.u(R.lerp(i, to, 0.5) * ROW) }, R.T(st));
+      R.tl.set(el, { top: R.u(to * ROW) }, R.T(st) + 2 * R.F);
+    });
+    R.sfx('select', st, { vol: -4 });
+    R.tl.set(R.$('#r2'), { backgroundColor: 'var(--ink)', color: 'var(--accent)' }, R.T(W('discount')));
+    R.text(R.$('#st'), W('discount'), 'best: NEWSUB2026');
+    R.sfx('coin', W('discount'), { vol: -4 });
+    R.flash(R.$('#r2'), W('code.'), 1);
+    R.done(END);
+  </script>
+</body>
+</html>

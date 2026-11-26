@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- 09-guide: "So if you want my free guide on the titles to search for, the skills to build and a 90-day
+     action plan. Comment marketing below and I'll send it to you for free and follow along for more tips on
+     building with AI.": the guide's real header opens below the chest with its three parts ticking in and
+     the 12 weeks filling; then a comment box types MARKETING, sends, and a Follow button gets pressed. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>09-guide</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    #GD .win__body { padding: 0; display: flex; flex-direction: column; }
+    #GD img { display: block; width: 100%; }
+    #GD .lst { display: flex; flex-direction: column; gap: calc(var(--u) * .9); padding: calc(var(--u) * 1.4) calc(var(--u) * 1.8) calc(var(--u) * 1.6); }
+    .it { display: flex; align-items: center; gap: calc(var(--u) * 1.2); font: 400 calc(var(--u) * 2.7)/1 var(--f-mono); }
+    .it .px { font-size: calc(var(--u) * 4); width: calc(var(--u) * 4); }
+    .wk { display: grid; grid-template-columns: repeat(12, 1fr); gap: calc(var(--u) * .4); }
+    .wk i { display: flex; align-items: center; justify-content: center; height: calc(var(--u) * 3.4); border: var(--hair) solid var(--ink); font: normal calc(var(--u) * 2.4)/1 var(--f-pixel); }
+    #CM .win__body { display: flex; flex-direction: column; gap: calc(var(--u) * 1.4); padding: calc(var(--u) * 1.6) calc(var(--u) * 1.8); }
+    .inp { display: flex; align-items: center; gap: calc(var(--u) * 1.2); }
+    .field { flex: 1; height: calc(var(--u) * 7.4); border: var(--hair) solid var(--ink); background: var(--paper); display: flex; align-items: center; padding: 0 calc(var(--u) * 1.4); }
+    .field .disp { font-size: calc(var(--u) * 5); line-height: 1; }
+    .btn { display: inline-flex; align-items: center; height: calc(var(--u) * 7.4); padding: 0 calc(var(--u) * 2); background: var(--ink); color: var(--accent); font: calc(var(--u) * 4.4)/1 var(--f-pixel);
+           box-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 var(--ink-55); }
+    .bot { display: flex; align-items: center; justify-content: space-between; }
+  </style>
+</head>
+<body data-world="teal">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w('So if you', 0);
+    const END = R.we('AI.', 62), W = p => R.w(p, R.START - 0.1);
+
+    // the guide (layer: guide)
+    const GD = R.win({ title: 'davecto.com/resources', right: 'free · 90 days', variant: 'paper', x: 9, y: 98, w: 82, h: 'auto', layer: 'guide',
+      body: `<img src="guide.png" style="aspect-ratio:2160/400">
+        <div class="lst"><div class="it h" id="i1"><span class="px">▶</span>4 job titles to search</div>
+          <div class="it h" id="i2"><span class="px">▶</span>8 skills to build</div>
+          <div class="it h" id="i3"><span class="px">▶</span>a 90-day plan, week by week</div>
+          <div class="wk">${Array.from({ length: 12 }, (_, i) => `<i>W${String(i + 1).padStart(2, '0')}</i>`).join('')}</div></div>` });
+    GD.id = 'GD';
+    R.open(GD, W('guide'), { from: { x: 50, y: 70 } });
+    [['i1', 'titles'], ['i2', 'skills'], ['i3', '90']].forEach(([id, w]) => { R.show(R.$('#' + id), W(w)); R.sfx('pop', W(w), { vol: -5, layer: 'guide' }); });
+    const wk = [...GD.querySelectorAll('.wk i')], w0 = W('-day'), w1 = W('plan.') + 0.3;
+    wk.forEach((el, i) => R.tl.set(el, { backgroundColor: 'var(--accent)' }, R.T(w0 + (w1 - w0) * i / 11)));
+    R.sfx('arpup', w0, { vol: -10, layer: 'guide' });
+    R.close(GD, W('Comment') - 0.05);
+
+    // comment MARKETING, sent; follow (layer: comment)
+    const CM = R.win({ title: 'Comments', right: '@davecto', x: 9, y: 101, w: 82, h: 'auto', layer: 'comment',
+      body: `<div class="inp"><div class="field"><span class="disp type" id="kw">MARKETING</span><span class="disp" id="cur">▌</span></div><span class="btn" id="post">Post ▶</span></div>
+        <div class="bot"><span class="chip-inv h" id="sent">✉ guide sent · free</span><span class="btn h" id="fol">+ Follow</span></div>` });
+    CM.id = 'CM';
+    R.open(CM, W('Comment'), { from: { x: 50, y: 110 } });
+    R.type(R.$('#kw'), W('marketing'), 22);
+    R.blink(R.$('#cur'), W('Comment'), END, 0.5);
+    R.press(R.$('#post'), W('below'));
+    R.show(R.$('#sent'), W('send')); R.sfx('success', W('send'), { vol: -5, layer: 'comment' });
+    R.show(R.$('#fol'), W('follow')); R.sfx('pop', W('follow'), { vol: -5, layer: 'comment' });
+    R.press(R.$('#fol'), W('along')); R.sfx('oneup', W('more'), { vol: -8, layer: 'comment' });
+    R.done(END);
+  </script>
+</body>
+</html>
