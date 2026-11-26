@@ -4,7 +4,7 @@ import { record } from './history.js';
 /* Saving. Every edit goes to retro.json through the server, and every save is checked: the server sends
    back what it stored, and if something we sent isn't there (an out-of-date server), or the server
    can't be reached for a while, a red banner says so instead of the edit quietly vanishing. */
-export const API = 5;                                         // must match lib/studio.mjs API
+export const API = 6;                                         // must match lib/studio.mjs API
 export const pending = new Map();                             // beat id → patch waiting to be saved
 let saveT = null;
 export function save(b, patch, delay = 0) {

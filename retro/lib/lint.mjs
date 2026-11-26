@@ -1,5 +1,6 @@
 /* Placement lint: checks every beat's visible boxes (from the probe, every 2 frames) against the face
-   no-go zone and the Instagram UI zone. Rules live in faces.mjs. Exceptions per beat in retro.json:
+   no-go zone (where the face shows, after the zoom: project.screenFaces) and the Instagram UI zone. Rules
+   live in rules.mjs. Exceptions per beat in retro.json:
    "allow": ["face"] or ["safe"] (or both), or ["clip"] for a beat whose overflow is on purpose.
    Also reported: content a window cuts off (kind 'clip', from the probe) and the kit's timing
    warnings (kind 'timing'). */
@@ -65,7 +66,8 @@ export const describe = i => i.kind === 'timing' ? `${i.beat}: ${i.msg}`
     lint panel: { at, issues: [{ ...issue, text, t }] } (t = where to look, in video seconds). */
 export async function lintProject(project, ids = project.beatIds()) {
   ids = ids.filter(id => project.on(id));
-  const pr = await probe(project, ids), issues = lint(project, pr, project.faces());
+  const pr = await probe(project, ids), all = await probe(project, project.beatIds());   // all: every beat's zoom moves the face
+  const issues = lint(project, pr, project.screenFaces(all));
   saveLint(project, issues, pr, ids.length === project.beatIds().filter(id => project.on(id)).length);
   return { issues, probes: pr };
 }

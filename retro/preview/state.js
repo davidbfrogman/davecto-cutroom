@@ -7,7 +7,7 @@ export const state = await (await fetch('api/state')).json();
 export const [W, H] = state.size, DUR = state.duration, FH = 100 * H / W;      // frame height in u
 export const cut = { state: 'none', progress: 0, on: false, gl: null, canvas: null };   // the speaker cutout (see "behind me")
 
-export const beats = state.beats.map(b => ({ ...b, move: b.move || {}, ltime: b.ltime || {}, hide: b.hide || [], behind: b.behind || [], sounds: b.sounds || { edit: {}, add: [] }, ready: false }));
+export const beats = state.beats.map(b => ({ ...b, move: b.move || {}, ltime: b.ltime || {}, hide: b.hide || [], behind: b.behind || [], sounds: b.sounds || { edit: {}, add: [] }, zoom: b.zoom || null, ready: false }));
 export const S = {
   cur: null,                     // the beat in the inspector
   sel: null,                     // { beat, layer } being moved
@@ -21,7 +21,7 @@ export const S = {
   undoNote: -1e9,                // when undo/redo last said something (so "Saved" doesn't talk over it)
 };
 const pref = (k, d) => (localStorage.getItem('retro.' + k) ?? d) === '1';
-export const opts = { sfx: pref('sfx', '1'), zone: pref('zone', '0'), snapV: pref('snapV', '0'), snapH: pref('snapH', '0') };
+export const opts = { sfx: pref('sfx', '1'), zone: pref('zone', '0'), ig: pref('ig', '0'), snapV: pref('snapV', '0'), snapH: pref('snapH', '0') };
 
 let statusT = null;
 export const status = s => { $('#status').textContent = s; $('#status').style.opacity = 1; clearTimeout(statusT); statusT = setTimeout(() => { $('#status').style.opacity = 0; }, 2500); };

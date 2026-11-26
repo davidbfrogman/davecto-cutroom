@@ -29,6 +29,39 @@
   #stage iframe { border: 0; transform-origin: 0 0; pointer-events: none; visibility: hidden; background: transparent; }
   #grab { inset: 0; width: 100%; height: 100%; cursor: default; }
   #grab.can { cursor: grab; } #grab.dragging { cursor: grabbing; }
+  /* Instagram Reels UI on an iPhone (header toggle, preview/ig.js): a guide only. The phone crops ~5u off the
+     frame's sides (shaded); inside it, sizes are in --p = 1% of the phone screen's width. */
+  #ig { position: absolute; inset: 0; pointer-events: none; display: none; color: #fff;
+        font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif; text-shadow: 0 0 calc(var(--u) * .5) rgba(0, 0, 0, .45); }
+  #ig .ig-crop { position: absolute; top: 0; bottom: 0; width: calc(var(--u) * (100 - var(--screen)) / 2); background: rgba(0, 0, 0, .55); }
+  #ig .ig-crop.l { left: 0; } #ig .ig-crop.r { right: 0; }
+  #ig .ig-phone { position: absolute; top: 0; height: calc(var(--u) * var(--screen) * 2.172); left: calc(var(--u) * (100 - var(--screen)) / 2); width: calc(var(--u) * var(--screen));
+                  --p: calc(var(--u) * var(--screen) / 100); }
+  #ig svg { display: block; filter: drop-shadow(0 0 calc(var(--u) * .35) rgba(0, 0, 0, .4)); }
+  #ig .ig-at { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; }
+  #ig .ig-at.ig-l { transform: translate(0, -50%); }
+  #ig .ig-at.ig-rt { transform: translate(-100%, -50%); }
+  #ig .ig-time { font-size: calc(var(--p) * 4.4); font-weight: 600; letter-spacing: -.02em; }
+  #ig .ig-stat { display: flex; align-items: center; gap: calc(var(--p) * 1.6); }
+  #ig .sig { display: flex; align-items: flex-end; gap: calc(var(--p) * .45); height: calc(var(--p) * 3); }
+  #ig .sig s { display: block; width: calc(var(--p) * .8); background: #fff; border-radius: calc(var(--p) * .3); }
+  #ig .sig s:nth-child(1) { height: 35%; } #ig .sig s:nth-child(2) { height: 55%; } #ig .sig s:nth-child(3) { height: 78%; } #ig .sig s:nth-child(4) { height: 100%; opacity: .4; }
+  #ig .bat { display: inline-flex; align-items: center; justify-content: center; width: calc(var(--p) * 6.4); height: calc(var(--p) * 3.4); border-radius: calc(var(--p) * 1.1);
+             background: #fff; color: #222; font-size: calc(var(--p) * 2.3); font-weight: 700; text-shadow: none; }
+  #ig .ig-n { font-size: calc(var(--p) * 2.4); font-weight: 600; }
+  #ig .ig-av { display: block; width: calc(var(--p) * 8.4); height: calc(var(--p) * 8.4); border-radius: 50%; background: #8d8d8d; }
+  #ig .ig-av.ring { width: calc(var(--p) * 9.8); height: calc(var(--p) * 9.8); border: calc(var(--p) * .7) solid transparent;
+                    background: linear-gradient(#8d8d8d, #8d8d8d) padding-box, linear-gradient(45deg, #f9c33a, #e4405f, #b62fbf) border-box; box-shadow: inset 0 0 0 calc(var(--p) * .5) #111; }
+  #ig .ig-av.xs { display: inline-block; width: calc(var(--p) * 3.9); height: calc(var(--p) * 3.9); margin-right: calc(var(--p) * -1); border: calc(var(--p) * .25) solid #fff; vertical-align: middle; }
+  #ig .ig-user { display: flex; align-items: center; gap: calc(var(--p) * 1.4); font-size: calc(var(--p) * 2.9); }
+  #ig .ig-tick { display: inline-flex; align-items: center; justify-content: center; width: calc(var(--p) * 2.6); height: calc(var(--p) * 2.6); border-radius: 50%; background: #fff; color: #222;
+                 font-size: calc(var(--p) * 1.7); font-weight: 800; text-shadow: none; margin-left: calc(var(--p) * -.6); }
+  #ig .ig-follow { border: calc(var(--p) * .25) solid rgba(255, 255, 255, .85); border-radius: calc(var(--p) * 1.3); padding: calc(var(--p) * .8) calc(var(--p) * 1.6); font-weight: 600; font-size: calc(var(--p) * 2.7); }
+  #ig .ig-cap { font-size: calc(var(--p) * 2.7); }
+  #ig .ig-fb { font-size: calc(var(--p) * 2.2); color: rgba(255, 255, 255, .85); }
+  #ig .ig-fb .ig-av.xs:nth-child(3) { margin-right: calc(var(--p) * 1.6); }
+  #ig .ig-prog { position: absolute; left: calc(var(--p) * 3.7); right: calc(var(--p) * 3.7); top: calc(var(--p) * 194.7); height: calc(var(--p) * .35); background: rgba(255, 255, 255, .3); }
+  #ig .ig-prog i { display: block; width: 10%; height: 100%; background: #fff; }
   #zone { border: 2px dashed #ff5a5a; pointer-events: none; display: none; }
   #selBox { border: 1.5px solid var(--sel); border-radius: 2px; pointer-events: none; display: none; box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
   #selBox span { position: absolute; left: -1.5px; bottom: 100%; margin-bottom: 4px; background: var(--sel); color: #0b1424; font-size: 11px; font-weight: 600;
@@ -295,3 +328,14 @@ a.pill { text-decoration: none; }
 @keyframes pr-move { to { background-position: 28px 0; } }
 .pr-err { color: #ff9a9a; white-space: pre-wrap; font-size: 12.5px; }
 .pr-foot { display: flex; align-items: center; gap: 12px; margin-top: 18px; color: var(--faint); font-size: 12px; } .pr-foot a { text-decoration: none; }
+
+/* Zoom card (preview/zoom.js) */
+.zoomc .zseg { display: flex; width: 100%; }
+.zoomc .zseg button { flex: 1; padding: 3px 4px; }
+.zoomc .line { margin-top: 6px; }
+.zoomc .line input[type=range] { flex: 1; min-width: 0; }
+.zoomc .plist { margin-top: 6px; }
+.zoomc .prow { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-top: 1px solid var(--line); font-size: 12px; }
+.zoomc .prow .pw { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zoomc .prow input { width: 44px; background: var(--bg); border: 1px solid var(--line-2); border-radius: 5px; padding: 1px 4px; }
+.zoomc select { margin-top: 8px; width: 100%; background: var(--bg); border: 1px solid var(--line-2); border-radius: 7px; padding: 4px 6px; }

@@ -21,12 +21,13 @@ export const RESETS = [
               b => { for (const e of Object.values(b.sounds.edit || {})) delete e.shift; }],
   ['sadd',    'Added sounds', 'remove the sounds you added', b => (b.sounds.add || []).length, b => { b.sounds.add = []; }],
   ['level',   'Beat sound levels', 'beat volume sliders, beats muted', b => (b.sfxGain ? 1 : 0) + (b.sfx === false ? 1 : 0), b => { delete b.sfxGain; delete b.sfx; }],
+  ['zoom',    'Zooms', "zoom settings and punch-ins, back to the project's default", b => (b.zoom ? 1 : 0), b => { b.zoom = null; }],
 ];
 let resetScope = 'all', resetAsk = null, undoT = null;
 export const scopeBeats = () => (resetScope === 'beat' && S.cur ? [S.cur] : beats);
 export function persist(b) {                                  // write a beat's whole editable state, then rebuild it
   for (const [k, e] of Object.entries(b.sounds.edit || {})) if (!Object.keys(e).length) delete b.sounds.edit[k];
-  save(b, { on: b.on !== false, move: b.move, time: b.time || null, ltime: b.ltime, hide: b.hide, behind: b.behind, sounds: b.sounds, sfxGain: b.sfxGain || 0, sfx: b.sfx !== false });
+  save(b, { on: b.on !== false, move: b.move, time: b.time || null, ltime: b.ltime, hide: b.hide, behind: b.behind, sounds: b.sounds, sfxGain: b.sfxGain || 0, sfx: b.sfx !== false, zoom: b.zoom || null });
   for (const k of [...laneOf.keys()]) if (k.startsWith(b.id + '|')) laneOf.delete(k);
   if (b.ready) rebuild(b);
 }

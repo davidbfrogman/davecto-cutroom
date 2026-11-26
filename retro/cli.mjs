@@ -12,6 +12,7 @@ import { probe } from './lib/probe.mjs';
 import { checkDeps, createProject, duration, findProject, Project, RETRO, transcribe } from './lib/project.mjs';
 import { rangeMatte } from './lib/cutout.mjs';
 import { renderOverlays, renderProject, sheet, writeSfx } from './lib/render.mjs';
+import { DEFAULT as ZOOM, KINDS } from './lib/zoom.mjs';
 
 const HELP = `retro: Retro OS overlays + sound effects for a finished video
 
@@ -61,6 +62,16 @@ Tweak (all of this is retro.json; edit it by hand if you like)
   retro behind <beat> <layer>  /  retro front <beat> <layer>
                                   put an animation behind you (you're cut out of the video and drawn
                                   over it) or back in front
+  retro zoom                      each beat's zoom: what it's set to and what it does
+  retro zoom auto [beats]         the easy button: every beat (or these) on auto: a quick zoom out then a
+                                  slow push on the opening beat, a slow push 100→125% on the rest, about
+                                  your face instead of the centre where the centre would lose you
+  retro zoom <beats> push|pop|pan|off|auto [--to 1.3]
+                                  push = slow push about the centre; pop = quick zoom out, then the push;
+                                  pan = the push about your face (zoom + pan); --to = how far (1.25)
+  retro zoom <beat> punch <phrase|secs> [--dur 1.2] [--by 1.15]
+                                  punch in on a word: jump 15% closer for 1.2 s   (punch --clear: none)
+  retro zoom <beats> --reset      back to the project's default (new projects: auto)
 
 Render
   retro render [beats] [--draft] [--no-sfx] [--no-open] [--video other.mov] [--size 1080x1920]
@@ -122,14 +133,14 @@ const cmds = {
   },
 
   faces() { const p = P(); const f = detect(p); console.log(`${f.samples.length} samples, cuts at ${f.cuts.join(', ')}`); printLayout(p, f); },
-  layout() { const p = P(); const f = p.faces(); if (!f) throw new Error('No faces.json: run retro faces'); printLayout(p, f); },
+  layout() { const p = P(); const f = p.screenFaces(); if (!f) throw new Error('No faces.json: run retro faces'); printLayout(p, f); },
 
   beat() {
     const p = P(), to = flag('--to', true), id = argv[0], phrase = argv.slice(1).join(' ');
     if (!/^\d\d-[a-z0-9-]+$/.test(id || '')) throw new Error('retro beat <NN-name> [phrase] [--to phrase|secs], e.g. retro beat 03-ton-smarter "a ton smarter"');
     const d = join(p.dir, 'beats', id);
     if (existsSync(join(d, 'index.html'))) throw new Error(`${id} exists`);
-    const ws = p.words(), f = p.faces(), cuts = f?.cuts || [];
+    const ws = p.words(), f = p.screenFaces(), cuts = f?.cuts || [];   // the face where it shows (zoom included, as far as the beats so far go)
     const find = (q, after = 0) => {
       const n = s => s.toLowerCase().replace(/[^a-z0-9%$' ]+/g, ' ').trim(), qs = n(q).split(/\s+/);
       const i = ws.findIndex((w, i) => w.t >= after - 1e-6 && qs.every((x, j) => n(ws[i + j]?.w || '') === x || (j === qs.length - 1 && n(ws[i + j]?.w || '').startsWith(x))));
@@ -214,7 +225,7 @@ ${info} -->
   },
 
   zones() {
-    const p = P(), f = p.faces(); if (!f) throw new Error('No faces.json: run retro faces');
+    const p = P(), f = p.screenFaces(); if (!f) throw new Error('No faces.json: run retro faces');
     const [a = 0, b = Math.max(p.words().at(-1)?.e ?? 0, f.samples.at(-1).t)] = argv.map(Number);
     console.log(`free space, worst case per stretch (u). Cuts: ${f.cuts.join(', ')}`);
     for (const z of zones(f, a, b)) console.log(`${z.a.toFixed(2).padStart(6)}–${z.b.toFixed(2).padEnd(6)} ${fmtZone(z)}`);
@@ -222,10 +233,11 @@ ${info} -->
 
   async ls() {
     const p = P(), pr = await probes(p);
+    const zs = Object.fromEntries(p.zoom(pr).resolved.filter(r => r.does !== 'off' || r.punch.length).map(r => [r.id, zoomText(r)]));
     for (const id of p.beatIds()) {
       const b = p.beat(id), x = pr[id];
       const mv = Object.entries(b.move || {}).map(([k, [dx, dy]]) => `${k}:${dx},${dy}`).join(' ');
-      console.log(`${p.on(id) ? 'on ' : 'off'}  ${id.padEnd(20)} ${x.start.toFixed(2).padStart(6)}–${x.end.toFixed(2).padEnd(6)} layers: ${x.layers.join(',').padEnd(18)} sfx: ${b.sfx === false ? 'muted' : `${x.cues.length}${b.sfxGain ? ` @${b.sfxGain}dB` : ''}`}${mv ? `  move ${mv}` : ''}${b.time ? `  time ${JSON.stringify(b.time)}` : ''}${b.ltime ? `  ltime ${JSON.stringify(b.ltime)}` : ''}${b.hide ? `  hidden ${b.hide.join(',')}` : ''}${b.behind ? `  behind ${b.behind.join(',')}` : ''}${b.allow ? `  allow ${b.allow.join(',')}` : ''}`);
+      console.log(`${p.on(id) ? 'on ' : 'off'}  ${id.padEnd(20)} ${x.start.toFixed(2).padStart(6)}–${x.end.toFixed(2).padEnd(6)} layers: ${x.layers.join(',').padEnd(18)} sfx: ${b.sfx === false ? 'muted' : `${x.cues.length}${b.sfxGain ? ` @${b.sfxGain}dB` : ''}`}${mv ? `  move ${mv}` : ''}${b.time ? `  time ${JSON.stringify(b.time)}` : ''}${b.ltime ? `  ltime ${JSON.stringify(b.ltime)}` : ''}${b.hide ? `  hidden ${b.hide.join(',')}` : ''}${b.behind ? `  behind ${b.behind.join(',')}` : ''}${b.allow ? `  allow ${b.allow.join(',')}` : ''}${zs[id] ? `  zoom ${zs[id]}` : ''}`);
     }
   },
 
@@ -245,7 +257,7 @@ ${info} -->
     for (const v of argv) (args.length && !isBeat(v) ? ts : args).push(v);   // "12" = beat 12 if there is one; "12.0" = 12 s
     const ids = args[0] === 'all' ? p.beatIds().filter(id => p.on(id)) : p.match(args);
     if (!ids.length) throw new Error('retro frames <beat> [t ...] | --events | all | <beats...>');
-    const pr = await probes(p, ids), movs = await renderOverlays(p, ids);
+    const pr = await probes(p, ids), movs = await renderOverlays(p, ids), all = await probes(p);
     let items;
     if (ids.length > 1) items = ids.map(id => ({ id, t: +(pr[id].start + (pr[id].end - pr[id].start) * at).toFixed(2) }));
     else {
@@ -261,7 +273,7 @@ ${info} -->
     const name = ids.length > 1 ? (args[0] === 'all' ? 'check-all' : `check-${ids.map(i => i.slice(0, 2)).join('-')}`) : `check-${ids[0]}`;
     const mattes = {};
     for (const id of ids) if (movs[id].back) mattes[id] = await rangeMatte(p.video, p.out, pr[id].start, pr[id].end, p.size);
-    const out = sheet(p, items.map(i => ({ ...i, probe: pr[i.id], mov: movs[i.id], matte: mattes[i.id] })), name, { faces: p.faces(), zones: !clean });
+    const out = sheet(p, items.map(i => ({ ...i, probe: pr[i.id], mov: movs[i.id], matte: mattes[i.id] })), name, { faces: p.screenFaces(all), zones: !clean, zoom: p.zoom(all).segs });
     console.log(out);
     console.log(items.map((i, k) => `${k + 1}: ${i.id} @${i.t}`).join('  '));
   },
@@ -329,6 +341,49 @@ ${info} -->
     console.log(`${id}: ${b.behind ? `behind you: ${b.behind.join(', ')}` : 'everything in front'}`);
   },
 
+  async zoom() {
+    const p = P(), to = flag('--to', true), dur = flag('--dur', true), by = flag('--by', true), reset = flag('--reset'), clear = flag('--clear');
+    const show = async () => {
+      const pr = await probes(p), r = new Map(p.zoom(pr).resolved.map(x => [x.id, x]));
+      console.log(`project default: ${p.cfg.zoom ? JSON.stringify(p.cfg.zoom) : 'none (beats without a zoom stay as shot)'}`);
+      for (const id of p.beatIds()) console.log(`${id.padEnd(24)} ${r.get(id) ? zoomText(r.get(id)) : '(not probed)'}`);
+    };
+    if (!argv.length && !reset) return show();
+    const kind = argv.find(a => KINDS.includes(a)), pi = argv.indexOf('punch');
+    if (argv[0] === 'auto' && kind === 'auto') argv.shift();        // retro zoom auto [beats]
+    const ids = pi >= 0 ? p.match([argv[0]]) : p.match(argv.filter(a => a !== kind));
+    for (const id of ids) {
+      const b = p.beat(id), z = { ...(b.zoom || {}) };
+      if (reset) { delete b.zoom; continue; }
+      if (pi >= 0) {
+        if (clear) delete z.punch;
+        else {
+          const what = argv.slice(pi + 1).join(' ');
+          if (!what) throw new Error('retro zoom <beat> punch <phrase|secs> [--dur 1.2] [--by 1.15]');
+          let t = Number(what);
+          if (!Number.isFinite(t)) {
+            const pr = (await probes(p, [id]))[id], n = w => w.toLowerCase().replace(/[^a-z0-9%$']+/g, '');
+            const qs = what.split(/\s+/).map(n), ws = p.words();
+            const i = ws.findIndex((w, i) => w.t >= pr.start - 0.05 && w.t < pr.end && qs.every((q, j) => n(ws[i + j]?.w || '') === q));
+            if (i < 0) throw new Error(`"${what}" isn't said during ${id}`);
+            t = ws[i].t;
+          }
+          z.punch = [...(z.punch || []).filter(q => Math.abs(q.t - t) > 0.05), { t: Math.round(t * 1000) / 1000, dur: Number(dur ?? ZOOM.dur), by: Number(by ?? ZOOM.by) }].sort((m, n) => m.t - n.t);
+        }
+        if (!z.kind) z.kind = p.cfg.zoom ? 'auto' : 'off';         // a punch-in on its own doesn't switch the push on
+      } else {
+        if (!kind && !to) throw new Error(`retro zoom <beats> ${KINDS.join('|')} [--to 1.3]`);
+        if (kind) z.kind = kind;
+        if (to) z.to = Number(to);
+        else if (kind && !z.to) z.to = ZOOM.to;
+      }
+      if (!z.punch?.length) delete z.punch;
+      b.zoom = z;
+    }
+    p.save();
+    await show();
+  },
+
   sfx() {
     const p = P(), what = argv.shift(), v = argv.shift();
     if (what === 'all') { p.cfg.sfxGain = Number(v); p.save(); console.log(`sound stem ${p.cfg.sfxGain} dB`); return; }
@@ -387,6 +442,13 @@ ${info} -->
   // Write only the SFX stem (out/sfx.wav), e.g. to drop into an editor.
   async stem() { const p = P(); const pr = await probes(p); const s = writeSfx(p, pr, duration(p.video)); console.log(`${s.count} cues → ${s.file}`); },
 };
+
+/** One beat's zoom in words, e.g. "auto → push 100→125% (centre) · punch 14.38 +15% 1.2s". */
+function zoomText(r) {
+  const what = { push: 'push', pop: 'pop + push', pan: 'push + pan (about your face)', off: 'no push' }[r.does];
+  const pct = `100→${Math.round(r.to * 100)}%`;
+  return `${r.kind === r.does ? '' : `${r.kind} → `}${what}${r.does === 'off' ? '' : ` ${pct}`}${r.punch.map(q => ` · punch ${q.t.toFixed(2)} +${Math.round((q.by - 1) * 100)}% ${(q.end - q.t).toFixed(1)}s`).join('')}`;
+}
 
 function printLayout(p, f) {
   const end = p.words().at(-1)?.e ?? f.samples.at(-1).t;
