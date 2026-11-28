@@ -134,9 +134,12 @@ All times are **absolute seconds in the video**.
 **Layers:** give separate pieces their own layer (`layer: 'save'`) so the user can drag one without
 the other. A cursor that clicks a button goes in the button's layer.
 
-**Colour:** `--accent` is the world colour (pink by default). `data-world="teal"` on `<body>` or any
-element switches it: pink teal magenta sage yellow blue lavender orange coral lime sky green.
-Chips: `.chip-inv` (ink, accent text), `.chip`, `.chip--green/--warm/--cool/--world`.
+**Colour: one accent, pink.** The user's call (Nov 2026): a video reads as one piece when every beat is
+pink + ink + paper + the window greys, like the first videos. A different world colour per beat looked
+jarring and disjointed. So keep `data-world="pink"` (the skeleton's default) on every beat, use the accent
+for the one thing that matters, and leave `.chip--green/--warm/--cool` alone. Another world colour only
+when the user asks for it. (`data-world` can switch `--accent` to teal magenta sage yellow blue lavender
+orange coral lime sky green.) Chips: `.chip-inv` (ink, accent text), `.chip`, `.chip--world`.
 Other classes: `.dots`, `.crop` (4 `<b>`), `.rule`, `.micro`, `.disp` (Inter Tight display), `.px`, `.mono`.
 
 ## Sound

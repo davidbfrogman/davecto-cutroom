@@ -1,0 +1,55 @@
+<!doctype html>
+<!-- 03-top-15: "It was in the top 15 trending repos last week": below the chest. Trending.Repos: the rank counts
+     down from #2,481 and on "15" the repo drops into the empty #12 slot in pink; "▲ Top 15" lands on "trending". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03-top-15</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .hd { display: flex; justify-content: space-between; align-items: center; font: calc(var(--u) * 4.2)/1 var(--f-pixel); margin-bottom: calc(var(--u) * 1.4); }
+    #rank { font-size: calc(var(--u) * 7); }
+    .list { position: relative; height: calc(var(--u) * 24); }
+    .rw { position: absolute; left: 0; right: 0; height: calc(var(--u) * 4.2); display: flex; align-items: center; gap: calc(var(--u) * 1.6);
+          font: calc(var(--u) * 3.8)/1 var(--f-pixel); padding: 0 calc(var(--u) * 1); }
+    .rw b { font-weight: 400; width: calc(var(--u) * 5); }
+    .rw s { flex: 1; height: calc(var(--u) * 1.6); background: var(--win-2); text-decoration: none; }
+    .slot { border: var(--hair) dashed var(--ink-55); }
+    #me { background: var(--accent); border: var(--hair) solid var(--ink); }
+    #me span { flex: 1; }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    // R.flash inverts colours, and inverted pink is green: this inverts lightness only, so pink stays pink.
+    R.flash = (el, t, n = 2) => { for (let i = 0; i < n; i++) { R.tl.set(el, { filter: 'invert(1) hue-rotate(180deg)' }, R.T(t) + i * 2 * R.F); R.tl.set(el, { filter: 'none' }, R.T(t) + (i * 2 + 1) * R.F); } };
+    R.START = R.w("It was in", 0);
+    const END = 8.8, W = p => R.w(p, R.START - 0.1);
+    const rows = [10, 11, 12, 13, 14], y = i => `calc(var(--u) * ${i * 4.9})`;
+
+    const A = R.win({ title: 'Trending.Repos', right: 'last week', variant: 'paper', x: 9, y: 96, w: 82, h: 'auto',
+      body: `<div class="hd"><span>This repo</span><span id="rank">#2,481</span></div>
+             <div class="list">${rows.map((n, i) => n === 12
+               ? `<div class="rw slot" style="top:${y(i)}"></div><div class="rw h" id="me" style="top:${y(i)}"><b>#12</b><span>Night shift for your agent</span><span style="flex:none">★▲</span></div>`
+               : `<div class="rw" style="top:${y(i)}"><b>#${n}</b><s style="max-width:${[66, 54, 0, 50, 42][i]}%"></s></div>`).join('')}</div>
+             <span class="chip-inv h" id="tag" style="position:absolute;right:calc(var(--u) * 1.6);top:calc(var(--u) * 1.2)">▲ TOP 15</span>` });
+    R.open(A, R.START, { from: { x: 50, y: 70 } });
+
+    R.count(R.$('#rank'), W('in'), W('15') - W('in'), 2481, 12, v => `#${Math.round(v).toLocaleString('en-US')}`);
+    R.sfx('arpup', W('in') - 0.2, { vol: -8 });
+    R.show(R.$('#me'), W('15'));
+    R.flash(R.$('#me'), W('15'), 1);
+    R.sfx('powerup', W('15'), { vol: -4 });
+    R.hide(R.$('#rank'), W('trending'));
+    R.show(R.$('#tag'), W('trending'));
+    R.sfx('pop', W('trending'), { vol: -4 });
+    R.done(END);
+  </script>
+</body>
+</html>

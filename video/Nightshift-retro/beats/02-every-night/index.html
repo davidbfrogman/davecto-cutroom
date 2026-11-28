@@ -1,0 +1,91 @@
+<!doctype html>
+<!-- 02-every-night: "every night before you go to bed, you might wanna check out this free GitHub repo". Below the chest.
+     A hand flips the light switch OFF on "bed": the room goes black but for Shifty's blinking eyes and a glowing
+     vending machine. On "free" the price flashes $0.00 and a nightshift box drops into the tray on "GitHub repo". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>02-every-night</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    .plate { background: var(--paper); border: var(--hair) solid var(--ink); }
+    .tog { background: var(--ink); }
+    .lbl { font: calc(var(--u) * 2.4)/1 var(--f-mono); }
+    .dark { background: var(--ink); inset: 0; }
+    .eye { background: var(--accent); }
+    .vm { background: var(--win-2); border: var(--hair) solid var(--ink); box-shadow: 0 0 0 calc(var(--u) * .6) var(--accent); }
+    .vm .hd { position: absolute; left: 0; right: 0; top: 0; height: calc(var(--u) * 4.4); background: var(--accent); border-bottom: var(--hair) solid var(--ink);
+              font: calc(var(--u) * 3.2)/calc(var(--u) * 4.4) var(--f-pixel); text-align: center; }
+    .glass { background: var(--ink); border: var(--hair) solid var(--ink); }
+    .item { background: var(--win-2); border: var(--hair) solid var(--ink); }
+    .item.me { background: var(--accent); }
+    .price { background: var(--paper); border: var(--hair) solid var(--ink); font: calc(var(--u) * 3.4)/1 var(--f-pixel); text-align: center; padding-top: calc(var(--u) * .5); }
+    .tray { background: var(--ink); }
+    .box { background: var(--accent); border: var(--hair) solid var(--ink); font: calc(var(--u) * 2.2)/1 var(--f-pixel); display: grid; place-items: center; }
+    .say { font: calc(var(--u) * 3.6)/1 var(--f-pixel); color: var(--paper); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("every night", 0);
+    const END = 6.43, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'Lights.Out', right: '23:00', variant: 'paper', x: 9, y: 96, w: 82, h: 42 });
+    const B = A.querySelector('.win__body'), box = (cls, g, html = '') => R.box('u ' + cls, { parent: B, ...g, html });
+    R.open(A, R.START, { from: { x: 50, y: 80 } });
+
+    // the switch and the hand that flips it
+    box('plate', { x: 4, y: 5, w: 7, h: 12 });
+    const tog = box('tog', { x: 6.4, y: 6.6, w: 2.2, h: 4 });
+    box('lbl', { x: 3.4, y: 18 }, 'ON / OFF');
+    const hand = box('', { x: 3.2, y: 34 }, R.pix(SH.hand, 1)); hand.dataset.bleed = '';   // comes up from below the frame
+    const tb = W('bed,');
+    R.path(hand, [[W('go') - 0.3, 3.2, 34], [W('go'), 3.2, 10], [tb, 3.2, 8], [tb + 0.27, 3.2, 12], [tb + 0.6, 3.2, 34]]);
+    R.path(tog, [[tb, 6.4, 6.6], [tb + 0.07, 6.4, 11.4]]);
+
+    // Shifty at his post
+    const sx = 22, sy = 8, c = 0.95;
+    box('', { x: sx, y: sy }, SH.pix({ hat: 'dark' }, c));
+
+    // lights out
+    const dark = box('dark h', { style: { inset: '0' } });
+    const say = box('say h', { x: 18, y: 1.5 }, '...shift over?');
+    const eyes = [4, 8].map(col => box('eye h', { x: sx + col * c, y: sy + 5 * c, w: 2 * c, h: 2 * c }));
+    R.show(dark, tb); eyes.forEach(e => { R.show(e, tb); R.blink(e, tb + 0.8, END, 0.8); });
+    R.show(say, tb + 0.4);
+    R.sfx('thunk', tb, { vol: -2 });
+    R.sfx('arpdown', tb + 0.05, { vol: -12 });
+
+    // the vending machine glows on through it
+    const vm = box('vm', { x: 50, y: 1.4, w: 26, h: 30.4 });
+    const vb = (cls, g, html = '') => R.box('u ' + cls, { parent: vm, ...g, html });
+    vb('', { x: 0, y: 0, w: 25.6, h: 4.4 }, '<div class="hd">NIGHT·SHIFT</div>');
+    vb('glass', { x: 1.4, y: 5.8, w: 15, h: 15 });
+    [[3, 7.6], [9.6, 7.6], [3, 14.4]].forEach(([x, y]) => vb('item', { x, y, w: 5, h: 5 }));
+    const me = vb('item me', { x: 9.6, y: 14.4, w: 5, h: 5 });
+    const price = vb('price', { x: 18, y: 7, w: 6.4, h: 5 }, '$?');
+    vb('lbl', { x: 18.2, y: 13.4 }, 'coin');
+    vb('tray', { x: 3, y: 23.6, w: 19.6, h: 4.6 });
+    const drop = vb('box h', { x: 9.6, y: 14.4, w: 5, h: 5 }, 'NS');
+
+    const tf = W('free'), tg = W('GitHub');
+    R.text(price, W('check'), '$0.00');
+    SH.flash(price, tf, 3);
+    R.sfx('coin', tf, { vol: -4 });
+    R.hide(me, tf + 0.07); R.show(drop, tf + 0.07);
+    R.path(drop, [[tf + 0.07, 9.6, 14.4], [tg, 9.6, 23.4]]);
+    R.text(drop, tg, 'FREE');
+    R.sfx('itemget', tg, { vol: -8 });
+    const repo = box('chip-inv h', { x: 48, y: 31.2, style: { fontSize: 'calc(var(--u) * 3)' } }, '★ nightshift.repo');
+    R.show(repo, W('repo.')); R.sfx('pop', W('repo.'), { vol: -5 });
+    R.done(END);
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+{
+  "video": "../Nightshift.mov",
+  "size": "1440x2560",
+  "sfxGain": 0,
+  "zoom": "auto",
+  "beats": {
+    "01-wasting-tokens": {
+      "on": true,
+      "zoom": {
+        "kind": "pop",
+        "to": 1.25,
+        "punch": [
+          {
+            "t": 2.52,
+            "dur": 1.2,
+            "by": 1.15
+          }
+        ]
+      }
+    },
+    "02-every-night": {
+      "on": true,
+      "zoom": {
+        "punch": [
+          {
+            "t": 5.44,
+            "dur": 1.2,
+            "by": 1.15
+          }
+        ],
+        "kind": "auto"
+      }
+    },
+    "03-top-15": {
+      "on": true,
+      "zoom": {
+        "punch": [
+          {
+            "t": 15,
+            "dur": 1.2,
+            "by": 1.15
+          }
+        ],
+        "kind": "auto"
+      }
+    },
+    "04-dave-cto": {
+      "on": true,
+      "hide": [
+        "main"
+      ]
+    },
+    "05-punch-list": {
+      "on": true,
+      "zoom": {
+        "punch": [
+          {
+            "t": 13.94,
+            "dur": 1.2,
+            "by": 1.15
+          }
+        ],
+        "kind": "auto"
+      }
+    },
+    "06-rad": {
+      "on": true
+    },
+    "07-question": {
+      "on": true
+    },
+    "08-decisions": {
+      "on": true,
+      "zoom": {
+        "punch": [
+          {
+            "t": 24.68,
+            "dur": 1.2,
+            "by": 1.15
+          }
+        ],
+        "kind": "auto"
+      }
+    },
+    "09-receipts": {
+      "on": true,
+      "zoom": {
+        "punch": [
+          {
+            "t": 30.36,
+            "dur": 0.47,
+            "by": 1.15
+          }
+        ],
+        "kind": "auto"
+      }
+    },
+    "10-art": {
+      "on": true
+    },
+    "11-assignments": {
+      "on": true
+    },
+    "12-comment": {
+      "on": true,
+      "zoom": {
+        "punch": [
+          {
+            "t": 40.8,
+            "dur": 1.2,
+            "by": 1.15
+          }
+        ],
+        "kind": "auto"
+      }
+    }
+  }
+}

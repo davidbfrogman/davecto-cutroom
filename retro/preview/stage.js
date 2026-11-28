@@ -155,6 +155,34 @@ export function paintCut(list) {
 
 export const showing = (b, t = v.currentTime) => b.ready && b.on !== false && t >= b.start && t < b.end;
 
+/* ---------- the picture ----------
+   The picture is always painted here, into #bg, from the decoded frame and with that frame's own zoom, in one
+   paint (the <video> is only the decoder). A zoom set as a CSS transform on the <video> moved on the page's
+   clock (each display refresh, from an estimate of currentTime) while the browser put frames up on its own
+   path, so the push stepped out of phase with the frames: a shimmer on every zoomed shot. Each new frame
+   (requestVideoFrameCallback) is painted with its own media time, the time the render zooms it at. */
+const rvfc = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+let paintedT = null;
+const deepAt = t => beats.filter(b => showing(b, t) && b.behind.some(L => !b.hide.includes(L)));
+export function paintPicture(t) {
+  if (v.readyState < 2 || !v.videoWidth) return;
+  const deep = deepAt(t);
+  if (cut.on) paintCut(deep);
+  else {
+    const bg = $('#bg'), w = v.videoWidth, h = v.videoHeight;
+    if (bg.width !== w || bg.height !== h) { bg.width = w; bg.height = h; }
+    bg.getContext('2d').drawImage(v, 0, 0);
+  }
+  applyZoom(t, U, deep);
+  paintedT = t;
+}
+let frameCb = null, frameAt = 0;
+function onFrame(now, m) { frameAt = performance.now(); paintPicture(m.mediaTime); frameCb = v.requestVideoFrameCallback(onFrame); }
+function watchFrames() {                              // (re)arm the frame callback, e.g. after a new src (the cutout copy)
+  if (frameCb != null) v.cancelVideoFrameCallback(frameCb);
+  frameAt = performance.now(); frameCb = v.requestVideoFrameCallback(onFrame);
+}
+
 
 /* ---------- moving: click an animation on the video, drag it ---------- */
 export const SNAP = 1.5;                                  // pull distance in u
@@ -207,9 +235,13 @@ export function sync() {
     b.frame.style.visibility = show ? 'visible' : 'hidden';
     if (show) b.win.__timelines.root.seek(Math.max(0, t - b.start), false);
   }
-  const deep = beats.filter(b => showing(b, t) && b.behind.some(L => !b.hide.includes(L)));
-  paintCut(deep);
-  applyZoom(t, U, deep);                             // the picture (and the cut-out speaker) zoomed; never the graphics
+  // The picture (and the cut-out speaker), zoomed; never the graphics. With frame callbacks, each frame paints
+  // itself (onFrame); here only a resize is caught up on. Without them, paint at the playhead each refresh.
+  if (!rvfc || paintedT == null) paintPicture(t);
+  else {
+    if (!v.paused && performance.now() - frameAt > 500) watchFrames();   // playing, but no frames called back
+    applyZoom(paintedT, U, deepAt(paintedT));
+  }
   $('#tc').innerHTML = `<b>${f2(t)}</b> / ${f2(DUR)}`;
   $('#play').textContent = v.paused ? '▶' : '❚❚';
   const hx = t * pps(), hd = $('#head'); if (hd) hd.style.left = `${hx}px`;
@@ -271,6 +303,8 @@ export function initStage() {
     const moved = drag.moved; drag = null; grab.classList.remove('dragging'); guides();
     if (moved) { save(S.sel.beat, { move: S.sel.beat.move }, 150); renderInspector(); }
   });
+  v.style.opacity = 0; $('#bg').style.display = 'block';   // the picture is painted (paintPicture), not the <video>
+  if (rvfc) watchFrames();
   (function loop() { sync(); requestAnimationFrame(loop); })();
   $('#play').addEventListener('click', togglePlay);
 }

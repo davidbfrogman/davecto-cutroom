@@ -27,11 +27,12 @@ export function faceZone(t) {
 }
 
 let last = '';
-/** Move the picture: the <video>, the background canvas (when the cut-out copy plays) and each showing beat's
-    cut-out speaker canvas (inside its iframe, so in the iframe's own pixels). U: stage px per u. */
+/** Move the picture: the canvas it's painted into (stage.js paintPicture, called with the painted frame's own
+    time) and each showing beat's cut-out speaker canvas (inside its iframe, so in the iframe's own pixels).
+    U: stage px per u. */
 export function applyZoom(t, U, list) {
   const z = zoomAt(t), css = `translate(${z.X * U}px, ${z.Y * U}px) scale(${z.S})`;
-  if (css !== last) { last = css; for (const el of [v, $('#bg')]) { el.style.transformOrigin = '0 0'; el.style.transform = css; } }
+  if (css !== last) { last = css; const el = $('#bg'); el.style.transformOrigin = '0 0'; el.style.transform = css; }
   const px = W / 100, inner = `translate(${z.X * px}px, ${z.Y * px}px) scale(${z.S})`;
   for (const b of list) if (b.me && b.me.style.transform !== inner) { b.me.style.transformOrigin = '0 0'; b.me.style.transform = inner; }
 }

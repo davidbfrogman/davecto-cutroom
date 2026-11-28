@@ -1,0 +1,63 @@
+<!doctype html>
+<!-- 09-receipts: "And when you wake up, it'll be excited to show you the receipts." Left of the head (narrow, tall).
+     Shifty bounces with excitement while an absurdly long drugstore receipt unrolls down the frame; the total
+     lands in pink on "receipts". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>09-receipts</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    .rc { background: var(--paper); border: var(--hair) solid var(--ink); border-top: 0; overflow: hidden; height: 0;
+          clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--u)), 90% 100%, 80% calc(100% - var(--u)), 70% 100%, 60% calc(100% - var(--u)), 50% 100%, 40% calc(100% - var(--u)), 30% 100%, 20% calc(100% - var(--u)), 10% 100%, 0 calc(100% - var(--u))); }
+    .rc div { display: flex; justify-content: space-between; padding: 0 calc(var(--u) * 1.4); font: calc(var(--u) * 3)/calc(var(--u) * 3.8) var(--f-pixel); white-space: nowrap; }
+    .rc .c { justify-content: center; }
+    .rc .hd { font: 600 calc(var(--u) * 4.4)/calc(var(--u) * 5.6) var(--f-display); letter-spacing: -0.04em; }
+    .rc .tot { background: var(--accent); }
+    .slot { background: var(--ink); }
+    .bang { font: calc(var(--u) * 4.4)/1 var(--f-pixel); color: var(--accent); text-shadow: calc(var(--u) * .3) calc(var(--u) * .3) 0 var(--ink); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("when you wake", 0);
+    const END = 30.83, W = p => R.w(p, R.START - 0.1);
+    const X = 9, c = 0.85;
+
+    // Shifty, thrilled, holding the printer
+    const hop = R.box('', { x: X + 8, y: 22, html: SH.anim([{ body: 'up', mouth: 'grin', eyes: 'stars' }, { body: 'up', mouth: 'grin', eyes: 'stars', legs: 'c' }], c) });
+    const bang = R.box('bang', { x: X + 22, y: 23, html: '!!' });
+    const slot = R.box('slot', { x: X, y: 40, w: 30, h: 1.6 });
+    [hop, bang, slot].forEach(e => e.classList.add('h'));
+    const tw = W('wake');
+    [hop, bang, slot].forEach(e => R.show(e, tw));
+    R.flip(hop.firstChild, tw, END, { fps: 7.5 });
+    R.path(hop, [[tw, X + 8, 22], [tw + 0.13, X + 8, 20.6], [tw + 0.27, X + 8, 22], [tw + 0.4, X + 8, 20.6], [tw + 0.53, X + 8, 22], [W('excited'), X + 8, 22], [W('excited') + 0.13, X + 8, 20], [W('excited') + 0.27, X + 8, 22]]);
+    R.blink(bang, tw, END, 0.27);
+    R.sfx('oneup', tw, { vol: -8 });
+
+    // the receipt: far too long
+    const lines = [['c hd', 'NIGHT SHIFT'], ['c', '23:00 → 07:00'], ['c', '- - - - - - - -'],
+      ['', '✓ Bug hunt|2 fixed'], ['', '✓ Flaky tests|3'], ['', '✓ Dead code|-412'], ['', '✓ Tests added|+14'], ['', '✓ Decisions|3 parked'],
+      ['', '✓ Deps|bumped'], ['', '✓ Types|-28 any'], ['', '✓ README|works'], ['', '✓ Alt text|19'], ['', '✓ Silent fails|6'],
+      ['c', '- - - - - - - -'], ['c', 'COUPON: ONE FREE'], ['c', 'NIGHT OF SLEEP'], ['c', '- - - - - - - -'],
+      ['tot', 'TOTAL|10 solved'], ['', 'Pushes|0'], ['c', 'THANK YOU ☺']];
+    const rc = R.box('rc', { x: X + 1, y: 41.2, w: 28, html: lines.map(([k, t]) => `<div class="${k}">${t.split('|').map(x => `<span>${x}</span>`).join('')}</div>`).join('') });
+    rc.dataset.bleed = '';
+    const tr = W('receipts.'), H = 96;
+    R.tl.to(rc, { height: R.u(H - 9), duration: R.T(tr) - R.T(W('it\'ll')), ease: `steps(${Math.round((tr - W('it\'ll')) * 15)})` }, R.T(W('it\'ll')));
+    R.tl.set(rc, { height: R.u(H) }, R.T(tr));
+    for (let t = W('it\'ll'); t < tr; t += 0.2) R.sfx('tick', t, { vol: -10 });
+    R.sfx('fanfare', tr, { vol: -6 });
+    R.done(END);
+  </script>
+</body>
+</html>
