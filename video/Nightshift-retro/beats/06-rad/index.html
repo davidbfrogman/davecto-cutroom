@@ -1,0 +1,63 @@
+<!doctype html>
+<!-- 06-rad: "But here's the part that's especially rad." Below the chest. RAD.EXE: a striped synthwave sun rises over a
+     pink grid while Shifty rolls in on a skateboard; on "rad" he kickflips, the shades drop and RAD lands. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>06-rad</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    #RB { background: var(--ink); }
+    .sun { border-radius: 50%; background: repeating-linear-gradient(180deg, var(--accent) 0 calc(var(--u) * 2.2), transparent calc(var(--u) * 2.2) calc(var(--u) * 3)); }
+    .clipper { overflow: hidden; }
+    .rad { font: 600 calc(var(--u) * 13)/.8 var(--f-display); letter-spacing: -0.05em; color: var(--accent); text-shadow: calc(var(--u) * .6) calc(var(--u) * .6) 0 var(--paper); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("But here's", 0);
+    const END = 19.22, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'RAD.EXE', right: '▶▶▶', variant: 'paper', x: 9, y: 106, w: 82, h: 34 });
+    const B = A.querySelector('.win__body'); B.id = 'RB';
+    const box = (cls, g, html = '', parent = B) => R.box('u ' + cls, { parent, ...g, html });
+    R.open(A, R.START, { from: { x: 60, y: 95 } });
+
+    const HZ = 14;
+    const sky = box('clipper', { x: 0, y: 0, w: 80, h: HZ });
+    const sun = box('sun', { x: 26, y: HZ, w: 26, h: 26 }, '', sky);
+    R.path(sun, [[W('here\'s'), 26, HZ], [W('rad.'), 26, 1]]);
+    R.sfx('polysweep', W('But'), { vol: -12 });
+    // the grid floor
+    const svg = `<svg viewBox="0 0 80 14" width="100%" height="100%" preserveAspectRatio="none" style="display:block">` +
+      [0, 1.4, 3.4, 6.4, 10.4].map(y => `<line x1="0" x2="80" y1="${y}" y2="${y}" stroke="#F386A1" stroke-width=".35"/>`).join('') +
+      [-60, -40, -20, -8, 0, 8, 20, 40, 60].map(dx => `<line x1="${40 + dx / 6}" y1="0" x2="${40 + dx * 1.6}" y2="14" stroke="#F386A1" stroke-width=".35"/>`).join('') + '</svg>';
+    box('', { x: 0, y: HZ, w: 80, h: 12.6 }, svg);
+
+    // Shifty on his board
+    const rider = box('', { x: -18, y: 6 });
+    const c = 0.72;
+    const cool = R.box('', { parent: rider, x: 0, y: 0, html: SH.pix({ mouth: 'happy' }, c) });
+    const shades = R.box('h', { parent: rider, x: 0, y: 0, html: SH.pix({ eyes: 'shades', mouth: 'grin', body: 'up' }, c) });
+    const deck = R.box('', { parent: rider, x: -1.5, y: 15.4, html: R.pix(['.kkkkkkkkkkkkk.', 'knnnnnnnnnnnnnk', '.kkkkkkkkkkkkk.', '..kpk.....kpk..'], 0.9) });
+    rider.dataset.bleed = '';
+    const tr = W('rad.');
+    R.path(rider, [[W('the'), -18, 6], [tr, 20, 6], [tr + 0.2, 26, 1], [tr + 0.47, 32, 6], [END, 36, 6]]);
+    [0, 0.07, 0.13, 0.2].forEach((d, i) => R.tl.set(deck, { rotation: [90, 180, 270, 360][i] }, R.T(tr + d)));
+    R.hide(cool, tr); R.show(shades, tr);
+    R.sfx('rev', W('part'), { vol: -10 });
+    R.sfx('bigjump', tr, { vol: -6 });
+    const rad = box('rad h', { x: 52, y: 4 }, 'RAD');
+    R.show(rad, tr + 0.2); SH.flash(rad, tr + 0.2, 2);
+    R.sfx('neon', tr + 0.2, { vol: -6 });
+    R.done(END);
+  </script>
+</body>
+</html>

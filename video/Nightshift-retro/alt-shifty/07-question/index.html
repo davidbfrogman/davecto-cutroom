@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- 07-question: "Rather than you waking up to a question that your AI was asking you six hours ago". Below the chest.
+     The old way: you're asleep, Shifty stands by the bed holding up a question while the clock spins to 06:00;
+     cobwebs grow and on "hours" he's a skeleton, sign drooping on "ago". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-question</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    #QB { background: var(--ink); padding: 0; }
+    .bed { background: var(--paper); border: var(--hair) solid var(--ink); }
+    .blanket { background: var(--accent); border: var(--hair) solid var(--ink); }
+    .head { background: var(--win); border: var(--hair) solid var(--ink); border-radius: 50% 50% 40% 40%; }
+    .zz { font: calc(var(--u) * 3.6)/1 var(--f-pixel); color: var(--paper); }
+    .clk { font: calc(var(--u) * 5)/1 var(--f-pixel); color: var(--accent); }
+    .sign { background: var(--paper); border: var(--hair) solid var(--ink); font: calc(var(--u) * 2.7)/1.15 var(--f-mono); padding: calc(var(--u) * .7) calc(var(--u) * 1); transform-origin: 50% 100%; }
+    .stick { background: var(--win-2); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("Rather than", 0);
+    const END = 23.64, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'Bedroom · the old way', right: 'waiting…', variant: 'paper', x: 9, y: 110, w: 82, h: 30 });
+    const B = A.querySelector('.win__body'); B.id = 'QB';
+    const box = (cls, g, html = '') => R.box('u ' + cls, { parent: B, ...g, html });
+    R.open(A, R.START, { from: { x: 60, y: 100 } });
+
+    // you, asleep
+    box('bed', { x: 3, y: 13, w: 30, h: 6 });
+    box('bed', { x: 1.6, y: 6, w: 2.6, h: 15 });
+    box('blanket', { x: 9, y: 9.4, w: 23, h: 5 });
+    box('head', { x: 4.6, y: 8.6, w: 5, h: 4.6 });
+    const zz = box('zz', { x: 9, y: 2 }, 'z Z z');
+    R.blink(zz, R.START, END, 0.8);
+
+    // the clock spins
+    const clk = box('clk', { x: 34, y: 2 }, '00:14');
+    const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
+    R.count(clk, W('question'), W('ago,') - W('question'), 14, 360, hm);
+
+    // Shifty and his question
+    const c = 0.6, sx = 62, sy = 8.4;
+    const live = box('', { x: sx, y: sy }, SH.pix({ body: 'up', mouth: 'o' }, c));
+    const bones = box('h', { x: sx, y: sy }, R.pix(SH.skeleton(), c));
+    box('stick', { x: sx + 0.6, y: 3.4, w: 0.7, h: 5.6 });
+    const sign = box('sign h', { x: 48, y: 2, w: 29.6 }, 'can I rename this table? (y/n)');
+    R.show(sign, W('question')); R.sfx('notify', W('question'), { vol: -6 });
+    const webs = [[sx - 5, 9], [sx + 9, 13]].map(([x, y]) => box('h', { x, y }, R.pix(SH.web, 0.6)));
+    webs.forEach(w => (w.style.filter = 'invert(1)'));
+    R.show(webs[0], W('was')); R.show(webs[1], W('asking'));
+    R.sfx('lowhealth', W('was'), { vol: -12 });
+    R.hide(live, W('hours')); R.show(bones, W('hours'));
+    R.sfx('poof', W('hours'), { vol: -6 });
+    R.tl.set(sign, { rotation: 8 }, R.T(W('ago,')));
+    R.sfx('gameover', W('ago,'), { vol: -10 });
+    R.done(END);
+  </script>
+</body>
+</html>

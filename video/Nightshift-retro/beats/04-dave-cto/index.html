@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- 04-dave-cto: "By the way, I'm Dave, your CTO on trying to help you build cool stuff with AI". Below the chest.
+     A video-game character select: the cursor hops from "?" to pixel Dave on "I'm", locks in on "Dave", CLASS: CTO
+     lands on "CTO", the stats fill (AI 99 · MEETINGS 2 · COFFEE ∞) and the special move types out. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>04-dave-cto</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    .slot { border: var(--hair) solid var(--ink); background: var(--win); display: grid; place-items: center; font: calc(var(--u) * 7)/1 var(--f-pixel); color: var(--grey); }
+    .slot.me { background: var(--paper); }
+    .cur { border: calc(var(--hair) * 2) solid var(--accent); }
+    .nm { font: 600 calc(var(--u) * 8.4)/.8 var(--f-display); letter-spacing: -0.045em; }
+    .st { display: flex; align-items: center; gap: calc(var(--u) * 1.2); font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    .st b { font-weight: 400; width: calc(var(--u) * 14); }
+    .st .seg { flex: 1; gap: calc(var(--u) * .25); }
+    .st .seg i { height: calc(var(--u) * 2.2); background: var(--paper); }
+    .st em { font-style: normal; width: calc(var(--u) * 4); text-align: right; }
+    .sp { font: calc(var(--u) * 3.2)/1 var(--f-pixel); }
+    .ready { font-size: calc(var(--u) * 3.4); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("By the way", 0);
+    const END = 11.77, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'SELECT PLAYER', right: '1P ▶', variant: 'paper', x: 9, y: 96, w: 82, h: 42 });
+    const B = A.querySelector('.win__body'), box = (cls, g, html = '') => R.box('u ' + cls, { parent: B, ...g, html });
+    R.open(A, R.START, { from: { x: 50, y: 80 } });
+
+    const DAVE = ['.....kk.....', '....kkkk....', '...kkkkkk...', '..kkkkkkkk..', '..kppppppk..', '.kkkkkkkkkk.', '.kpnkkkkpnk.', '.kkkkppkkkk.',
+                  '..kppppppk..', '..kpkkkkpk..', '..kppppppk..', '...kppppk...', '....kkkk....', '..kmmmmmmk..', '.kmmmmmmmmk.'];
+    box('slot', { x: 1, y: 1, w: 9, h: 11 }, '?');
+    box('slot me', { x: 11.5, y: 0.6, w: 19, h: 22 }, R.pix(DAVE, 1.3));
+    box('slot', { x: 1, y: 13.5, w: 9, h: 11 }, '?');
+    const cur = box('cur', { x: 0.4, y: 0.4, w: 10.2, h: 12.2 });
+    R.path(cur, [[W('I\'m'), 0.4, 0.4], [W('I\'m') + 0.07, 10.9, 0]]);
+    R.tl.set(cur, { width: R.u(20.2), height: R.u(23.2) }, R.T(W('I\'m') + 0.07));
+    R.sfx('select', W('I\'m'), { vol: -4 });
+    SH.flash(cur, W('Dave,'), 3);
+    R.sfx('confirm', W('Dave,'), { vol: -2 });
+    const rdy = box('chip-inv ready h', { x: 12.5, y: 24 }, 'P1 READY');
+    R.show(rdy, W('Dave,')); R.blink(rdy, W('Dave,') + 0.5, END, 0.5);
+
+    const nm = box('nm h', { x: 34, y: 0 }, 'DAVE');
+    R.show(nm, W('Dave,'));
+    const cls = box('chip-inv h', { x: 59, y: 0.6, style: { fontSize: 'calc(var(--u) * 3.6)' } }, 'CLASS: CTO');
+    R.show(cls, W('CTO')); R.sfx('pop', W('CTO') + 0.07, { vol: -4 });
+
+    const stats = [['AI', 10, '99'], ['MEETINGS', 1, '2'], ['COFFEE', 10, '∞']];
+    stats.forEach(([n, on, v], i) => box('st', { x: 34, y: 9 + i * 4.4, w: 43 }, `<b>${n}</b>${R.seg(10)}<em class="h" id="v${i}">${v}</em>`));
+    const segs = R.$$('.st .seg');
+    const fa = W('trying'), fb = W('build') - 0.07;
+    stats.forEach(([, on], i) => {
+      const cells = [...segs[i].children];
+      cells.slice(0, on).forEach((c, k) => R.tl.set(c, { background: i === 2 ? 'var(--accent)' : 'var(--ink)' }, R.T(fa + (fb - fa) * (k / 10) * (i === 1 ? 3 : 1))));
+      R.show(R.$('#v' + i), fb);
+    });
+    R.stagger([], fa, fb);
+    [0, 0.2, 0.4].forEach(d => R.sfx('tick', fa + d, { vol: -6 }));
+    R.blink(R.$('#v2'), fb, END, 0.27);
+
+    box('sp', { x: 34, y: 23.4 }, 'SPECIAL MOVE:');
+    const mv = box('sp type', { x: 34, y: 27.4 }, 'Builds cool stuff with AI ▶▶');
+    mv.style.color = 'var(--ink)';
+    R.type(mv, W('build'), 34);
+    R.sfx('powerup', W('AI.'), { vol: -8 });
+    R.done(END);
+  </script>
+</body>
+</html>

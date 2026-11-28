@@ -251,7 +251,8 @@ test('the Instagram UI toggle shows the Reels buttons over the video, scales wit
 });
 
 describe('zoom', () => {
-  const scale = page => page.evaluate(() => { const m = /scale\(([\d.]+)\)/.exec(document.querySelector('#v').style.transform); return m ? +m[1] : 1; });
+  // the picture is painted into #bg (the <video> is only the decoder), so the zoom is read off the canvas
+  const scale = page => page.evaluate(() => { const m = /scale\(([\d.]+)\)/.exec(document.querySelector('#bg').style.transform); return m ? +m[1] : 1; });
 
   test('Auto zoom: every beat on auto, the video pushes in under the graphics, one undo takes it all back', async () => {
     const e = await editor();
@@ -269,6 +270,30 @@ describe('zoom', () => {
     await e.page.keyboard.press('Meta+z');
     await until(() => !e.beat('01-hello').zoom && !e.beat('02-second').zoom, 'one undo to take both back');
     await until(async () => (await scale(e.page)) === 1, 'the video as shot again');
+    await e.done();
+  });
+
+  test('playing, the zoom moves with the frames: one step per new frame, painted with the picture', async () => {
+    const e = await editor();
+    await e.page.locator('#pZoomAll').click();
+    await until(() => e.beat('01-hello').zoom?.kind === 'auto', 'auto in retro.json');
+    await seek(e.page, 0.6);
+    const r = await e.page.evaluate(async () => {
+      const v = document.querySelector('#v'), bg = document.querySelector('#bg');
+      v.muted = true; await v.play();
+      let frames = 0, changes = 0, last = bg.style.transform;
+      const cb = () => { frames++; v.requestVideoFrameCallback(cb); }; v.requestVideoFrameCallback(cb);
+      const t0 = performance.now();
+      await new Promise(done => (function loop() { if (bg.style.transform !== last) { changes++; last = bg.style.transform; } performance.now() - t0 < 1200 ? requestAnimationFrame(loop) : done(); })());
+      v.pause();
+      const px = bg.getContext('2d').getImageData(bg.width >> 1, bg.height >> 1, 1, 1).data;
+      return { frames, changes, vop: getComputedStyle(v).opacity, px: px[0] + px[1] + px[2] };
+    });
+    assert.ok(r.frames >= 20, `frames played: ${r.frames}`);
+    assert.ok(r.changes > 10, `the push moved: ${r.changes} steps`);
+    assert.ok(r.changes <= r.frames + 1, `the zoom stepped ${r.changes} times over ${r.frames} frames: it should only move with a new frame`);
+    assert.equal(r.vop, '0', 'the picture comes from the canvas, not the <video>');
+    assert.ok(r.px > 0, 'the canvas holds the picture');
     await e.done();
   });
 

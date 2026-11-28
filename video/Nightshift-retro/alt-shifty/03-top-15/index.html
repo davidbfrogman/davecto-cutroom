@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- 03-top-15: "It was in the top 15 trending repos last week". Below the chest. Trending.Derby: repos as racing
+     snails. #12–#14 have long finished; ours (pink shell, hard hat) tears in from behind and crosses on "15";
+     a giant "15th!!" trophy lands on "trending" in a shower of confetti. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>03-top-15</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    .lane { border-bottom: var(--hair) dashed var(--ink-55); }
+    .fin { background: repeating-linear-gradient(0deg, var(--ink) 0 calc(var(--u) * 1.2), var(--paper) calc(var(--u) * 1.2) calc(var(--u) * 2.4)); border: var(--hair) solid var(--ink); }
+    .rk { font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .speed { border-top: var(--hair) solid var(--ink); }
+    .big { font: 600 calc(var(--u) * 6)/.8 var(--f-display); letter-spacing: -0.045em; background: var(--accent); padding: calc(var(--u) * .4) calc(var(--u) * .8) calc(var(--u) * .8); border: var(--hair) solid var(--ink); white-space: nowrap; }
+    .cf { width: calc(var(--u) * 1); height: calc(var(--u) * 1); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("It was in", 0);
+    const END = 8.8, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'Trending.Derby', right: 'last week', variant: 'paper', x: 9, y: 96, w: 82, h: 42 });
+    const B = A.querySelector('.win__body'), box = (cls, g, html = '') => R.box('u ' + cls, { parent: B, ...g, html });
+    R.open(A, R.START, { from: { x: 50, y: 80 } });
+
+    const FIN = 46, LY = [1, 9, 17, 25];
+    LY.forEach(y => box('lane', { x: 0, y: y + 6.6, w: 78, h: 0.1 }));
+    box('fin', { x: FIN, y: 0, w: 2.4, h: 32 });
+    // the ones that finished ages ago
+    ['#12', '#13', '#14'].forEach((r, i) => {
+      box('', { x: FIN + 4 + i * 2, y: LY[i] + 0.6 }, R.pix(SH.snail('w'), 0.85));
+      box('rk', { x: FIN + 15 + i * 2, y: LY[i] + 2.6 }, r);
+    });
+    // ours
+    const me = box('', { x: -12, y: LY[3] - 2.2 }, R.pix([...['....kkk...', '...knnnk..', '..kkkkkkk.'], ...SH.snail('n')], 0.85));
+    const lines = [0, 1, 2].map(i => box('speed h', { x: 0, y: LY[3] + 2 + i * 1.6, w: 6 + i * 2, h: 0.1 }));
+    const t0 = W('was'), t15 = W('15');
+    R.path(me, [[t0, -12, LY[3] - 2.2], [W('top'), 8, LY[3] - 2.2], [t15, FIN + 3, LY[3] - 2.2], [t15 + 0.6, FIN + 6, LY[3] - 2.2]]);
+    lines.forEach((l, i) => { R.show(l, W('top')); R.path(l, [[W('top'), 0, LY[3] + 2 + i * 1.6], [t15, FIN - 12 - i * 2, LY[3] + 2 + i * 1.6]]); R.hide(l, t15); });
+    R.sfx('turbo', W('top') - 0.1, { vol: -8 });
+    const rk = box('rk h', { x: FIN + 19, y: LY[3] + 2.6 }, '#15');
+    R.show(rk, t15); SH.flash(rk, t15, 2);
+    R.sfx('jump', t15, { vol: -6 });
+
+    // the trophy, which is far too big
+    const tt = W('trending');
+    const tro = box('h', { x: 20, y: 0.5 }, R.pix(SH.trophy, 1.5));
+    const lab = box('big h', { x: 17, y: 17 }, '15th!!');
+    R.show(tro, tt); R.show(lab, tt + 0.13); SH.flash(lab, tt + 0.13, 2);
+    R.sfx('fanfare', tt, { vol: -6 });
+    // confetti
+    R.seed(15);
+    const cf = Array.from({ length: 18 }, (_, i) => ({ el: box('cf h', { x: 0, y: 0, style: { background: i % 3 ? 'var(--accent)' : 'var(--ink)' } }), x: 8 + R.rnd() * 32, v: 9 + R.rnd() * 10, d: R.rnd() * 6 }));
+    cf.forEach(c => R.show(c.el, tt));
+    R.every(tt, END, t => cf.forEach(c => { const y = (t - tt) * c.v + c.d; c.el.style.top = R.u(Math.min(31, y)); c.el.style.left = R.u(c.x + (Math.floor((t - tt) * 7.5) % 2 ? 0.6 : 0)); }));
+    R.done(END);
+  </script>
+</body>
+</html>

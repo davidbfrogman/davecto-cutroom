@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- 07-question: "Rather than you waking up to a question that your AI was asking you six hours ago": above the head
+     (short: the push grows the face into the space). Agent.Question opens on "waking up", the question types on
+     "question" with a waiting cursor, and the "asked … ago" clock in the title bar races to 6:00:00 on "ago". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>07-question</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .win__bar .r { font-variant-numeric: tabular-nums; }
+    .q { display: flex; align-items: center; gap: calc(var(--u) * .4); font: calc(var(--u) * 3.4)/1.2 var(--f-mono); }
+    #cur { font-family: var(--f-pixel); color: var(--accent); background: var(--ink); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    // R.flash inverts colours, and inverted pink is green: this inverts lightness only, so pink stays pink.
+    R.flash = (el, t, n = 2) => { for (let i = 0; i < n; i++) { R.tl.set(el, { filter: 'invert(1) hue-rotate(180deg)' }, R.T(t) + i * 2 * R.F); R.tl.set(el, { filter: 'none' }, R.T(t) + (i * 2 + 1) * R.F); } };
+    R.START = R.w("Rather than", 0);
+    const END = 23.64, W = p => R.w(p, R.START - 0.1);
+    const hms = s => { s = Math.round(s); return `asked ${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')} ago`; };
+
+    const A = R.win({ title: 'Agent.Question', right: 'asked 0:00:00 ago', variant: 'paper', x: 9, y: 21, w: 82, h: 'auto',
+      body: `<div class="q"><span class="type" id="q">Rename users → accounts? (y/n)</span><span id="cur">█</span></div>` });
+    R.open(A, W('waking'), { from: { x: 60, y: 60 }, sfx: 'notify' });
+    R.type(R.$('#q'), W('question'), 32);
+    R.blink(R.$('#cur'), W('waking'), END, 0.5);
+    const r = A.querySelector('.r');
+    R.count(r, W('that'), W('ago,') - W('that'), 0, 6 * 3600, hms);
+    R.sfx('lowhealth', W('six'), { vol: -10 });
+    R.flash(A.querySelector('.win__bar'), W('ago,'), 2);
+    R.sfx('alert', W('ago,'), { vol: -8 });
+    R.done(END);
+  </script>
+</body>
+</html>

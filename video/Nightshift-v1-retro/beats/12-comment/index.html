@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- 12-comment: "comment night shift below and I'll send them to you for free and follow along for more tips on
+     building with AI": below the chest. Comments: "night shift" types into the box and Post is pressed on
+     "below"; Dave's reply "Sent ✓ free" pops in on "send"; + Follow is pressed on "follow" and turns pink. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>12-comment</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .in { display: flex; gap: calc(var(--u) * 1.4); align-items: stretch; }
+    .box { flex: 1; display: flex; align-items: center; border: var(--hair) solid var(--ink); background: var(--paper); padding: calc(var(--u) * .8) calc(var(--u) * 1.2);
+           font: calc(var(--u) * 5.4)/1 var(--f-pixel); }
+    #cur { background: var(--ink); color: var(--accent); }
+    .btn { display: flex; align-items: center; border: var(--hair) solid var(--ink); background: var(--ink); color: var(--paper); padding: 0 calc(var(--u) * 1.6);
+           font: calc(var(--u) * 4.4)/1 var(--f-pixel); box-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 var(--ink-55); }
+    .reply { display: flex; justify-content: space-between; align-items: center; margin-top: calc(var(--u) * 1.8); font: calc(var(--u) * 4.2)/1 var(--f-pixel); }
+    .reply .chip-inv { font-size: calc(var(--u) * 4.2); }
+    #fol { background: var(--paper); color: var(--ink); padding: calc(var(--u) * .7) calc(var(--u) * 1.4) calc(var(--u) * .9); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("comment night", 0);
+    const END = 45.06, W = p => R.w(p, R.START - 0.1);
+
+    const A = R.win({ title: 'Comments', right: 'reply in 1 min', variant: 'paper', x: 9, y: 94, w: 82, h: 'auto',
+      body: `<div class="in"><div class="box"><span class="type" id="txt">night shift</span><span id="cur">█</span></div><div class="btn" id="post">Post ▶</div></div>
+             <div class="reply"><span class="chip-inv h" id="rep">DAVE: SENT ✓ FREE</span><span class="btn" id="fol">+ Follow</span></div>` });
+    R.open(A, R.START, { from: { x: 55, y: 80 } });
+    R.type(R.$('#txt'), W('night'), 18);
+    R.blink(R.$('#cur'), W('shift') + 0.2, END, 0.5);
+    R.press(R.$('#post'), W('below'));
+    R.text(R.$('#post'), W('below'), 'Posted ✓');
+    R.show(R.$('#rep'), W('send'));
+    R.flash(R.$('#rep'), W('send'), 1);
+    R.sfx('notify', W('send'), { vol: -4 });
+    R.sfx('coin', W('free', W('send')), { vol: -6 });
+    R.press(R.$('#fol'), W('follow'));
+    R.text(R.$('#fol'), W('follow'), '✓ Following');
+    R.tl.set('#fol', { background: 'var(--accent)' }, R.T(W('follow')));
+    R.sfx('success', W('follow') + 0.07, { vol: -6 });
+    R.done(END);
+  </script>
+</body>
+</html>

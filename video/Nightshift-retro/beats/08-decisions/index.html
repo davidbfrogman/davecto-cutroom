@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- 08-decisions: "it can make those decisions on your behalf, document why it made them and keep on working". Below the
+     chest. The Parking Lot (Nightshift's name for it): questions drive in as little "?" cars and park; Shifty,
+     the attendant, slaps a WHY ticket on each, then marches back to work on "keep on working". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>08-decisions</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    #PB { padding: 0; }
+    .road { background: var(--win-2); }
+    .dash { border-top: var(--hair) dashed var(--paper); }
+    .bay { border-left: var(--hair) solid var(--ink); }
+    .q { font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .tk { background: var(--paper); border: var(--hair) solid var(--ink); font: calc(var(--u) * 2)/1 var(--f-pixel); padding: calc(var(--u) * .3) calc(var(--u) * .4); white-space: nowrap; }
+    .tk b { font-weight: 400; background: var(--accent); }
+    .sign { font: calc(var(--u) * 3)/1 var(--f-pixel); }
+    .pl { font: calc(var(--u) * 2.4)/1 var(--f-mono); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("it can make", 0);
+    const END = 28.4, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'Parking.Lot', right: 'parked: 0', variant: 'paper', x: 9, y: 113, w: 82, h: 27 });
+    const B = A.querySelector('.win__body'); B.id = 'PB';
+    const box = (cls, g, html = '') => R.box('u ' + cls, { parent: B, ...g, html });
+    R.open(A, W('can'), { from: { x: 45, y: 100 } });
+
+    const BAYS = [24, 36, 48], RY = 12.4;
+    box('road', { x: 0, y: RY, w: 80, h: 7 });
+    box('dash', { x: 0, y: RY + 3.4, w: 80, h: 0.1 });
+    [...BAYS, 60].forEach(x => box('bay', { x, y: 0.6, w: 0.1, h: 10 }));
+    BAYS.forEach((x, i) => box('pl', { x: x + 4.4, y: 8.6 }, `P${i + 1}`));
+    const sign = box('sign', { x: 63, y: 1.6 }, 'WORK ▶');
+
+    // Shifty, attendant
+    const c = 0.48, ax = 8, ay = 1.4;
+    const att = box('', { x: ax, y: ay }, SH.pix({ hat: 'cap', body: 'hold' }, c));
+    const walk = box('h', { x: ax, y: ay }, SH.anim([{ hat: 'cap', legs: 'a', mouth: 'happy' }, { hat: 'cap', legs: 'b', mouth: 'happy' }], c));
+
+    // three questions park, one ticket each
+    const parks = [W('decisions'), W('behalf,'), W('document')];
+    const cars = parks.map((t, i) => {
+      const car = box('', { x: -10, y: RY + 0.8 }, R.pix(SH.car, 0.6));
+      const q = R.box('q', { parent: car, x: 2.4, y: -3.6, html: '?' });
+      car.dataset.bleed = '';
+      R.path(car, [[t - 0.8, -10, RY + 0.8], [t - 0.27, BAYS[i] + 2, RY + 0.8], [t, BAYS[i] + 2, 3.2]]);
+      R.sfx('rev', t - 0.8, { vol: -16 });
+      const tk = box('tk h', { x: BAYS[i] + 0.6, y: 0.2 }, '<b>WHY</b> ✓');
+      R.show(tk, t + 0.2); R.sfx('pop', t + 0.2, { vol: -5 });
+      R.text(q, t + 0.2, '✓');
+      R.text(A.querySelector('.r'), t + 0.2, `parked: ${i + 1}`);
+      return car;
+    });
+    R.sfx('strike', W('why'), { vol: -6 });
+
+    // and back to work
+    const tk0 = W('keep');
+    R.hide(att, tk0); R.show(walk, tk0);
+    R.path(walk, [[tk0, ax, ay], [tk0 + 0.2, ax, 9.6], [END, 68, 9.6]]);
+    R.flip(walk.firstChild, tk0, END, { fps: 7.5 });
+    SH.flash(sign, W('working.'), 2);
+    R.sfx('pulse', tk0, { vol: -12 });
+    R.done(END);
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<!-- 05-punch-list: "It essentially puts your AI coding agent on an overnight shift. You just give it a punch list
+     of what you want done by morning.": above the head (lots of room, the face is low). Time.Card opens on
+     "agent" and punches IN 23:00 on "overnight shift"; Punch.List opens on "punch list" and four jobs tick in,
+     "Done by 07:00" lands on "morning". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05-punch-list</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <style>
+    .tc { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--u) * 2); font: calc(var(--u) * 4.2)/1 var(--f-pixel); }
+    .slots { display: flex; gap: calc(var(--u) * 1.4); }
+    .sl { width: calc(var(--u) * 17); border: var(--hair) solid var(--ink); text-align: center; padding: calc(var(--u) * .6) 0 calc(var(--u) * .9); background: var(--paper); }
+    .sl small { display: block; font: calc(var(--u) * 2.4)/1 var(--f-mono); margin-bottom: calc(var(--u) * .6); }
+    #in.on { background: var(--ink); color: var(--accent); }
+    .items { display: flex; flex-direction: column; gap: calc(var(--u) * 1.3); font: calc(var(--u) * 4.4)/1 var(--f-pixel); }
+    .items div { display: flex; gap: calc(var(--u) * 1.6); align-items: center; }
+    .items i { width: calc(var(--u) * 3); height: calc(var(--u) * 3); border: var(--hair) solid var(--ink); background: var(--paper); flex: none; }
+    #due { position: absolute; right: calc(var(--u) * 1.6); bottom: calc(var(--u) * 1.6); font-size: calc(var(--u) * 4.4); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("It essentially", 0);
+    const END = 17.33, W = p => R.w(p, R.START - 0.1);
+
+    const C = R.win({ title: 'Time.Card', right: 'shift: night', variant: 'paper', x: 9, y: 22, w: 82, h: 'auto', layer: 'card',
+      body: `<div class="tc"><span>AI Coding Agent</span><div class="slots">
+               <div class="sl" id="in"><small>IN</small><span id="int">--:--</span></div>
+               <div class="sl"><small>OUT</small><span id="out">07:00</span></div></div></div>` });
+    R.open(C, W('agent'), { from: { x: 45, y: 85 } });
+    const tin = W('overnight');
+    R.tl.set('#in', { background: 'var(--ink)', color: 'var(--accent)' }, R.T(tin));
+    R.text(R.$('#int'), tin, '23:00');
+    R.press(R.$('#in'), tin, { sfx: 'thunk' });
+    R.sfx('gated', tin + 0.07, { vol: -6, layer: 'card' });
+    R.blink(R.$('#out'), tin + 0.4, END, 0.5);
+
+    const jobs = ['Fix the login bug', 'Write tests for checkout', 'Bump the dependencies', 'Draft the new README'];
+    const L = R.win({ title: 'Punch.List', right: 'due 07:00', variant: 'paper', x: 9, y: 45, w: 82, h: 'auto', layer: 'list',
+      body: `<div class="items">${jobs.map(j => `<div class="h"><i></i><span>${j}</span></div>`).join('')}</div>
+             <span class="chip-inv h" id="due">☀ DONE BY 07:00</span>` });
+    R.open(L, W('punch'), { from: { x: 50, y: 34 } });
+    R.stagger('.items div', W('list'), W('by') - 0.1, { sfx: 'tick', vol: -4, layer: 'list' });
+    R.show(R.$('#due'), W('morning.'));
+    R.sfx('bell', W('morning.'), { vol: -8, layer: 'list' });
+    R.done(END);
+  </script>
+</body>
+</html>

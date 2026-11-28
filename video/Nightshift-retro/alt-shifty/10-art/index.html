@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- 10-art: "Now there is an art to picking the kinds of things that you'd want an AI to do while you're asleep".
+     Above the head. A police lineup of the playbook's characters against a height chart: the Bug Hunter, the Flake
+     Exterminator, the Debt Collector each get stamped NIGHT SHIFT ✓; the Logo Picker in a beret gets NEEDS YOUR
+     TASTE ✕ on "asleep". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>10-art</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    .ln { border-top: var(--hair) solid var(--ink-55); }
+    .ft { font: calc(var(--u) * 2.2)/1 var(--f-mono); color: var(--ink-55); }
+    .plac { background: var(--ink); color: var(--paper); font: calc(var(--u) * 2.6)/1.1 var(--f-pixel); text-align: center; padding: calc(var(--u) * .4) 0; }
+    .stamp { font: calc(var(--u) * 3)/1 var(--f-pixel); padding: calc(var(--u) * .4) calc(var(--u) * .6) calc(var(--u) * .6); border: calc(var(--hair) * 1.5) solid var(--ink); transform: rotate(-10deg); white-space: nowrap; text-align: center; }
+    .ok { background: var(--accent); }
+    .no { background: var(--paper); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("Now there is", 0);
+    const END = 35.5, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'Lineup.exe', right: 'the art of picking', variant: 'paper', x: 9, y: 22, w: 82, h: 46 });
+    const B = A.querySelector('.win__body'), box = (cls, g, html = '') => R.box('u ' + cls, { parent: B, ...g, html });
+    R.open(A, R.START, { from: { x: 50, y: 80 } });
+    SH.flash(A.querySelector('.win__bar'), W('art'), 2);
+    R.sfx('pop', W('art'), { vol: -6 });
+
+    // the height chart
+    [0, 6, 12, 18, 24].forEach((y, i) => { box('ln', { x: 0, y: 4 + y, w: 78, h: 0.1 }); box('ft', { x: 0.6, y: 4.6 + y }, `${7 - i}FT`); });
+
+    const c = 0.95, Y = 6;
+    const cast = [
+      { o: { hat: 'safari', mouth: 'grin', body: 'hold' }, prop: SH.net, px: 12, py: 2, name: 'BUG<br>HUNTER', at: 'picking', ok: 'NIGHT<br>SHIFT ✓', st: 'AI' },
+      { o: { hat: 'cap', eyes: 'shades', body: 'hold' }, prop: SH.spray, px: 12.6, py: 9, name: 'FLAKE<br>EXTERMINATOR', at: 'kinds', ok: 'NIGHT<br>SHIFT ✓', st: 'to' },
+      { o: { hat: 'fedora', mouth: 'flat', body: 'hold' }, prop: SH.briefcase, px: 11, py: 13, name: 'DEBT<br>COLLECTOR', at: 'things', ok: 'NIGHT<br>SHIFT ✓', st: 'do' },
+      { o: { hat: 'beret', eyes: 'blink', mouth: 'happy', body: 'hold' }, prop: SH.sign, px: 12.6, py: 4, name: 'LOGO<br>PICKER', at: 'want', no: 'NEEDS YOUR<br>TASTE ✕', st: 'asleep.' },
+    ];
+    cast.forEach((p, i) => {
+      const x0 = 3 + i * 19.4, t = W(p.at, R.START + 0.5);
+      const who = box('h', { x: x0, y: Y }, SH.pix(p.o, c));
+      const prop = box('h', { x: x0 + p.px, y: Y + p.py }, R.pix(p.prop, 0.85));
+      const pl = box('plac h', { x: x0 - 1, y: 27.4, w: 16 }, p.name);
+      R.path(who, [[t, x0 - 2, Y], [t + 0.2, x0, Y]]);
+      R.path(prop, [[t, x0 - 2 + p.px, Y + p.py], [t + 0.2, x0 + p.px, Y + p.py]]);
+      [who, prop, pl].forEach(e => R.show(e, t));
+      R.sfx('jump', t, { vol: -10 });
+      const ts = W(p.st, R.START + 2.5);
+      const st = box('stamp h ' + (p.no ? 'no' : 'ok'), { x: x0 - 1, y: 9, w: 17 }, p.no || p.ok);
+      R.show(st, ts);
+      R.sfx(p.no ? 'error' : 'thunk', ts, { vol: p.no ? -4 : -3 });
+    });
+    R.done(END);
+  </script>
+</body>
+</html>

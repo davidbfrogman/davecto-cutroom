@@ -1,0 +1,107 @@
+<!doctype html>
+<!-- 05-punch-list: "It essentially puts your AI coding agent on an overnight shift. You just give it a punch list of what
+     you want done by morning." Above the head (lots of room). Shifty walks in to the time clock and punches in on
+     "overnight" (KA-CHUNK): night falls, the moon's up, his headlamp clicks on. On "punch list" a boxing glove
+     punches each job onto his clipboard, POW; "DUE 07:00" lands on "morning". -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1920" />
+  <title>05-punch-list</title>
+  <link rel="stylesheet" href="retro.css" />
+  <script src="gsap.min.js"></script>
+  <script src="retro.js"></script>
+  <script src="shifty.js"></script>
+  <style>
+    .u { position: absolute; }
+    .night { background: var(--ink); inset: 0; }
+    .clock { background: var(--win-2); border: var(--hair) solid var(--ink); }
+    .face { position: absolute; left: calc(var(--u) * 1.6); right: calc(var(--u) * 1.6); top: calc(var(--u) * 1.6); height: calc(var(--u) * 7); background: var(--paper);
+            border: var(--hair) solid var(--ink); font: calc(var(--u) * 5)/calc(var(--u) * 6.6) var(--f-pixel); text-align: center; }
+    .slot { position: absolute; left: calc(var(--u) * 4); right: calc(var(--u) * 4); top: calc(var(--u) * 11); height: calc(var(--u) * 1.4); background: var(--ink); }
+    .card { background: var(--paper); border: var(--hair) solid var(--ink); font: calc(var(--u) * 2.2)/1 var(--f-pixel); text-align: center; padding-top: calc(var(--u) * .6); }
+    .boom { font: 600 calc(var(--u) * 4.6)/1 var(--f-display); letter-spacing: -0.04em; background: var(--accent); color: var(--ink); padding: calc(var(--u) * .4) calc(var(--u) * .8) calc(var(--u) * .7);
+            border: var(--hair) solid var(--ink); white-space: nowrap; transform: rotate(-6deg); }
+    .beam i { position: absolute; inset: 0; background: var(--accent); opacity: .45; clip-path: polygon(0 45%, 100% 0, 100% 100%, 0 55%); }
+    .board { background: var(--win-2); border: var(--hair) solid var(--ink); }
+    .clip-t { background: var(--ink); }
+    .sheet { background: var(--paper); border: var(--hair) solid var(--ink); }
+    .ttl { font: calc(var(--u) * 3.4)/1 var(--f-pixel); }
+    .job { display: flex; align-items: center; gap: calc(var(--u) * 1.2); font: calc(var(--u) * 3.8)/1 var(--f-pixel); }
+    .job i { width: calc(var(--u) * 2.8); height: calc(var(--u) * 2.8); border: var(--hair) solid var(--ink); }
+  </style>
+</head>
+<body data-world="pink">
+  <div id="root" data-composition-id="root" data-width="1080" data-height="1920">
+    <div class="clip" id="stage" data-start="0" data-duration="5"></div>
+  </div>
+  <script>
+    R.START = R.w("It essentially", 0);
+    const END = 17.33, W = p => R.w(p, R.START - 0.1);
+    const A = R.win({ title: 'Night.Shift', right: 'clock: 22:59', variant: 'paper', x: 9, y: 22, w: 82, h: 54 });
+    const B = A.querySelector('.win__body'), box = (cls, g, html = '') => R.box('u ' + cls, { parent: B, ...g, html });
+    R.open(A, R.START, { from: { x: 45, y: 88 } });
+
+    const night = box('night h', { style: { inset: '0' } });
+    const moon = box('h', { x: 33, y: 30 }, R.pix(SH.moon, 1.6));
+    const clock = box('clock', { x: 2, y: 8, w: 15, h: 26 }, '<div class="face" id="cf">22:59</div><div class="slot"></div>');
+    const card = box('card', { x: 5.5, y: -2, w: 8, h: 10 }, '<span id="cd">IN<br>--:--</span>'); card.dataset.bleed = '';
+
+    // Shifty walks in, then stands at the clock
+    const c = 1.0, sy = 22.4;
+    const walk = box('', { x: -16, y: sy }, SH.anim([{ hat: 'dark', legs: 'a' }, { hat: 'dark', legs: 'b' }], c));
+    const stand = box('h', { x: 19, y: sy }, SH.pix({ hat: 'dark', body: 'hold' }, c));
+    const lit = box('h', { x: 19, y: sy }, SH.pix({ hat: 'hard', mouth: 'grin', body: 'hold' }, c));
+    const beam = box('beam h', { x: 19 + 7.6, y: sy - 5.6, w: 22, h: 18 }, '<i></i>');
+    walk.dataset.bleed = '';
+    const tw0 = W('puts'), tw1 = W('agent');
+    R.path(walk, [[tw0, -16, sy], [tw1, 19, sy]]);
+    R.flip(walk.firstChild, tw0, tw1, { fps: 7.5 });
+    R.hide(walk, tw1); R.show(stand, tw1);
+    [0, 0.27, 0.53, 0.8].forEach(d => R.sfx('blip', tw0 + d, { vol: -14, freq: 300 }));
+
+    // punch in
+    const tin = W('overnight');
+    R.path(card, [[tin - 0.27, 5.5, -2], [tin, 5.5, 18]]);
+    R.text(R.$('#cd'), tin, 'IN<br>23:00');
+    R.tl.set(R.$('#cd'), { innerHTML: 'IN<br>23:00' }, R.T(tin));
+    R.text(R.$('#cf'), tin, '23:00');
+    R.text(A.querySelector('.r'), tin, 'clock: 23:00');
+    const ka = box('boom h', { x: 1, y: 36 }, 'KA-CHUNK!');
+    R.show(ka, tin); R.hide(ka, tin + 0.6);
+    R.sfx('thunk', tin, { vol: 0 }); R.sfx('gated', tin + 0.03, { vol: -6 });
+    R.show(night, tin + 0.13); R.show(moon, tin + 0.13);
+    R.path(moon, [[tin + 0.13, 33, 30], [tin + 1.2, 33, 3]]);
+    R.hide(stand, tin + 0.4); R.show(lit, tin + 0.4); R.show(beam, tin + 0.4);
+    R.sfx('starfall', tin + 0.13, { vol: -12 });
+
+    // the punch list
+    const tp = W('punch');
+    const board = box('board h', { x: 44, y: 1, w: 33, h: 43 });
+    const bb = (cls, g, html = '') => R.box('u ' + cls, { parent: board, ...g, html });
+    bb('sheet', { x: 1.6, y: 3, w: 29, h: 37.6 });
+    bb('clip-t', { x: 10, y: -1, w: 12, h: 4 });
+    bb('ttl', { x: 3.4, y: 5.4 }, 'PUNCH LIST');
+    const jobs = ['Bug hunt', 'Flaky tests', 'Dead code'].map((j, i) => bb('job h', { x: 3.4, y: 12 + i * 6.6 }, `<i></i><span>${j}</span>`));
+    const due = bb('chip-inv h', { x: 3.4, y: 33, style: { fontSize: 'calc(var(--u) * 3.4)' } }, '☀ DUE 07:00');
+    R.show(board, tp); R.sfx('pop', tp, { vol: -4 });
+
+    const glove = box('h', { x: 80, y: 14 }, R.pix(SH.glove, 1.3)); glove.dataset.bleed = '';
+    const pow = box('boom h', { x: 56, y: 1.2 }, 'POW!');
+    const hits = [W('list'), W('what'), W('done')];
+    const keys = [];
+    hits.forEach((t, i) => { const y = 12 + i * 6.6 + 1 - 3.5; keys.push([t - 0.2, 80, y], [t, 62, y], [t + 0.2, 80, y]); });
+    R.show(glove, hits[0] - 0.2);
+    R.path(glove, keys);
+    hits.forEach((t, i) => {
+      R.show(jobs[i], t);
+      R.show(pow, t); R.hide(pow, t + 0.2);
+      R.sfx(i === 2 ? 'gatetom' : 'stomp', t, { vol: -4 });
+    });
+    R.hide(glove, hits[2] + 0.2);
+    R.show(due, W('morning.')); SH.flash(due, W('morning.'), 2);
+    R.sfx('bell', W('morning.'), { vol: -8 });
+    R.done(END);
+  </script>
+</body>
+</html>
