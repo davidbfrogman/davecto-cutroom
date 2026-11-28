@@ -90,7 +90,7 @@ function body(g, pose) {
     // an X: each forearm rises from its elbow to the opposite upper arm; the right one passes under, the left one over
     const band = (r0, c0, r1, c1, th, fill, top) => {
       const cells = new Set(), K = (r, c) => r * 100 + c;
-      for (let r = Math.min(r0, r1) - 5; r <= Math.max(r0, r1) + 5; r++) for (let c = Math.min(c0, c1) - 5; c <= Math.max(c0, c1) + 5; c++) {
+      for (let r = Math.floor(Math.min(r0, r1)) - 5; r <= Math.ceil(Math.max(r0, r1)) + 5; r++) for (let c = Math.floor(Math.min(c0, c1)) - 5; c <= Math.ceil(Math.max(c0, c1)) + 5; c++) {
         const dx = c1 - c0, dy = r1 - r0, t = Math.max(0, Math.min(1, ((c - c0) * dx + (r - r0) * dy) / (dx * dx + dy * dy)));
         if (Math.hypot(c - (c0 + t * dx), r - (r0 + t * dy)) <= th / 2) cells.add(K(r, c));
       }
@@ -99,12 +99,13 @@ function body(g, pose) {
         put(g, r, c, edge ? 'k' : top && !cells.has(K(r - 2, c)) ? top : fill);
       }
     };
-    band(46, 33, 40, 10, 5.6, 'c');                                                          // under
-    for (let r = 36; r <= 47; r++) { const o = Math.min(2, Math.floor((r - 36) / 3)); row(g, r, 9 - o, 12, 'C'); put(g, r, 13, 'k'); }    // left upper arm
-    for (let r = 36; r <= 47; r++) { const o = Math.min(2, Math.floor((r - 36) / 3)); row(g, r, 31, 34 + o, 'C'); put(g, r, 30, 'k'); }   // right upper arm
-    band(47, 10, 41, 33, 6, 'C', 'D');                                                       // over
-    stamp(g, 39, 31, [' kkk ', 'kssSk', 'ksssk', 'kSssk', ' kkk ']);                          // over hand, on the right arm
-    stamp(g, 40, 8, [' kkk ', 'ksssk', 'kSssk', ' kkk ']);                                     // under hand, gripping the arm where the forearm meets it
+    // upper arms first; both forearms cross in front of them, each hand wrapping the outside of the other arm
+    for (let r = 36; r <= 44; r++) { const o = Math.min(2, Math.floor((r - 36) / 3)); row(g, r, 9 - o, 12, 'C'); put(g, r, 13, 'k'); }    // left upper arm
+    for (let r = 36; r <= 44; r++) { const o = Math.min(2, Math.floor((r - 36) / 3)); row(g, r, 31, 34 + o, 'C'); put(g, r, 30, 'k'); }   // right upper arm
+    band(45, 30, 40, 12, 5, 'c');                                                            // the right forearm, under
+    band(45.5, 13, 40.5, 31, 5.4, 'C', 'D');                                                 // the left forearm, over
+    stamp(g, 38, 8, [' kkk ', 'ksssk', 'kSssk', 'kSSsk', ' kkk ']);                          // under hand, on the end of its forearm
+    stamp(g, 38, 30, [' kkk ', 'ksssk', 'ksssk', 'ksSSk', ' kkk ']);                         // over hand
   }
   // legs + sneakers
   for (let r = 52; r <= 55; r++) { row(g, r, 15, 20, 'c'); row(g, r, 23, 28, 'c'); put(g, r, 16, 'C'); put(g, r, 24, 'C'); }
